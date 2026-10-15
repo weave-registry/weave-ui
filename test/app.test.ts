@@ -210,6 +210,26 @@ test("the audit check is finished by the audit request's own settle, not by an u
   assert.equal(out.textContent, "");
 });
 
+test("a failed audit check does not report that the log still gives exactly this record", () => {
+  const on: Record<string, Handler[]> = {};
+  const out = { textContent: "", tone: "", setAttribute(a: string, v: string) { if (a === "data-tone") this.tone = v; } };
+  const shaEl = { getAttribute: (a: string) => (a === "data-audit-sha" ? "aaa" : null) };
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    querySelector: (sel: string) => (sel === "#view-audit [data-audit-sha]" ? shaEl : sel === "#view-audit [data-audit-result]" ? out : null),
+  }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+  const button = { hasAttribute: (a: string) => a === "data-audit-check", getAttribute: () => null };
+
+  // The 500 error is swapped (htmx config swaps 4xx/5xx) elsewhere, so #view-audit and its sha are unchanged.
+  const failed = { status: 500 };
+  fire("htmx:beforeRequest", { elt: button, xhr: failed });
+  fire("htmx:afterSettle", { xhr: failed });
+  assert.equal(out.textContent, "", "a failed check gives no verdict");
+  assert.equal(out.tone, "");
+});
+
 test("a failed submit keeps the form dirty, so the view's next poll does not wipe the unsent draft", () => {
   const on: Record<string, Handler[]> = {};
   const docOn: Record<string, Handler[]> = {};
