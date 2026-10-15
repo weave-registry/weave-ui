@@ -78,7 +78,7 @@ export function layout(o: LayoutOptions): string {
 <script src="${"/ui/assets/app.js"}" defer></script>
 </head>
 <body hx-ext="weave-json" data-shell="${page.toLowerCase()}">
-<header class="topbar"><div class="topbar-in"><a class="brand" href="/"><img src="/ui/assets/favicon.svg" alt="" width="20" height="20"> weave</a><nav id="nav" aria-label="Console">${ctx.nav.map((n) => navLink(n, page))}</nav></div></header>
+<header class="topbar"><div class="topbar-in"><a class="brand" href="/"><img src="/ui/assets/favicon.svg" alt="" width="20" height="20"> weave</a><nav id="nav" class="nav" aria-label="Console">${ctx.nav.map((n) => navLink(n, page))}</nav></div></header>
 ${banner}
 <div id="weave-error" class="problem" role="alert" hidden></div>
 <main class="page" id="main">${o.intro}${o.views.map(viewSlot)}</main>
