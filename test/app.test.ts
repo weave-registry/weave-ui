@@ -320,6 +320,46 @@ test("a failed submit keeps the form dirty, so the view's next poll does not wip
   assert.equal(poll(), false, "once the submit succeeds the form is clean and the poll goes ahead");
 });
 
+test("a form emptied back to how it loaded is clean again, so the view's poll resumes even after a failed submit", () => {
+  const on: Record<string, Handler[]> = {};
+  const docOn: Record<string, Handler[]> = {};
+  const attrs: Record<string, string> = {};
+  const title = { tagName: "INPUT", type: "text", value: "", defaultValue: "", closest: (sel: string) => (sel === "form" ? form : null) };
+  const form = {
+    tagName: "FORM",
+    elements: [title],
+    setAttribute: (a: string, v: string) => void (attrs[a] = v),
+    removeAttribute: (a: string) => void delete attrs[a],
+  };
+  const view = { id: "view-factory", contains: () => true, querySelector: (sel: string) => (sel === "form[data-dirty]" && "data-dirty" in attrs ? form : null) };
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    activeElement: { tagName: "BODY" },
+    addEventListener: (n: string, h: Handler) => void (docOn[n] ??= []).push(h),
+  }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+  const type = (v: string): void => { title.value = v; (docOn["input"] ?? []).forEach((h) => h({ target: title })); };
+  const poll = (): boolean => {
+    let held = false;
+    (on["htmx:beforeRequest"] ?? []).forEach((h) => h({ detail: { elt: view, xhr: {}, requestConfig: { verb: "get" } }, preventDefault: () => { held = true; } }));
+    return held;
+  };
+
+  type("Ship it");
+  assert.equal(poll(), true, "a typed draft holds the poll");
+  type("");
+  assert.equal(poll(), false, "the draft was deleted, so there is nothing to protect and the poll goes ahead");
+
+  type("Ship it");
+  const post = {};
+  fire("htmx:beforeRequest", { elt: form, xhr: post, requestConfig: { verb: "post" } });
+  fire("htmx:afterRequest", { elt: form, xhr: post, successful: false });
+  assert.equal(poll(), true, "the failed submit leaves the draft in place, so the poll is still held");
+  type("");
+  assert.equal(poll(), false, "once the operator abandons the draft the poll resumes");
+});
+
 test("a submit that succeeds after the operator typed more keeps the form dirty, so the next poll does not wipe the newer draft", () => {
   const on: Record<string, Handler[]> = {};
   const docOn: Record<string, Handler[]> = {};

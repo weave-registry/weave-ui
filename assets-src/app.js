@@ -152,9 +152,23 @@
     var form = e.target && e.target.closest ? e.target.closest("form") : null;
     if (!form) return;
     if (/^@new-file:/.test(e.target.name || "")) each(form, '[name="@new-file:path"]', function (i) { if (i.setCustomValidity) i.setCustomValidity(""); });
-    form.setAttribute("data-dirty", "1");
     edits.set(form, (edits.get(form) || 0) + 1);
+    if (changed(form)) form.setAttribute("data-dirty", "1");
+    else form.removeAttribute("data-dirty"); // emptied back to how it loaded: nothing left to lose, so the poll may run
   });
+
+  // Whether any field differs from the value it loaded with; a form whose fields can't be read counts as changed
+  function changed(form) {
+    var els = form.elements;
+    if (!els || typeof els.length !== "number") return true;
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.type === "checkbox" || el.type === "radio") { if (el.checked !== el.defaultChecked) return true; }
+      else if (el.options) { for (var j = 0; j < el.options.length; j++) if (el.options[j].selected !== el.options[j].defaultSelected) return true; }
+      else if ("defaultValue" in el && el.value !== el.defaultValue) return true;
+    }
+    return false;
+  }
 
   htmx.on("htmx:beforeRequest", function (evt) {
     var d = evt.detail;
