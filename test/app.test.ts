@@ -153,3 +153,32 @@ test("an OOB #weave-error from a 2xx response stays shown; the next successful r
   assert.equal(err.hidden, true, "a later successful request clears the stale error");
   assert.equal(err.cleared, 1);
 });
+
+test("the audit check is finished by the audit request's own settle, not by an unrelated swap that settles first", () => {
+  const on: Record<string, Handler[]> = {};
+  let sha = "aaa";
+  const out = { textContent: "", tone: "", setAttribute(a: string, v: string) { if (a === "data-tone") this.tone = v; } };
+  const shaEl = { getAttribute: (a: string) => (a === "data-audit-sha" ? sha : null) };
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    querySelector: (sel: string) => (sel === "#view-audit [data-audit-sha]" ? shaEl : sel === "#view-audit [data-audit-result]" ? out : null),
+  }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+  const button = { hasAttribute: (a: string) => a === "data-audit-check", getAttribute: () => null };
+
+  const auditXhr = { status: 200 };
+  fire("htmx:beforeRequest", { elt: button, xhr: auditXhr });
+  fire("htmx:afterSettle", { xhr: { status: 200 } }); // a poll settles while the audit request is in flight
+  assert.equal(out.textContent, "", "an unrelated settle reports nothing");
+
+  sha = "bbb"; // the audit response brings a different record
+  fire("htmx:afterSettle", { xhr: auditXhr });
+  assert.equal(out.tone, "bad", "the audit request's own settle compares against the record it started from");
+
+  // A failed audit request leaves no pending check behind for the next unrelated settle.
+  out.textContent = ""; out.tone = "";
+  fire("htmx:beforeRequest", { elt: button, xhr: { status: 0 } });
+  fire("htmx:afterSettle", { xhr: { status: 200 } });
+  assert.equal(out.textContent, "");
+});

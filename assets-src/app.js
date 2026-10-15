@@ -251,7 +251,7 @@
 
   // ── 9c / 10 state, shared with afterRequest ──
   var picks = new WeakMap();
-  var auditSha = null;
+  var auditSha = null, auditXhr = null;
 
   htmx.on("htmx:afterRequest", function (evt) {
     var d = evt.detail;
@@ -330,24 +330,29 @@
     if (!elt || !elt.hasAttribute || !elt.hasAttribute("data-audit-check")) return;
     var cur = doc.querySelector("#view-audit [data-audit-sha]");
     auditSha = cur ? cur.getAttribute("data-audit-sha") : "";
+    auditXhr = evt.detail.xhr;
   });
 
-  function auditResult() {
-    if (auditSha === null) return;
+  // Only the audit request's own settle finishes the check; other swaps (polls, counts) settle too.
+  function auditResult(xhr) {
+    if (auditSha === null || !xhr || xhr !== auditXhr) return;
+    var was = auditSha;
+    auditSha = null;
+    auditXhr = null;
+    if (!(xhr.status >= 200 && xhr.status < 300)) return;
     var now = doc.querySelector("#view-audit [data-audit-sha]");
     var out = doc.querySelector("#view-audit [data-audit-result]");
     if (!now || !out) return;
-    var same = now.getAttribute("data-audit-sha") === auditSha;
-    auditSha = null;
+    var same = now.getAttribute("data-audit-sha") === was;
     out.textContent = same ? "The log still gives exactly this record."
       : "The log gives a different record now — new events landed in this selection. Show it again to see them.";
     out.setAttribute("data-tone", same ? "ok" : "bad");
   }
 
   // After any swap settles: restore kept state, refresh counts, finish an audit check.
-  htmx.on("htmx:afterSettle", function () {
+  htmx.on("htmx:afterSettle", function (evt) {
     restore();
     updateCounts();
-    auditResult();
+    auditResult(evt.detail && evt.detail.xhr);
   });
 })();
