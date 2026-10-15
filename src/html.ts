@@ -200,8 +200,13 @@ function analyze(strings: readonly string[]): Ctx[] {
         case S_TEXT:
           if (c === "<") {
             if (chunk.startsWith("!--", i + 1)) {
-              state = S_COMMENT;
-              i += 3;
+              // `<!-->` and `<!--->` are whole (empty) comments: the parser is back in text after them.
+              if (chunk.startsWith(">", i + 4)) i += 4;
+              else if (chunk.startsWith("->", i + 4)) i += 5;
+              else {
+                state = S_COMMENT;
+                i += 3;
+              }
             } else {
               state = S_TAG_OPEN;
             }
@@ -297,6 +302,9 @@ function analyze(strings: readonly string[]): Ctx[] {
           if (c === "-" && chunk.startsWith("->", i + 1)) {
             state = S_TEXT;
             i += 2;
+          } else if (c === "-" && chunk.startsWith("-!>", i + 1)) {
+            state = S_TEXT;
+            i += 3;
           }
           break;
       }

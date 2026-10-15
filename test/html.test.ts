@@ -103,6 +103,16 @@ test("a template that ends inside a tag, attribute, raw-text element or comment 
   assert.equal(s(html`<p>x</p><script></script><!-- c -->`), "<p>x</p><script></script><!-- c -->");
 });
 
+test("a comment closes where the browser closes it: <!-->, <!--->, -->, --!>", () => {
+  assert.equal(s(html`<!-->${"x"}`), "<!-->x");
+  assert.equal(s(html`<!--->${"x"}`), "<!--->x");
+  assert.equal(s(html`<!-- c --!>${"x"}`), "<!-- c --!>x");
+  assert.equal(s(html`<!---->${"x"}`), "<!---->x");
+  assert.throws(() => html`<!---${"x"}-->`, /comment/i);
+  assert.throws(() => html`<!-- -!>${"x"}-->`, /comment/i);
+  assert.throws(() => html`<!-- ->${"x"}-->`, /comment/i);
+});
+
 test("refused sites: on* and hx-on* handlers, style and srcdoc attributes, non-URL hx-* values", () => {
   const x = "v";
   assert.throws(() => html`<a onclick="${x}">x</a>`, /handler|on\*/i);
