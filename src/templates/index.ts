@@ -14,8 +14,10 @@ import { factory } from "./factory.js";
 import { machines } from "./machines.js";
 import { fleet } from "./fleet.js";
 import { team } from "./team.js";
+import { task } from "./task.js";
+import { audit } from "./audit.js";
 
 // `any`: the view model arrives as parsed JSON from weave; each template's own signature names its contract type.
 export type Template = (vm: any, ctx: RenderCtx) => string;
 
-export const templates: Readonly<Record<string, Template>> = { error, home, work, control, factory, machines, fleet, team };
+export const templates: Readonly<Record<string, Template>> = { error, home, work, control, factory, machines, fleet, team, task, audit };
