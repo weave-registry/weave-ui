@@ -320,6 +320,44 @@ test("a failed submit keeps the form dirty, so the view's next poll does not wip
   assert.equal(poll(), false, "once the submit succeeds the form is clean and the poll goes ahead");
 });
 
+test("a submit that succeeds after the operator typed more keeps the form dirty, so the next poll does not wipe the newer draft", () => {
+  const on: Record<string, Handler[]> = {};
+  const docOn: Record<string, Handler[]> = {};
+  const attrs: Record<string, string> = {};
+  const form = {
+    tagName: "FORM",
+    setAttribute: (a: string, v: string) => void (attrs[a] = v),
+    removeAttribute: (a: string) => void delete attrs[a],
+  };
+  const input = { tagName: "TEXTAREA", closest: (sel: string) => (sel === "form" ? form : null) };
+  const view = { id: "view-team", contains: () => true, querySelector: (sel: string) => (sel === "form[data-dirty]" && "data-dirty" in attrs ? form : null) };
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    activeElement: { tagName: "BODY" }, // the operator clicked outside the form, so focus left it
+    addEventListener: (n: string, h: Handler) => void (docOn[n] ??= []).push(h),
+  }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+  const type = (): void => (docOn["input"] ?? []).forEach((h) => h({ target: input }));
+  const poll = (): boolean => {
+    let held = false;
+    (on["htmx:beforeRequest"] ?? []).forEach((h) => h({ detail: { elt: view, xhr: {}, requestConfig: { verb: "get" } }, preventDefault: () => { held = true; } }));
+    return held;
+  };
+
+  type();
+  const post = {};
+  fire("htmx:beforeRequest", { elt: form, xhr: post, requestConfig: { verb: "post" } });
+  type(); // more edits while the POST is in flight
+  fire("htmx:afterRequest", { elt: form, xhr: post, successful: true });
+  assert.equal(poll(), true, "the form holds edits the POST did not carry, so the poll is held");
+
+  const again = {};
+  fire("htmx:beforeRequest", { elt: form, xhr: again, requestConfig: { verb: "post" } });
+  fire("htmx:afterRequest", { elt: form, xhr: again, successful: true });
+  assert.equal(poll(), false, "a submit that carried every edit clears the mark and the poll goes ahead");
+});
+
 test("a running duration (data-fmt=dur, no data-to) counts up to now, not from 1970", () => {
   const docOn: Record<string, Handler[]> = {};
   const fakeTime = (attrs: Record<string, string>) => ({

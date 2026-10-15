@@ -115,14 +115,19 @@
   });
 
   // ── 3. Hold a view's poll while the operator is typing in it (weave page behaviour) ──
+  // edits counts input per form; sentEdits ties each submit to the count it sent, so a reply clears only what it carried
+  var edits = new WeakMap(), sentEdits = new WeakMap();
   doc.addEventListener("input", function (e) {
     var form = e.target && e.target.closest ? e.target.closest("form") : null;
-    if (form) form.setAttribute("data-dirty", "1");
+    if (!form) return;
+    form.setAttribute("data-dirty", "1");
+    edits.set(form, (edits.get(form) || 0) + 1);
   });
 
   htmx.on("htmx:beforeRequest", function (evt) {
     var d = evt.detail;
     var elt = d.elt;
+    if (elt && elt.tagName === "FORM" && d.xhr) sentEdits.set(d.xhr, edits.get(elt) || 0);
     if (!elt || !isGet(d.requestConfig && d.requestConfig.verb) || !/^view-/.test(elt.id || "")) return;
     var a = doc.activeElement;
     var typing = a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && elt.contains(a);
@@ -287,7 +292,8 @@
     var d = evt.detail;
     var elt = d.elt;
     if (!d.successful) return;
-    if (elt && elt.tagName === "FORM") elt.removeAttribute("data-dirty");
+    var sentAt = d.xhr && sentEdits.get(d.xhr);
+    if (elt && elt.tagName === "FORM" && (sentAt === undefined || sentAt === (edits.get(elt) || 0))) elt.removeAttribute("data-dirty");
     var err = doc.getElementById("weave-error");
     if (err && !err.hidden && d.xhr && sentSeq.get(d.xhr) > errorSeq) { err.replaceChildren(); err.hidden = true; }
     var pick = elt && picks.get(elt);
