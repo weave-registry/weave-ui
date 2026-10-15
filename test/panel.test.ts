@@ -31,3 +31,11 @@ test("anything malformed renders an empty card, never throws", () => {
     assert.match(p(x), /^<div class="card panel">/);
   }
 });
+
+test("metric tone matches whole-word keywords, so 'broken' or 'setup failed' is never ok", () => {
+  const t = (status: string): string => /data-tone="([^"]*)"/.exec(p({ type: "show_metrics", items: [{ label: "x", value: 1, status }] }))?.[1] ?? "?";
+  for (const s of ["setup failed", "backup error", "lookup failing", "Down"]) assert.equal(t(s), "bad", s);
+  for (const s of ["ok", "OK", "okay", "passed", "up", "good"]) assert.equal(t(s), "ok", s);
+  assert.equal(t("pending"), "needs");
+  for (const s of ["broken", "stock"]) assert.equal(t(s), "", s);
+});

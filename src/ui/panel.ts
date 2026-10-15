@@ -43,11 +43,12 @@ function or(...vs: unknown[]): unknown {
   return vs[vs.length - 1];
 }
 
+/** Keywords match at the start of a word ("broken" is not "ok", "setup" is not "up"), and bad wins over ok. */
 function tone(v: unknown): string {
   const s = str(v || "").toLowerCase();
-  if (/good|ok|positive|up|pass/.test(s)) return "ok";
-  if (/bad|crit|error|down|negative|fail/.test(s)) return "bad";
-  if (/warn|needs|pending/.test(s)) return "needs";
+  if (/\b(?:bad|crit|error|down|negative|fail)/.test(s)) return "bad";
+  if (/\b(?:good|ok|positive|up|pass)/.test(s)) return "ok";
+  if (/\b(?:warn|needs|pending)/.test(s)) return "needs";
   return "";
 }
 
