@@ -145,9 +145,11 @@
     if (window.confirm(el.getAttribute("data-confirm"))) evt.detail.issueRequest(true);
   });
 
-  // ── 3. Hold a view's poll while the operator is typing in it (weave page behaviour) ──
-  // edits counts input per form; sentEdits ties each submit to the count it sent, so a reply clears only what it carried
-  var edits = new WeakMap(), sentEdits = new WeakMap();
+  // ── 3. Dirty forms (weave page behaviour) ──
+  // edits counts input per form; sentEdits ties each submit to the count it sent, so a reply clears only what it carried.
+  // A view's poll is still held while one of its forms carries an unsent draft (the poll tests pin this); typing alone
+  // (focus) no longer holds it — §3b carries the operator's work into every fresh fragment instead.
+  var edits = new WeakMap(), sentEdits = new WeakMap(), reqForm = new WeakMap();
   doc.addEventListener("input", function (e) {
     var form = e.target && e.target.closest ? e.target.closest("form") : null;
     if (!form) return;
@@ -170,33 +172,136 @@
     return false;
   }
 
+  var isView = function (el) { return !!el && /^view-/.test(el.id || ""); };
+
   htmx.on("htmx:beforeRequest", function (evt) {
     var d = evt.detail;
     var elt = d.elt;
-    if (elt && elt.tagName === "FORM" && d.xhr) sentEdits.set(d.xhr, edits.get(elt) || 0);
-    if (!elt || !isGet(d.requestConfig && d.requestConfig.verb) || !/^view-/.test(elt.id || "")) return;
-    var a = doc.activeElement;
-    var typing = a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && elt.contains(a);
-    if (typing || elt.querySelector("form[data-dirty]")) evt.preventDefault();
+    if (elt && elt.tagName === "FORM" && d.xhr) { sentEdits.set(d.xhr, edits.get(elt) || 0); reqForm.set(d.xhr, elt); }
+    if (!isView(elt) || !isGet(d.requestConfig && d.requestConfig.verb)) return;
+    // Hidden tabs (finding 5): a tab nobody is looking at does not poll; §5b catches up when it is shown again.
+    if (doc.hidden) { evt.preventDefault(); return; }
+    if (elt.querySelector("form[data-dirty]")) evt.preventDefault();
   });
 
-  // ── 4. Keep <details data-keep> open state and [data-keep-scroll] positions across swaps ──
+  // ── 3b. Edits survive swaps (finding 1: a refresh no longer wipes text typed in flight or in another form) ──
+  // Each field is found again in the fresh fragment by (form position among the view's forms, name, index among
+  // same-named fields); fields outside any form use position -1. Hidden fields and buttons carry server state: skipped.
+  var FIELD = "input, textarea, select";
+  var SKIP_TYPES = ["hidden", "submit", "button", "reset", "file", "image"];
+  var swapXhr = null, pendingFocus = null;
+
+  function carriable(el) { return !!el.name && SKIP_TYPES.indexOf(String(el.type || "").toLowerCase()) === -1; }
+  function list(root, sel) { return root && root.querySelectorAll ? Array.prototype.slice.call(root.querySelectorAll(sel)) : []; }
+  function sameNamed(root, form, name) {
+    var scope = form || root;
+    return list(scope, FIELD).filter(function (f) { return f.name === name && (form || !f.closest("form")); });
+  }
+  function locate(root, el) {
+    var form = el.closest("form");
+    var fi = form ? list(root, "form").indexOf(form) : -1;
+    return { form: fi, name: el.name, idx: sameNamed(root, form, el.name).indexOf(el) };
+  }
+  function find(root, loc) {
+    var form = null;
+    if (loc.form >= 0) { form = list(root, "form")[loc.form]; if (!form) return null; }
+    return sameNamed(root, form, loc.name)[loc.idx] || null;
+  }
+  function copyField(from, to) {
+    if (!to || to.tagName !== from.tagName || to.type !== from.type) return;
+    if (from.type === "checkbox" || from.type === "radio") to.checked = from.checked;
+    else if (from.tagName === "SELECT") {
+      if (from.multiple) {
+        var picked = Array.prototype.filter.call(from.options, function (o) { return o.selected; }).map(function (o) { return o.value; });
+        Array.prototype.forEach.call(to.options, function (o) { o.selected = picked.indexOf(o.value) !== -1; });
+      } else {
+        var i = from.selectedIndex;
+        if (i >= 0 && to.options[i] && to.options[i].value === from.options[i].value) to.selectedIndex = i;
+      }
+    } else to.value = from.value;
+  }
+
+  htmx.on("htmx:oobBeforeSwap", function (evt) {
+    var d = evt.detail;
+    var target = d.target, fresh = d.fragment;
+    if (!target || !target.querySelectorAll || !fresh || !fresh.querySelectorAll) return;
+    var active = doc.activeElement;
+    var focused = active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) && target.contains(active) ? active : null;
+    // The form whose own request produced this response, if it sent every edit, takes the server's fresh values.
+    var own = swapXhr && reqForm.get(swapXhr);
+    var ownDone = own && sentEdits.get(swapXhr) === (edits.get(own) || 0);
+    list(target, FIELD).forEach(function (el) {
+      if (!carriable(el)) return;
+      var form = el.closest("form");
+      var dirty = form && form.hasAttribute("data-dirty");
+      if (!dirty && el !== focused) return;
+      if (form && form === own && ownDone) return;
+      var loc = locate(target, el);
+      var to = find(fresh, loc);
+      if (!to) return;
+      var toForm = to.closest("form");
+      // A list that shifted puts a different form at this position: never pour a draft into another action.
+      if (form && toForm && form.getAttribute("hx-post") !== toForm.getAttribute("hx-post")) return;
+      copyField(el, to);
+      if (dirty && toForm) { toForm.setAttribute("data-dirty", "1"); edits.set(toForm, edits.get(form) || 0); }
+    });
+    if (focused && focused.name) {
+      var loc = locate(target, focused);
+      var sel = null;
+      try { if (typeof focused.selectionStart === "number") sel = [focused.selectionStart, focused.selectionEnd, focused.selectionDirection]; } catch (e) { sel = null; }
+      pendingFocus = { view: target.id, loc: loc, sel: sel };
+    }
+  });
+
+  function restoreFocus(only) {
+    var p = pendingFocus;
+    if (!p || (only && only !== p.view)) return;
+    var root = p.view ? doc.getElementById(p.view) : null;
+    if (!root) return; // not swapped in yet: a later oobAfterSwap or the settle tries again
+    pendingFocus = null;
+    var el = find(root, p.loc);
+    if (!el || doc.activeElement === el) return;
+    el.focus({ preventScroll: true });
+    if (p.sel) {
+      try { el.setSelectionRange(p.sel[0], p.sel[1], p.sel[2] || "none"); } catch (e) { /* input types without a selection */ }
+    }
+  }
+  htmx.on("htmx:oobAfterSwap", function (evt) { var t = evt.detail.target; if (t && t.id) restoreFocus(t.id); });
+
+  // ── 4. Keep <details> open state and scroll positions across swaps (finding 2) ──
+  // details[data-keep] are keyed by data-keep; other <details> by (view id, index among the view's details, summary
+  // text). [data-keep-scroll][id] keep their place (or stay at the bottom); any other element scrolled down keeps its
+  // scrollTop by (view id, index among the view's elements, tag).
   var kept = {};
 
   function markDefaults(root) {
-    each(root, "details[data-keep][open]", function (d) { d.setAttribute("data-default-open", "1"); });
+    each(root, "details[open]", function (d) { d.setAttribute("data-default-open", "1"); });
+  }
+
+  function summaryOf(d) {
+    var s = d.querySelector ? d.querySelector("summary") : null;
+    return s ? String(s.textContent || "").trim() : "";
   }
 
   function remember(target) {
     if (!target || !target.id) return;
-    var s = { open: [], closed: [], scroll: {} };
-    each(target, "details[data-keep]", function (d) {
+    var s = { open: [], closed: [], popen: [], pclosed: [], scroll: {}, pscroll: {} };
+    var i = 0;
+    each(target, "details", function (d) {
       var k = d.getAttribute("data-keep");
-      if (d.open) s.open.push(k);
-      else if (d.hasAttribute("data-default-open")) s.closed.push(k);
+      var key = k != null ? k : i + "|" + summaryOf(d);
+      var open = k != null ? s.open : s.popen, closed = k != null ? s.closed : s.pclosed;
+      i++;
+      if (d.open) open.push(key);
+      else if (d.hasAttribute("data-default-open")) closed.push(key);
     });
     each(target, "[data-keep-scroll][id]", function (el) {
       s.scroll[el.id] = el.scrollHeight - el.scrollTop - el.clientHeight < 60 ? "bottom" : el.scrollTop;
+    });
+    var n = 0;
+    each(target, "*", function (el) {
+      var at = n++;
+      if (el.scrollTop > 0 && !(el.hasAttribute("data-keep-scroll") && el.id)) s.pscroll[at + "|" + el.tagName] = el.scrollTop;
     });
     kept[target.id] = s;
   }
@@ -210,15 +315,26 @@
       delete kept[id];
       if (!el) return;
       markDefaults(el);
-      each(el, "details[data-keep]", function (d) {
+      var i = 0;
+      each(el, "details", function (d) {
         var k = d.getAttribute("data-keep");
-        if (s.open.indexOf(k) !== -1) d.open = true;
-        else if (s.closed.indexOf(k) !== -1) d.open = false;
+        var key = k != null ? k : i + "|" + summaryOf(d);
+        var open = k != null ? s.open : s.popen, closed = k != null ? s.closed : s.pclosed;
+        i++;
+        if (open.indexOf(key) !== -1) d.open = true;
+        else if (closed.indexOf(key) !== -1) d.open = false;
       });
       Object.keys(s.scroll).forEach(function (sid) {
         var sc = doc.getElementById(sid);
         if (sc) sc.scrollTop = s.scroll[sid] === "bottom" ? sc.scrollHeight : s.scroll[sid];
       });
+      if (Object.keys(s.pscroll).length) {
+        var n = 0;
+        each(el, "*", function (x) {
+          var key = n++ + "|" + x.tagName;
+          if (Object.prototype.hasOwnProperty.call(s.pscroll, key)) x.scrollTop = s.pscroll[key];
+        });
+      }
     });
   }
 
@@ -232,7 +348,6 @@
     var t = evt.detail.target;
     if (t && t.id) restore(t.id);
   });
-
   // ── 5. Times: <time data-ts data-fmt> rendered in the operator's locale and kept fresh ──
   function span(ms) {
     var s = Math.round(Math.abs(ms) / 1000);
@@ -315,20 +430,66 @@
     }
   }
 
-  // ── 7. Clear a stale #weave-error once a later request succeeds ──
-  // htmx:oobAfterSwap carries no xhr; its response is the one whose htmx:beforeSwap ran just before.
-  // "Later" is by send order: a request sent before the error's request does not clear it, however late it ends.
-  var sent = 0, sentSeq = new WeakMap(), errorSeq = 0, swapXhr = null;
+  // ── 7. The error region (finding 3): #weave-error clears after the operator's next successful action ──
+  // Only a successful NON-GET request clears it, never a background poll. htmx:oobAfterSwap carries no xhr; its
+  // response is the one whose htmx:beforeSwap ran just before. "Next" is by send order: a request sent before the
+  // error's request does not clear it, however late it ends.
+  var sent = 0, sentSeq = new WeakMap(), errorSeq = 0, errorXhr = null;
   function seqOf(xhr) { var n = xhr && sentSeq.get(xhr); return n === undefined ? sent : n; }
   htmx.on("htmx:beforeRequest", function (evt) { if (evt.detail.xhr) sentSeq.set(evt.detail.xhr, ++sent); });
   htmx.on("htmx:beforeSwap", function (evt) { swapXhr = evt.detail.xhr; });
+  function errorSwapped(xhr) { errorSeq = seqOf(xhr); errorXhr = xhr || null; localShown = false; }
   htmx.on("htmx:oobAfterSwap", function (evt) {
-    if (evt.detail.target && evt.detail.target.id === "weave-error") errorSeq = seqOf(swapXhr);
+    if (evt.detail.target && evt.detail.target.id === "weave-error") errorSwapped(swapXhr);
   });
   htmx.on("htmx:afterSwap", function (evt) {
-    if (evt.detail.target && evt.detail.target.id === "weave-error") errorSeq = seqOf(evt.detail.xhr);
+    if (evt.detail.target && evt.detail.target.id === "weave-error") errorSwapped(evt.detail.xhr);
   });
   // htmx:beforeSwap on an error status: nothing to do — responseHandling already swaps 4xx/5xx.
+
+  // ── 7b. Unreachable weave (finding 4): say so, mark the views stale, and keep retrying ──
+  // A request that never reaches weave (network error, 20 s timeout) or a failure response that is not weave's own
+  // error fragment gets a local problem in #weave-error; the next successful swap clears it and the stale marks.
+  htmx.config.timeout = 20000;
+  var lastOk = null, localShown = false, stale = false;
+
+  function firstLoadFailed(elt) {
+    if (!isView(elt) || !elt.querySelector) return;
+    var note = elt.querySelector("p.note.loading");
+    if (note && String(note.textContent || "").trim() === "Loading…") note.textContent = "Could not load — see above.";
+  }
+
+  function unreachable(evt) {
+    var d = evt.detail;
+    firstLoadFailed(d.elt);
+    if (evt.type === "htmx:responseError" && d.xhr && d.xhr === errorXhr) return; // weave answered with its own problem
+    var err = doc.getElementById("weave-error");
+    if (err) {
+      var strong = doc.createElement("strong");
+      strong.textContent = "Can't reach weave — retrying.";
+      var since = lastOk === null ? "Nothing has loaded yet." : "Not updated since " + new Date(lastOk).toLocaleTimeString() + ".";
+      err.replaceChildren(strong, doc.createTextNode(" " + since));
+      err.setAttribute("role", "alert");
+      err.hidden = false;
+      localShown = true;
+    }
+    each(doc, '[id^="view-"]', function (v) { v.setAttribute("data-stale", "true"); });
+    stale = true;
+  }
+  htmx.on("htmx:sendError", unreachable);
+  htmx.on("htmx:timeout", unreachable);
+  htmx.on("htmx:responseError", unreachable);
+
+  function swappedOk(xhr) {
+    if (!xhr || !(xhr.status >= 200 && xhr.status < 300)) return;
+    lastOk = Date.now();
+    if (stale) { stale = false; each(doc, "[data-stale]", function (v) { v.removeAttribute("data-stale"); }); }
+    if (localShown) {
+      localShown = false;
+      var err = doc.getElementById("weave-error");
+      if (err) { err.replaceChildren(); err.hidden = true; }
+    }
+  }
 
   // ── 9c / 10 state, shared with afterRequest ──
   var picks = new WeakMap();
@@ -341,7 +502,8 @@
     var sentAt = d.xhr && sentEdits.get(d.xhr);
     if (elt && elt.tagName === "FORM" && (sentAt === undefined || sentAt === (edits.get(elt) || 0))) elt.removeAttribute("data-dirty");
     var err = doc.getElementById("weave-error");
-    if (err && !err.hidden && d.xhr && sentSeq.get(d.xhr) > errorSeq) { err.replaceChildren(); err.hidden = true; }
+    var action = !isGet(d.requestConfig && d.requestConfig.verb);
+    if (action && err && !err.hidden && d.xhr && sentSeq.get(d.xhr) > errorSeq) { err.replaceChildren(); err.hidden = true; localShown = false; }
     var pick = elt && picks.get(elt);
     if (pick) history.replaceState(history.state, "", "?" + encodeURIComponent(pick[0]) + "=" + encodeURIComponent(pick[1]));
   });
@@ -435,10 +597,47 @@
     out.setAttribute("data-tone", same ? "ok" : "bad");
   }
 
-  // After any swap settles: restore kept state, refresh counts, finish an audit check.
+  // After any swap settles: restore kept state and focus, refresh counts, finish an audit check, clear staleness.
   htmx.on("htmx:afterSettle", function (evt) {
+    var xhr = evt.detail && evt.detail.xhr;
     restore();
+    restoreFocus();
     updateCounts();
-    auditResult(evt.detail && evt.detail.xhr);
+    auditResult(xhr);
+    swappedOk(xhr);
   });
+
+  // ── 11. Hidden tabs (finding 5): once the tab is shown again, every view catches up at once ──
+  doc.addEventListener("visibilitychange", function () {
+    if (doc.hidden) return;
+    each(doc, '[id^="view-"][hx-get]', function (el) {
+      var url = el.getAttribute("hx-get");
+      if (url) htmx.ajax("GET", url, { source: el, swap: "none" });
+    });
+  });
+
+  // ── 12. Pending (finding 6): a form in flight is aria-busy with its buttons disabled, so Enter cannot send twice ──
+  // Registered last, so a request another handler cancelled is never marked. Only buttons this disabled are re-enabled.
+  var busy = new WeakMap();
+  htmx.on("htmx:beforeRequest", function (evt) {
+    var d = evt.detail;
+    var form = d.elt;
+    if (evt.defaultPrevented || !form || form.tagName !== "FORM" || !d.xhr) return;
+    var buttons = list(form, "button").filter(function (b) { return !b.disabled; });
+    buttons.forEach(function (b) { b.disabled = true; });
+    form.setAttribute("aria-busy", "true");
+    busy.set(d.xhr, { form: form, buttons: buttons });
+  });
+  htmx.on("htmx:afterRequest", function (evt) {
+    var p = evt.detail.xhr && busy.get(evt.detail.xhr);
+    if (!p) return;
+    busy.delete(evt.detail.xhr);
+    p.form.removeAttribute("aria-busy");
+    p.buttons.forEach(function (b) { b.disabled = false; });
+  });
+  // requestSubmit (Enter) ignores disabled buttons: stop a busy form's submit before htmx sees it.
+  doc.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (form && form.getAttribute && form.getAttribute("aria-busy") === "true") { e.preventDefault(); e.stopPropagation(); }
+  }, true);
 })();
