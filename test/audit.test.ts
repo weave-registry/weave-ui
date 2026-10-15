@@ -18,7 +18,8 @@ test("root: #view-audit, out of band, not polled, re-reads its own selector for 
   assert.doesNotMatch(r, /hx-trigger="every/);
   assert.match(one, /<button class="btn" type="button" data-audit-check hx-get="\/ui\/f\/audit\?id=task-[0-9a-f]+" hx-swap="none">Check this record<\/button>/);
   assert.match(win, /hx-get="\/ui\/f\/audit\?since=\d+&amp;until=\d+"/);
-  assert.match(search, /hx-get="\/ui\/f\/audit\?find=release%20notes"/);
+  // A search re-read pins the report's absolute bounds, or the gateway re-resolves "last 7 days" from now and the sha differs.
+  assert.match(search, /hx-get="\/ui\/f\/audit\?find=release%20notes&amp;since=1792015977608&amp;until=1792102377608"/);
 });
 
 test("summary card: the selector's title, status line, cost line, notes, the sha", () => {

@@ -152,7 +152,7 @@ function selTitle(x: Rec): SafeHtml | string {
   return "This record";
 }
 
-/** "Check this record": re-reads this selector (a window pinned to its absolute bounds); a workflow has none. */
+/** "Check this record": re-reads this selector (a window or a search pinned to its absolute bounds); a workflow has none. */
 function checkButton(x: Rec): SafeHtml {
   const kind = str(x["kind"]);
   const label = "Check this record";
@@ -166,7 +166,20 @@ function checkButton(x: Rec): SafeHtml {
     return html`<button class="btn" type="button" data-audit-check hx-get="/ui/f/audit?since=${n0(x["since"])}&amp;until=${n0(x["until"])}" hx-swap="none">${label}</button>`;
   }
   if (kind === "search") {
-    return html`<button class="btn" type="button" data-audit-check hx-get="/ui/f/audit?find=${str(x["query"])}" hx-swap="none">${label}</button>`;
+    // Pin the window too: a bare find re-resolves its bounds from "now", and the sha covers them.
+    const q = str(x["query"]);
+    const hasSince = x["since"] !== undefined;
+    const hasUntil = x["until"] !== undefined;
+    if (hasSince && hasUntil) {
+      return html`<button class="btn" type="button" data-audit-check hx-get="/ui/f/audit?find=${q}&amp;since=${n0(x["since"])}&amp;until=${n0(x["until"])}" hx-swap="none">${label}</button>`;
+    }
+    if (hasSince) {
+      return html`<button class="btn" type="button" data-audit-check hx-get="/ui/f/audit?find=${q}&amp;since=${n0(x["since"])}" hx-swap="none">${label}</button>`;
+    }
+    if (hasUntil) {
+      return html`<button class="btn" type="button" data-audit-check hx-get="/ui/f/audit?find=${q}&amp;until=${n0(x["until"])}" hx-swap="none">${label}</button>`;
+    }
+    return html`<button class="btn" type="button" data-audit-check hx-get="/ui/f/audit?find=${q}" hx-swap="none">${label}</button>`;
   }
   return html``;
 }
