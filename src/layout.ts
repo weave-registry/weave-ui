@@ -44,7 +44,12 @@ export interface LayoutOptions {
   readonly views: readonly LayoutView[];
   readonly htmxFile: string;
   readonly intro?: SafeHtml;
+  /** `<main class="page wide">`; defaults from the page key (weave's wide pages are home, work, control and audit). */
+  readonly wide?: boolean;
 }
+
+/** The pages weave renders full width; the rest use the narrower `.page` column. */
+const WIDE_PAGES: ReadonlySet<string> = new Set(["home", "work", "control", "audit"]);
 
 function navLink(n: NavEntry, page: string): SafeHtml {
   return n.key === page
@@ -65,6 +70,10 @@ export function layout(o: LayoutOptions): string {
     ctx.api !== BUILT_FOR
       ? html`<p class="banner" role="status">This console was built for view contract ${BUILT_FOR}; weave serves ${ctx.api}.</p>`
       : "";
+  const main =
+    o.wide ?? WIDE_PAGES.has(page.toLowerCase())
+      ? html`<main class="page wide" id="main">${o.intro}${o.views.map(viewSlot)}</main>`
+      : html`<main class="page" id="main">${o.intro}${o.views.map(viewSlot)}</main>`;
   const doc = html`<!doctype html>
 <html lang="en">
 <head>
@@ -81,7 +90,7 @@ export function layout(o: LayoutOptions): string {
 <header class="topbar"><div class="topbar-in"><a class="brand" href="/"><img src="/ui/assets/favicon.svg" alt="" width="20" height="20"> weave</a><nav id="nav" class="nav" aria-label="Console">${ctx.nav.map((n) => navLink(n, page))}</nav></div></header>
 ${banner}
 <div id="weave-error" class="problem" role="alert" hidden></div>
-<main class="page" id="main">${o.intro}${o.views.map(viewSlot)}</main>
+${main}
 </body>
 </html>
 `;
