@@ -209,3 +209,40 @@ test("the audit check is finished by the audit request's own settle, not by an u
   fire("htmx:afterSettle", { xhr: { status: 200 } });
   assert.equal(out.textContent, "");
 });
+
+test("a failed submit keeps the form dirty, so the view's next poll does not wipe the unsent draft", () => {
+  const on: Record<string, Handler[]> = {};
+  const docOn: Record<string, Handler[]> = {};
+  const attrs: Record<string, string> = {};
+  const form = {
+    tagName: "FORM",
+    setAttribute: (a: string, v: string) => void (attrs[a] = v),
+    removeAttribute: (a: string) => void delete attrs[a],
+  };
+  const input = { tagName: "TEXTAREA", closest: (sel: string) => (sel === "form" ? form : null) };
+  const button = { tagName: "BUTTON" };
+  const view = { id: "view-work", contains: () => true, querySelector: (sel: string) => (sel === "form[data-dirty]" && "data-dirty" in attrs ? form : null) };
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    activeElement: button, // the operator clicked submit, so focus is on a BUTTON, not in a field
+    addEventListener: (n: string, h: Handler) => void (docOn[n] ??= []).push(h),
+  }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+  const poll = (): boolean => {
+    let held = false;
+    (on["htmx:beforeRequest"] ?? []).forEach((h) => h({ detail: { elt: view, xhr: {}, requestConfig: { verb: "get" } }, preventDefault: () => { held = true; } }));
+    return held;
+  };
+
+  (docOn["input"] ?? []).forEach((h) => h({ target: input })); // the operator types a draft, then submits
+  const post = {};
+  fire("htmx:beforeRequest", { elt: form, xhr: post, requestConfig: { verb: "post" } });
+  fire("htmx:afterRequest", { elt: form, xhr: post, successful: false });
+  assert.equal(poll(), true, "a failed submit leaves the draft unsent, so the poll is held");
+
+  const retry = {};
+  fire("htmx:beforeRequest", { elt: form, xhr: retry, requestConfig: { verb: "post" } });
+  fire("htmx:afterRequest", { elt: form, xhr: retry, successful: true });
+  assert.equal(poll(), false, "once the submit succeeds the form is clean and the poll goes ahead");
+});

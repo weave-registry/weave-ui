@@ -259,8 +259,8 @@
   htmx.on("htmx:afterRequest", function (evt) {
     var d = evt.detail;
     var elt = d.elt;
-    if (elt && elt.tagName === "FORM") elt.removeAttribute("data-dirty");
     if (!d.successful) return;
+    if (elt && elt.tagName === "FORM") elt.removeAttribute("data-dirty");
     var err = doc.getElementById("weave-error");
     if (err && !err.hidden && d.xhr && sentSeq.get(d.xhr) > errorSeq) { err.replaceChildren(); err.hidden = true; }
     var pick = elt && picks.get(elt);
