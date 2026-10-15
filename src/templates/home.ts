@@ -429,8 +429,8 @@ function attentionCard(n: Rec, now: number | undefined): SafeHtml {
 
 function decidedSection(decided: unknown, now: number | undefined): SafeHtml {
   const rows = arr(decided).map(rec);
-  const head = html`<h2 class="section" id="decided-h">Decided for you<span class="count"> (${rows.length})</span><span class="sub"> · last 24 h</span></h2>`;
-  if (rows.length === 0) return html`${head}<p class="note" id="decided">Nothing was decided for you in the last 24 hours.</p>`;
+  const head = html`<h2 class="section" id="decided-h">Decided for you${rows.length > 0 ? html`<span class="count"> (${rows.length})</span>` : ""}<span class="sub"> · last 24 h</span></h2>`;
+  if (rows.length === 0) return html`${head}<div class="card" id="decided"><p class="note">Nothing was decided for you in the last 24 hours.</p></div>`;
   const items = rows.map((d) => {
     const why = str(d["why"]);
     return html`<div class="row"><span class="badge" data-tone="auto">${str(d["by"])}</span><div class="grow">${str(d["what"])}${why !== "" ? html`<div class="sub">${why}</div>` : ""}</div><span class="meta">${time(d["ts"], opt(now))} · <a href="${str(d["href"])}">Audit</a></span></div>`;
@@ -445,7 +445,7 @@ function workingSection(working: unknown, queued: unknown, now: number | undefin
   const q = n0(queued);
   const head = html`<h2 class="section" id="working-h">Working now</h2>`;
   const waiting = q > 0 ? html`<p class="muted small">${plural(q, "task")} waiting for a worker.</p>` : "";
-  if (rows.length === 0 && q === 0) return html`${head}<p class="note" id="working">Nothing is running.</p>`;
+  if (rows.length === 0 && q === 0) return html`${head}<div class="card" id="working"><p class="note">Nothing is running.</p></div>`;
   const items = rows.map((w) => {
     const id = str(w["taskId"]);
     const title = str(w["title"]);
@@ -466,7 +466,7 @@ const MARKS: Readonly<Record<string, string>> = { done: "✓", failed: "✗", ca
 function doneSection(done: unknown, now: number | undefined): SafeHtml {
   const rows = arr(done).map(rec);
   const head = html`<h2 class="section" id="done-h">Done recently <a class="more" href="/task">All tasks</a></h2>`;
-  if (rows.length === 0) return html`${head}<p class="note" id="done">Nothing has finished yet.</p>`;
+  if (rows.length === 0) return html`${head}<div class="card" id="done"><p class="note">Nothing has finished yet.</p></div>`;
   const items = rows.map((d) => {
     const state = d["state"] === "failed" ? "failed" : d["state"] === "cancelled" ? "cancelled" : "done";
     const summary = str(d["summary"]);
