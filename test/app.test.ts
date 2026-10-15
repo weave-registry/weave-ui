@@ -271,3 +271,32 @@ test("a running duration (data-fmt=dur, no data-to) counts up to now, not from 1
   assert.equal(emptyTo.textContent, "5m", "an empty data-to is the same as none");
   assert.equal(finished.textContent, "2h", "a data-to still ends the duration");
 });
+
+test("a time with an empty data-ts is skipped, not shown as 1 Jan 1970", () => {
+  const docOn: Record<string, Handler[]> = {};
+  const fakeTime = (attrs: Record<string, string>) => {
+    const set: Record<string, string> = {};
+    return {
+      textContent: "",
+      set,
+      getAttribute: (a: string) => attrs[a] ?? null,
+      setAttribute: (a: string, v: string) => void (set[a] = v),
+      removeAttribute: noopFn,
+    };
+  };
+  const empty = fakeTime({ "data-ts": "" });
+  const blank = fakeTime({ "data-ts": " " });
+  const until = fakeTime({ "data-ts": "", "data-fmt": "until" });
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    addEventListener: (n: string, h: Handler) => void (docOn[n] ??= []).push(h),
+    querySelectorAll: (sel: string) => (sel === "time[data-ts]" ? [empty, blank, until] : []),
+  });
+  (docOn["DOMContentLoaded"] ?? []).forEach((h) => h({}));
+
+  for (const t of [empty, blank, until]) {
+    assert.equal(t.textContent, "", "an empty data-ts renders nothing");
+    assert.deepEqual(t.set, {}, "no title or tone is set");
+  }
+});

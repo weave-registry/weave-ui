@@ -180,7 +180,8 @@
   function renderTimes(root) {
     var now = Date.now();
     each(root, "time[data-ts]", function (t) {
-      var ts = Number(t.getAttribute("data-ts"));
+      var tsAttr = t.getAttribute("data-ts");
+      var ts = tsAttr && tsAttr.trim() ? Number(tsAttr) : NaN; // an empty data-ts is unusable, not 0 (1970)
       if (!Number.isFinite(ts)) return;
       var date = new Date(ts);
       var fmt = t.getAttribute("data-fmt") || "ago";
