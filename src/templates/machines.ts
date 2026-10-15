@@ -25,7 +25,7 @@ export function machines(vm: MachinesView, ctx: RenderCtx): string {
       : html`<p class="note">No machine has checked in yet. Start weave on one with: weave serve</p>`;
 
   return toHtml(
-    html`<section id="view-machines" class="view machines" hx-get="/ui/f/machines" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true" data-nav-count="machines:${quiet}">${pageHead(ms.length, quiet)}<div id="machines">${body}</div></section>`,
+    html`<section id="view-machines" class="view machines-view" hx-get="/ui/f/machines" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true" data-nav-count="machines:${quiet}">${pageHead(ms.length, quiet)}<div id="machines">${body}</div></section>`,
   );
 }
 
