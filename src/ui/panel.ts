@@ -60,7 +60,7 @@ function metricsEl(items: unknown): SafeHtml {
       const value = str(m["value"]);
       const label = str(or(m["label"], m["title"]));
       const inner = html`<div class="metric-value num">${value}</div><div class="metric-label">${label}</div>`;
-      return t ? html`<div class="metric" data-tone="${t}">${inner}</div>` : html`<div class="metric">${inner}</div>`;
+      return html`<div class="metric" data-tone="${t}">${inner}</div>`;
     });
   return html`<div class="metrics">${cells}</div>`;
 }
@@ -85,10 +85,7 @@ function chartEl(series: unknown): SafeHtml {
     const v = Number(x["value"]);
     const pct = max > 0 && Number.isFinite(v) ? Math.max(0, Math.round((100 * v) / max)) : 0;
     const t = tone(x["status"]);
-    const meter = t
-      ? html`<meter min="0" max="100" value="${pct}" data-tone="${t}"></meter>`
-      : html`<meter min="0" max="100" value="${pct}"></meter>`;
-    return html`<div class="bar-row"><span class="bar-label">${str(x["label"])}</span>${meter}<span class="num">${str(x["value"])}</span></div>`;
+    return html`<div class="bar-row" data-tone="${t}"><span class="bar-label">${str(x["label"])}</span><meter min="0" max="100" value="${pct}"></meter><span class="num">${str(x["value"])}</span></div>`;
   });
   return html`<div class="bars">${rows}</div>`;
 }
@@ -138,9 +135,7 @@ function uiEl(node: unknown, depth: number, budget: Budget): SafeHtml | string |
     case "Pill": {
       const t = tone(or(p["tone"], p["status"]));
       const label = str(or(p["text"], p["label"]));
-      return t
-        ? html`<span class="badge" data-tone="${t}">${label}${kids}</span>`
-        : html`<span class="badge">${label}${kids}</span>`;
+      return html`<span class="badge" data-tone="${t}">${label}${kids}</span>`;
     }
     case "Button":
       return html`<span class="badge" title="${BUTTON_TITLE}">${str(or(p["label"], p["text"], "Action"))}</span>`;
