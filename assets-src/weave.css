@@ -518,3 +518,35 @@ dl.kv dt { color: var(--muted); } dl.kv dd { margin: 0; overflow-wrap: anywhere;
   .seq { font: 12px var(--mono); color: var(--muted); white-space: nowrap; }
   .kind { font-weight: 600; }
   pre.goal { max-height: 320px; overflow: auto; }
+
+/* ═══ weave-ui adaptations (ADR-0234 Phase 2): where the templates differ from the pages they replace ═══ */
+/* <meter class="meter"> replaces weave's span-in-span meter: an inline width style is blocked by the CSP. */
+meter.meter { -webkit-appearance: none; -moz-appearance: none; appearance: none; display: inline-block; vertical-align: middle; width: 80px; height: 8px; margin: 0 4px; border: 0; border-radius: 4px; background: var(--sunken); overflow: hidden; }
+meter.meter::-webkit-meter-bar { background: var(--sunken); border: 0; border-radius: 4px; }
+meter.meter::-webkit-meter-optimum-value, meter.meter::-webkit-meter-suboptimum-value, meter.meter::-webkit-meter-even-less-good-value { background: var(--ok); }
+meter.meter::-moz-meter-bar { background: var(--ok); }
+meter.meter[data-tone="hot"]::-webkit-meter-optimum-value, meter.meter[data-tone="hot"]::-webkit-meter-suboptimum-value, meter.meter[data-tone="hot"]::-webkit-meter-even-less-good-value { background: var(--needs); }
+meter.meter[data-tone="hot"]::-moz-meter-bar { background: var(--needs); }
+meter.meter[data-tone="over"]::-webkit-meter-optimum-value, meter.meter[data-tone="over"]::-webkit-meter-suboptimum-value, meter.meter[data-tone="over"]::-webkit-meter-even-less-good-value { background: var(--bad); }
+meter.meter[data-tone="over"]::-moz-meter-bar { background: var(--bad); }
+.bars meter { -webkit-appearance: none; -moz-appearance: none; appearance: none; display: block; width: 100%; height: 10px; border: 0; border-radius: 4px; background: var(--sunken); overflow: hidden; }
+.bars meter::-webkit-meter-bar { background: var(--sunken); border: 0; border-radius: 4px; }
+.bars meter::-webkit-meter-optimum-value, .bars meter::-webkit-meter-suboptimum-value, .bars meter::-webkit-meter-even-less-good-value { background: var(--ok); }
+.bars meter::-moz-meter-bar { background: var(--ok); }
+.bars meter[data-tone="needs"]::-webkit-meter-optimum-value, .bars meter[data-tone="needs"]::-webkit-meter-suboptimum-value, .bars meter[data-tone="needs"]::-webkit-meter-even-less-good-value { background: var(--needs); }
+.bars meter[data-tone="needs"]::-moz-meter-bar { background: var(--needs); }
+.bars meter[data-tone="bad"]::-webkit-meter-optimum-value, .bars meter[data-tone="bad"]::-webkit-meter-suboptimum-value, .bars meter[data-tone="bad"]::-webkit-meter-even-less-good-value { background: var(--bad); }
+.bars meter[data-tone="bad"]::-moz-meter-bar { background: var(--bad); }
+
+/* The Ask weave aside has no open/close script: under 1000px it sits in the flow below the main column. */
+@media (max-width: 1000px) { .home .chat { display: flex; position: static; height: auto; max-height: 80vh; } }
+
+/* Forms that wrap one action button lay out inline, as weave's buttons did. */
+form.act { display: inline-flex; gap: var(--s2); align-items: center; margin: 0; }
+form.act + form.act, form.act + .btn, .btn + form.act { margin-left: var(--s2); }
+form.htmx-request { opacity: .6; pointer-events: none; }
+
+#weave-error[hidden] { display: none; }
+#weave-error { margin: var(--s3) auto; max-width: var(--w-page); }
+
+.banner { background: var(--needs-bg); color: var(--needs); padding: var(--s2) var(--s4); text-align: center; margin: 0; }
