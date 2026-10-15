@@ -9,7 +9,10 @@ import { join } from "node:path";
 import vm from "node:vm";
 import { ROOT } from "./helpers.js";
 
-interface Ext { encodeParameters?: (xhr: unknown, params: FormData, elt: unknown) => unknown }
+interface Ext {
+  encodeParameters?: (xhr: unknown, params: FormData, elt: unknown) => unknown;
+  onEvent?: (name: string, evt: unknown) => unknown;
+}
 
 function ext(): Ext {
   const exts: Record<string, Ext> = {};
@@ -55,4 +58,28 @@ test("a new file's path must be a plain relative name (letters, digits, dot, das
 
 test("@remove-file drops that file from define[files]", () => {
   assert.deepEqual(encode([["define[files][a.md]", "a"], ["define[files][b.md]", "b"], ["@remove-file", "b.md"]]), { define: { files: { "a.md": "a" } } });
+});
+
+test("a new file's text with an empty or rejected path blocks the save and tells the operator, instead of being dropped", () => {
+  const send = (path: string, body: string): { sent: boolean; warned: string } => {
+    let warned = "";
+    let sent = true;
+    const input = { setCustomValidity: (m: string) => void (warned = m), reportValidity: () => true };
+    const form = { querySelector: (sel: string) => (sel === '[name="@new-file:path"]' ? input : null) };
+    const params = new FormData();
+    params.append("define[name]", "copy");
+    params.append("@new-file:path", path);
+    params.append("@new-file:body", body);
+    const evt = { detail: { verb: "post", elt: form, parameters: params, headers: {} as Record<string, string> }, preventDefault: () => void (sent = false) };
+    if (ext().onEvent!("htmx:configRequest", evt) === false) sent = false;
+    return { sent, warned };
+  };
+  for (const bad of ["", "my notes.md", "notes/style.md", "skills/MySkill/SKILL.md", "__proto__"]) {
+    const r = send(bad, "# my text");
+    assert.equal(r.sent, false, `sent with path ${JSON.stringify(bad)}`);
+    assert.notEqual(r.warned, "", `no warning for path ${JSON.stringify(bad)}`);
+  }
+  assert.deepEqual(send("", ""), { sent: true, warned: "" });
+  assert.deepEqual(send("style-guide.md", "# Style"), { sent: true, warned: "" });
+  assert.deepEqual(send("skills/tone/SKILL.md", "t"), { sent: true, warned: "" });
 });

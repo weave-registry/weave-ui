@@ -39,6 +39,21 @@
     return cur;
   }
 
+  function fileOk(path) { return FILE_RE.test(path) && FORBIDDEN.indexOf(path) === -1; }
+
+  // Why the role editor's add-a-file fields can't be sent as they are ("" when they can): encode drops a file whose
+  // path is empty or not allowed, so typed text would be thrown away with no word to the operator.
+  function newFileProblem(path, body) {
+    if (!path && !body) return "";
+    if (!path) return "Give the new file a path, or clear its text.";
+    if (fileOk(path)) return "";
+    return "A file path is one name of letters, digits, '.', '-' or '_' (no spaces or folders), or skills/<name>/SKILL.md with a lowercase <name>.";
+  }
+  function param(params, k) {
+    var v = params && (typeof params.get === "function" ? params.get(k) : params[k]);
+    return typeof v === "string" ? v : "";
+  }
+
   function encode(entries) {
     var root = {};
     var body;
@@ -80,7 +95,7 @@
         delete cur[last];
       }
     });
-    if (newPath && FILE_RE.test(newPath) && FORBIDDEN.indexOf(newPath) === -1) filesOf(root)[newPath] = newBody;
+    if (newPath && fileOk(newPath)) filesOf(root)[newPath] = newBody;
     if (removes.length) {
       var files = filesOf(root);
       removes.forEach(function (f) { if (Object.prototype.hasOwnProperty.call(files, f)) delete files[f]; });
@@ -94,6 +109,13 @@
       var d = evt.detail;
       if (isGet(d.verb)) { if (d.elt) getElts.add(d.elt); return; }
       if (d.elt) getElts.delete(d.elt);
+      var bad = newFileProblem(param(d.parameters, "@new-file:path"), param(d.parameters, "@new-file:body"));
+      if (bad) {
+        evt.preventDefault();
+        var input = d.elt && d.elt.querySelector ? d.elt.querySelector('[name="@new-file:path"]') : null;
+        if (input && input.setCustomValidity) { input.setCustomValidity(bad); input.reportValidity(); } else window.alert(bad);
+        return false;
+      }
       d.headers["Content-Type"] = "application/json";
     },
     encodeParameters: function (xhr, parameters, elt) {
@@ -120,6 +142,7 @@
   doc.addEventListener("input", function (e) {
     var form = e.target && e.target.closest ? e.target.closest("form") : null;
     if (!form) return;
+    if (/^@new-file:/.test(e.target.name || "")) each(form, '[name="@new-file:path"]', function (i) { if (i.setCustomValidity) i.setCustomValidity(""); });
     form.setAttribute("data-dirty", "1");
     edits.set(form, (edits.get(form) || 0) + 1);
   });
