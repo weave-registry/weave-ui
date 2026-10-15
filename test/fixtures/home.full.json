@@ -1,0 +1,572 @@
+{
+  "now": 1792102377559,
+  "brief": "Good evening. Nothing needs you — the fleet is quiet.",
+  "needs": [
+    {
+      "key": "grant:g-1",
+      "kind": "grant",
+      "severity": "needs-you",
+      "title": "A task wants to run a command",
+      "askedTs": 1792102257559,
+      "expiresTs": 1792102437559,
+      "grantId": "g-1",
+      "tool": "bash",
+      "task": "Fix the flaky test",
+      "call": [
+        "$ bun run test",
+        "in /work/repo"
+      ],
+      "whoDecides": "Only you: a command outside the allow-list"
+    },
+    {
+      "key": "grant:g-2",
+      "kind": "grant",
+      "severity": "needs-you",
+      "title": "hexa",
+      "askedTs": 1792102372559,
+      "grantId": "g-2",
+      "tool": "hexa_build",
+      "task": "Build the UI"
+    },
+    {
+      "key": "stage:12",
+      "kind": "stage",
+      "severity": "needs-you",
+      "title": "Add a dark mode",
+      "issue": 12,
+      "stage": "build",
+      "note": "plan written, test committed",
+      "askedTs": 1792098777559
+    },
+    {
+      "key": "plan:p-1",
+      "kind": "plan",
+      "severity": "needs-you",
+      "title": "Plan",
+      "askedTs": 1792102317559,
+      "task": "Ship the release notes",
+      "plan": {
+        "id": "p-1",
+        "request": "task-71de9ec3",
+        "summary": "Two steps and a new role",
+        "steps": [
+          {
+            "kind": "factory",
+            "title": "Write release notes",
+            "body": "From the merged PRs",
+            "costUsd": 0.42
+          },
+          {
+            "kind": "role",
+            "role": "copywriter",
+            "goal": "Polish the notes"
+          }
+        ],
+        "roles": [
+          {
+            "name": "copywriter",
+            "purpose": "Writes the words on a page",
+            "why": "No role writes copy",
+            "tools": [
+              "write_file",
+              "edit_file"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "halt",
+      "kind": "halt",
+      "severity": "needs-you",
+      "title": "The fleet is halted",
+      "detail": "halted from the console",
+      "askedTs": 1792102347559
+    },
+    {
+      "key": "attention:release",
+      "kind": "attention",
+      "severity": "needs-you",
+      "title": "Release 0.2.181 is ready to merge",
+      "detail": "PR #567 is green",
+      "action": "weave release merge 0.2.181",
+      "whoDecides": "Yolo will decide this in 2h",
+      "actions": [
+        {
+          "label": "Approve",
+          "body": {
+            "releaseMergeDecide": {
+              "version": "0.2.181",
+              "sha": "abc123",
+              "approve": true
+            }
+          },
+          "tone": "primary"
+        },
+        {
+          "label": "Decline",
+          "body": {
+            "releaseMergeDecide": {
+              "version": "0.2.181",
+              "sha": "abc123",
+              "approve": false
+            }
+          },
+          "tone": "danger",
+          "confirm": "Decline the merge?"
+        },
+        {
+          "label": "Open PR",
+          "href": "https://git.local/gary/weave/pulls/567"
+        },
+        {
+          "label": "Audit",
+          "href": "/audit?thread=release"
+        }
+      ]
+    },
+    {
+      "key": "attention:watch",
+      "kind": "attention",
+      "severity": "watch",
+      "title": "A host is quiet",
+      "detail": "max not heard for 2h",
+      "action": "weave peers"
+    },
+    {
+      "key": "attention:close",
+      "kind": "attention",
+      "severity": "needs-you",
+      "title": "Close #9?",
+      "actions": [
+        {
+          "label": "Close",
+          "body": {
+            "factoryClose": {
+              "issue": 9
+            }
+          },
+          "tone": "quiet"
+        },
+        {
+          "label": "Odd",
+          "body": {
+            "notAVerb": {
+              "x": 1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "working": [
+    {
+      "taskId": "task-aa",
+      "title": "Fix the flaky test",
+      "agent": "max-peer",
+      "sinceTs": 1792101957559
+    }
+  ],
+  "queued": 2,
+  "criticalQueued": 0,
+  "done": [
+    {
+      "taskId": "task-dbbe8dc8",
+      "title": "draft release notes",
+      "state": "done",
+      "summary": "echo: draft release notes",
+      "ts": 1792102359403
+    },
+    {
+      "taskId": "task-1a87c38d",
+      "title": "list three risks of the release",
+      "state": "done",
+      "summary": "echo: list three risks of the release",
+      "ts": 1792102359253
+    },
+    {
+      "taskId": "task-71de9ec3",
+      "title": "summarize the readme",
+      "state": "done",
+      "summary": "echo: summarize the readme",
+      "ts": 1792102359100
+    },
+    {
+      "taskId": "task-bb",
+      "title": "Deploy",
+      "state": "failed",
+      "summary": "exit 1",
+      "ts": 1792101477559
+    },
+    {
+      "taskId": "task-cc",
+      "title": "Old job",
+      "state": "cancelled",
+      "ts": 1792003377559
+    }
+  ],
+  "chat": [
+    {
+      "taskId": "chat-6d325491",
+      "asked": "summarize what weave is",
+      "ts": 1792102349786,
+      "state": "done",
+      "answer": "echo: [Network context: you are the conversational agent of this weave swarm\nFleet ground truth, computed from the replicated log at ask time — trust this over your own guesses; when asked what happened, answer FROM these facts:\nGood evening. Nothing needs you — the fleet is quiet.\nlast hour: 0 declared · 0 completed · 0 failed\nIf the operator states a durable fact or preference about themselves or their setup, keep it with the `remember` tool; if they say a kept fact is wrong, retract it with `forget <handle>`; if they ask about something you would expect to have been told, search with `recall_memory { query }` before saying you do not know.] summarize what weave is"
+    },
+    {
+      "taskId": "chat-2",
+      "asked": "make a dashboard",
+      "ts": 1792102347559,
+      "state": "done",
+      "answer": "## Done\n\n- **one** item\n- `code` and [a link](https://example.com)\n\n```\nx = 1\n```",
+      "files": [
+        "/work/reports/dash.md"
+      ],
+      "panels": [
+        {
+          "type": "show_metrics",
+          "title": "Fleet",
+          "items": [
+            {
+              "label": "Agents",
+              "value": 3,
+              "status": "ok"
+            },
+            {
+              "label": "Failed",
+              "value": 1,
+              "status": "bad"
+            }
+          ]
+        },
+        {
+          "type": "show_table",
+          "title": "Tasks",
+          "columns": [
+            "id",
+            "state"
+          ],
+          "rows": [
+            [
+              "a",
+              "done"
+            ],
+            [
+              "b",
+              "failed"
+            ]
+          ]
+        },
+        {
+          "type": "show_chart",
+          "series": [
+            {
+              "label": "mon",
+              "value": 2
+            },
+            {
+              "label": "tue",
+              "value": 5
+            }
+          ]
+        },
+        {
+          "type": "show_answer",
+          "text": "plain"
+        },
+        {
+          "type": "show_ui",
+          "ui": {
+            "component": "Card",
+            "props": {
+              "title": "UI"
+            },
+            "children": [
+              {
+                "component": "Text",
+                "props": {
+                  "text": "hello"
+                }
+              },
+              {
+                "component": "Pill",
+                "props": {
+                  "text": "ok",
+                  "tone": "good"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "chat-3",
+      "asked": "what now?",
+      "ts": 1792102372559,
+      "state": "working",
+      "sinceTs": 1792102373559,
+      "progress": [
+        "reading the log",
+        "thinking"
+      ]
+    },
+    {
+      "taskId": "chat-4",
+      "asked": "queued one",
+      "ts": 1792102376559,
+      "state": "waiting"
+    },
+    {
+      "taskId": "chat-5",
+      "asked": "broken",
+      "ts": 1792102377059,
+      "state": "failed"
+    }
+  ],
+  "steward": {
+    "on": false,
+    "why": "yolo is off",
+    "everyH": 24,
+    "cap": 3,
+    "issuesToday": 0
+  },
+  "reconciler": {
+    "on": false,
+    "why": "yolo is off",
+    "everyMin": 15,
+    "fixedToday": 0
+  },
+  "decided": [
+    {
+      "key": "decision:1",
+      "what": "Merged release 0.2.179",
+      "by": "yolo",
+      "ts": 1792095177559,
+      "why": "within the cap",
+      "href": "/audit?id=release-0.2.179"
+    },
+    {
+      "key": "decision:2",
+      "what": "Approved a fleet install",
+      "by": "chief of staff",
+      "ts": 1792102317559,
+      "href": "/audit?id=fleet-1"
+    }
+  ],
+  "status": {
+    "now": 1792102377559,
+    "verdict": "degraded",
+    "word": "DEGRADED",
+    "sentence": "Working, but a host is down.",
+    "reasons": [
+      {
+        "key": "halt",
+        "text": "The fleet is halted.",
+        "fix": {
+          "kind": "command",
+          "label": "Resume",
+          "body": {
+            "fleet": "resume"
+          },
+          "confirm": "Resume the fleet?"
+        }
+      },
+      {
+        "key": "yolo-off",
+        "text": "Yolo is off.",
+        "fix": {
+          "kind": "yolo",
+          "label": "Turn yolo on",
+          "confirm": "Turn yolo on?"
+        }
+      },
+      {
+        "key": "needs-you",
+        "text": "3 things need you.",
+        "fix": {
+          "kind": "link",
+          "label": "See them",
+          "href": "#needs-h"
+        }
+      }
+    ],
+    "facts": {
+      "hosts": {
+        "up": 1,
+        "total": 2,
+        "versions": [
+          "0.2.180"
+        ],
+        "down": [
+          "max"
+        ],
+        "retired": [
+          "old-1"
+        ]
+      },
+      "agents": {
+        "live": 1,
+        "total": 1
+      },
+      "running": 0,
+      "queued": 0,
+      "done24h": 3,
+      "failed24h": 0,
+      "spend": {
+        "usd": 23.4,
+        "budgetUsd": 25,
+        "fraction": 0.936,
+        "windowMs": 86400000,
+        "freesAt": 1792105977559
+      },
+      "yolo": {
+        "on": true,
+        "until": 1792109577559
+      },
+      "chief": {
+        "on": true,
+        "actsLastHour": 4
+      },
+      "needsYou": 0,
+      "decisions": {
+        "open": 27,
+        "proposed": 16,
+        "acceptedOpen": 11
+      },
+      "reconcile": {
+        "on": true,
+        "lastTs": 1792101777559,
+        "findings": 2,
+        "fixed": 1,
+        "left": 1
+      },
+      "autonomy": {
+        "level": "full",
+        "on": true,
+        "merges": 1,
+        "cap": 3,
+        "windowMs": 28800000
+      },
+      "machines": [
+        {
+          "node": "local",
+          "cpus": 32,
+          "load1": 2.09,
+          "load5": 1.5,
+          "memAvailablePct": 57,
+          "gpu": {
+            "utilPct": 40,
+            "memUsedPct": 20
+          }
+        }
+      ],
+      "churn": {
+        "stages": 4,
+        "attempts": 6,
+        "retries": 2,
+        "perStage": 0.5,
+        "diverged": 1
+      },
+      "controlPlane": {
+        "peers": 2,
+        "inSync": 1,
+        "behind": [
+          {
+            "agent": "max-peer",
+            "difference": "budget"
+          }
+        ]
+      },
+      "controlRaft": {
+        "mode": "shadow",
+        "agree": 1,
+        "hosts": 2,
+        "divergent": [
+          {
+            "node": "max",
+            "forSec": 30
+          }
+        ],
+        "frozen": [
+          {
+            "node": "max",
+            "since": 1792102317559
+          }
+        ]
+      },
+      "breakers": {
+        "open": 1,
+        "agree": false,
+        "disagree": [
+          "max"
+        ]
+      },
+      "control": "/control",
+      "backlog": 3,
+      "modelSources": [
+        {
+          "setting": "model.default",
+          "values": [
+            {
+              "gateway": "a",
+              "value": "opus",
+              "source": "log"
+            },
+            {
+              "gateway": "b",
+              "value": "sonnet",
+              "source": "env"
+            }
+          ]
+        }
+      ],
+      "usageLimit": {
+        "until": 1792105977559,
+        "lanes": [
+          "openrouter"
+        ],
+        "key": "claude"
+      }
+    }
+  },
+  "work": {
+    "now": 1792102377559,
+    "summary": {
+      "machines": 1,
+      "slots": 2,
+      "inUse": 0,
+      "issues": 0,
+      "queued": 0,
+      "merged": 0,
+      "help": 0,
+      "sentence": "0 of 2 slots in use on 1 machine · no issues in progress, nothing queued, 0 merged today · nothing needs you"
+    },
+    "machines": [
+      {
+        "node": "This machine",
+        "quiet": false,
+        "lastHeardTs": 1792102374504,
+        "slots": 2,
+        "inUse": 0,
+        "agents": [
+          {
+            "agent": "bazzite-712bbd26-main-peer",
+            "name": "bazzite-712bbd26-main-peer",
+            "state": "idle",
+            "slots": 2,
+            "inUse": 0,
+            "doing": [],
+            "idleWhy": "nothing queued",
+            "lastSeenTs": 1792102374504
+          }
+        ],
+        "idleWhy": "nothing queued"
+      }
+    ],
+    "issues": [],
+    "other": [],
+    "otherMore": 0,
+    "help": []
+  }
+}
