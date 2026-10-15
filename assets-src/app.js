@@ -127,8 +127,10 @@
     kept[target.id] = s;
   }
 
-  function restore() {
-    Object.keys(kept).forEach(function (id) {
+  // restore(id) applies only that target's kept state; restore() applies every pending entry.
+  function restore(only) {
+    (only ? [only] : Object.keys(kept)).forEach(function (id) {
+      if (!Object.prototype.hasOwnProperty.call(kept, id)) return;
       var el = doc.getElementById(id);
       var s = kept[id];
       delete kept[id];
@@ -148,7 +150,12 @@
 
   htmx.on("htmx:oobBeforeSwap", function (evt) { remember(evt.detail.target); });
   htmx.on("htmx:beforeSwap", function (evt) { remember(evt.detail.target); });
-  htmx.on("htmx:oobAfterSwap", restore);
+  // htmx 2 runs the OOB swaps before the main swap: an OOB swap restores only its own target, so the main
+  // target's entry survives until afterSettle, when its new content is in the DOM.
+  htmx.on("htmx:oobAfterSwap", function (evt) {
+    var t = evt.detail.target;
+    if (t && t.id) restore(t.id);
+  });
 
   // ── 5. Times: <time data-ts data-fmt> rendered in the operator's locale and kept fresh ──
   function span(ms) {

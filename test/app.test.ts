@@ -16,13 +16,15 @@ interface Ext {
   encodeParameters?: (xhr: unknown, params: FormData, elt: unknown) => unknown;
 }
 
-function loadApp(): Record<string, Ext> {
+type Handler = (evt: unknown) => void;
+
+function loadApp(dom: Record<string, unknown> = {}, on: Record<string, Handler[]> = {}): Record<string, Ext> {
   const exts: Record<string, Ext> = {};
   const noop = (): void => {};
   const el = { getAttribute: () => null, setAttribute: noop, dataset: {}, querySelectorAll: () => [], addEventListener: noop, closest: () => null };
   const sandbox = {
-    htmx: { defineExtension: (n: string, e: Ext) => void (exts[n] = e), on: noop, process: noop, config: {} },
-    document: { addEventListener: noop, querySelectorAll: () => [], querySelector: () => null, body: el, documentElement: el, activeElement: null, readyState: "loading" },
+    htmx: { defineExtension: (n: string, e: Ext) => void (exts[n] = e), on: (n: string, h: Handler) => void (on[n] ??= []).push(h), process: noop, config: {} },
+    document: { addEventListener: noop, querySelectorAll: () => [], querySelector: () => null, body: el, documentElement: el, activeElement: null, readyState: "loading", ...dom },
     window: { addEventListener: noop, location: { search: "", pathname: "/ui/assets/pages/home.html", hash: "" }, confirm: () => true },
     location: { search: "", pathname: "/ui/assets/pages/home.html", hash: "" },
     setInterval: noop, clearInterval: noop, setTimeout: noop, Intl, Date,
@@ -88,4 +90,47 @@ test("@ is the whole body: a scalar for cancel and fleet", () => {
 test("no prototype pollution through field names", () => {
   encode([["__proto__[polluted]", "yes"], ["constructor[prototype][polluted]", "yes"]]);
   assert.equal(({} as Record<string, unknown>).polluted, undefined);
+});
+
+// A details[data-keep] / [data-keep-scroll] view, as a fake element: enough DOM for remember/restore.
+function fakeView(id: string, open: boolean, scrollTop: number) {
+  const details = { open, getAttribute: (a: string) => (a === "data-keep" ? "more" : null), hasAttribute: () => false, setAttribute: noopFn };
+  const log = { id: `${id}-log`, scrollTop, scrollHeight: 1000, clientHeight: 100 };
+  const view = {
+    id, details, log,
+    querySelectorAll: (sel: string) => (sel.startsWith("details") ? (sel.includes("[open]") ? (details.open ? [details] : []) : [details]) : sel.startsWith("[data-keep-scroll]") ? [log] : []),
+  };
+  return view;
+}
+function noopFn(): void {}
+
+test("kept <details>/scroll state of the main target survives an OOB swap that runs before the main swap", () => {
+  const els: Record<string, unknown> = {};
+  const on: Record<string, Handler[]> = {};
+  const dom = {
+    getElementById: (id: string) => els[id] ?? null,
+    querySelector: () => null,
+    title: "weave",
+  };
+  loadApp(dom, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+
+  // Old main view: the operator opened the details and scrolled the log up from the bottom.
+  const oldMain = fakeView("view-runs", true, 300);
+  els["view-runs"] = oldMain;
+  els["view-runs-log"] = oldMain.log;
+  const oobTarget = { id: "weave-error", querySelectorAll: () => [] };
+  els["weave-error"] = oobTarget;
+
+  // htmx 2.0.11 order: beforeSwap (main) → OOB swaps → main swap → afterSettle.
+  fire("htmx:beforeSwap", { target: oldMain });
+  fire("htmx:oobBeforeSwap", { target: oobTarget });
+  fire("htmx:oobAfterSwap", { target: oobTarget });
+  const newMain = fakeView("view-runs", false, 0);
+  els["view-runs"] = newMain;
+  els["view-runs-log"] = newMain.log;
+  fire("htmx:afterSettle", {});
+
+  assert.equal(newMain.details.open, true, "the fresh <details data-keep> keeps the operator's open state");
+  assert.equal(newMain.log.scrollTop, 300, "the fresh [data-keep-scroll] keeps its scroll position");
 });
