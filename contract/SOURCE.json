@@ -1,0 +1,9 @@
+{
+  "file": "console-views-v1.d.ts",
+  "contract": "1.0",
+  "from": "https://git.local/gary/weave/src/commit/c4e6e3a7/docs/api/console-views-v1.d.ts",
+  "weaveCommit": "c4e6e3a7",
+  "weaveTag": null,
+  "note": "No weave tag carries the contract yet (v0.2.179 predates it); re-pin to the first tag that does.",
+  "sha256": "ebbbe31c7acaea4e6aa09f47c98ed24b36814217da22f10ceaf5fc533786d62c"
+}

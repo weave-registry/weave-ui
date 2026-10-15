@@ -1,0 +1,12 @@
+{
+  "from": "weave main at c4e6e3a7, design-system/ (ADR-0234 §6: only the tokens move)",
+  "files": {
+    "colors_and_type.css": "design-system/colors_and_type.css",
+    "tokens.css": "design-system/tokens.css",
+    "theme.json": "design-system/theme.json",
+    "brand.json": "design-system/brand.json",
+    "tools/check-tokens.mjs": "design-system/tools/check-tokens.mjs"
+  },
+  "stylesheet": "assets-src/weave.css is weave's /ui/weave.css (src/adapters/primary/ui/weave-css.ts WEAVE_CSS), verbatim — the look of every core page",
+  "favicon": "assets-src/favicon.svg is design-system/build/favicon.svg (served by weave as /ds/favicon.svg)"
+}

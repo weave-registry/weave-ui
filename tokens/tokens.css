@@ -1,0 +1,84 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   weave / Touchstone — spacing, radius, elevation, motion, layout
+   Design system: Agentic
+
+   Companion to colors_and_type.css. Values lifted verbatim from the
+   `:root` contract in assets/hud.css.
+
+   Load order in a consuming page:
+     colors_and_type.css → tokens.css → assets/hud.css (class system)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── spacing: 4px base, doubling with a 12/20 half-step ───────────── */
+  --space-1: 4px;    /* icon nudge, dot gaps */
+  --space-2: 8px;    /* chip gap, button icon gap, stacked pills */
+  --space-3: 12px;   /* table cell padding, tight row gaps */
+  --space-4: 16px;   /* panel body padding, control row gap — the workhorse */
+  --space-5: 20px;   /* card padding, stack rhythm, transcript turn gap */
+  --space-6: 24px;   /* grid gutter, modal padding, section inner */
+  --space-8: 32px;   /* major block separation */
+  --space-12: 48px;  /* split-layout column gap, editorial breathing room */
+
+  /* ── vertical section rhythm, per breakpoint ──────────────────────── */
+  --section-y-desktop: 96px;
+  --section-y-tablet: 68px;
+  --section-y-phone: 48px;
+
+  /* ── radius: four steps, no others ────────────────────────────────── */
+  --radius-sm: 8px;      /* buttons, tiles, task cards, chips, feed rows */
+  --radius-md: 12px;     /* panels, cards, modals, input shell */
+  --radius-lg: 20px;     /* hero-scale framed media only */
+  --radius-pill: 9999px; /* pills, meters, lease bars, toggles */
+
+  /* ── elevation: depth is a ring, not a drop shadow ────────────────── */
+  --elev-flat: none;
+  --elev-ring: 0 0 0 1px var(--border);              /* the default "raised" */
+  --elev-raised: 0 24px 72px rgba(0, 0, 0, 0.36);    /* modals, toasts, hero */
+  --focus-ring: 0 0 0 4px rgba(96, 165, 250, 0.28);
+
+  /* ── motion ───────────────────────────────────────────────────────── */
+  --motion-fast: 130ms;   /* hover, press, colour swaps */
+  --motion-base: 220ms;   /* enter/exit, elevation, glow */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ── layout ───────────────────────────────────────────────────────── */
+  --container-max: 1200px;
+  --container-gutter-desktop: 36px;
+  --container-gutter-tablet: 24px;
+  --container-gutter-phone: 16px;
+}
+
+/* ── derived: the live-state glows and shell metrics ─────────────────
+   Glow marks *live*, not *exists*. A control that merely renders does
+   not glow — only a running task, a connected voice session, a primary
+   action, or a busy peer.                                             */
+:root {
+  --glow: 0 0 14px color-mix(in oklab, var(--accent) 46%, transparent);
+  --glow-hot: 0 0 22px color-mix(in oklab, var(--accent) 62%, transparent);
+  --glow-danger: 0 0 16px color-mix(in oklab, var(--danger) 52%, transparent);
+  --topbar-h: 56px;
+}
+
+/* ── focus ───────────────────────────────────────────────────────────
+   The transparent outline is load-bearing: forced-colors mode strips
+   box-shadow and repaints outlines, so it is the only focus signal HCM
+   users get. Do not remove it when overriding focus styles.           */
+:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* ── reduced motion ──────────────────────────────────────────────────
+   The system leans on continuous animation (orb rings, breathing core,
+   ping pulses, waveform). All of it is decorative; none of it carries
+   state that isn't also carried by colour or text. Kill it wholesale.  */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

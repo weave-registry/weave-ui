@@ -1,0 +1,21 @@
+{
+  "htmx": {
+    "version": "2.0.11",
+    "file": "htmx-2.0.11.min.js",
+    "from": "https://registry.npmjs.org/htmx.org/-/htmx.org-2.0.11.tgz (package/dist/htmx.min.js)",
+    "published": "2026-09-22",
+    "npmIntegrity": "sha512-Thx/WtpeOQqSrqBCw/A1cwGJGg4UrVa3+sW0GmrM3p4gJgO89ecH4qtbnyzDDWFvBTqjnIMCgELTNt636dtamA==",
+    "sha256": "d6fdc75f204e6bdefa99b69bf1e6d4ac69b8a364f77929f45c13476b4000f717",
+    "license": "0BSD (LICENSE-htmx)"
+  },
+  "sse": {
+    "version": "2.2.4",
+    "file": "sse-2.2.4.js",
+    "from": "https://registry.npmjs.org/htmx-ext-sse/-/htmx-ext-sse-2.2.4.tgz (package/sse.js)",
+    "published": "2025-10-18",
+    "npmIntegrity": "sha512-LJmxVhykyflBWgh5PvbRidcyuqMHlgfajmmzumvKctv9puvsufeH6OaejSMZTNTnEI8O2wXXn4ZZtBdpEMqmEQ==",
+    "sha256": "3b5992a541619babefc4c169505af474df5c3039da51e59b96ccf9241ecd61d2",
+    "license": "0BSD (LICENSE-htmx-ext-sse)",
+    "note": "Vendored for Phase 3's /ui/events invalidation stream; no Phase 2 page loads it."
+  }
+}
