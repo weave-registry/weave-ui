@@ -134,3 +134,22 @@ test("kept <details>/scroll state of the main target survives an OOB swap that r
   assert.equal(newMain.details.open, true, "the fresh <details data-keep> keeps the operator's open state");
   assert.equal(newMain.log.scrollTop, 300, "the fresh [data-keep-scroll] keeps its scroll position");
 });
+
+test("an OOB #weave-error from a 2xx response stays shown; the next successful request clears it", () => {
+  const on: Record<string, Handler[]> = {};
+  const err = { id: "weave-error", hidden: false, cleared: 0, replaceChildren() { this.cleared++; } };
+  loadApp({ getElementById: (id: string) => (id === "weave-error" ? err : null), title: "weave" }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+
+  // htmx 2.0.11: htmx:oobAfterSwap's detail is {shouldSwap, target, fragment} — no xhr.
+  const xhr1 = {};
+  fire("htmx:beforeSwap", { xhr: xhr1, target: {} });
+  fire("htmx:oobAfterSwap", { shouldSwap: true, target: err, fragment: {} });
+  fire("htmx:afterRequest", { xhr: xhr1, successful: true, elt: null });
+  assert.equal(err.hidden, false, "the error this response just swapped in is kept");
+  assert.equal(err.cleared, 0);
+
+  fire("htmx:afterRequest", { xhr: {}, successful: true, elt: null });
+  assert.equal(err.hidden, true, "a later successful request clears the stale error");
+  assert.equal(err.cleared, 1);
+});

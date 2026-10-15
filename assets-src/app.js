@@ -238,9 +238,11 @@
   }
 
   // ── 7. Clear a stale #weave-error once a later request succeeds ──
-  var errorXhr = null;
+  // htmx:oobAfterSwap carries no xhr; its response is the one whose htmx:beforeSwap ran just before.
+  var errorXhr = null, swapXhr = null;
+  htmx.on("htmx:beforeSwap", function (evt) { swapXhr = evt.detail.xhr; });
   htmx.on("htmx:oobAfterSwap", function (evt) {
-    if (evt.detail.target && evt.detail.target.id === "weave-error") errorXhr = evt.detail.xhr;
+    if (evt.detail.target && evt.detail.target.id === "weave-error") errorXhr = swapXhr;
   });
   htmx.on("htmx:afterSwap", function (evt) {
     if (evt.detail.target && evt.detail.target.id === "weave-error") errorXhr = evt.detail.xhr;
