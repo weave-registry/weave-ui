@@ -62,3 +62,9 @@ test("editor: editing a role that replaces a shipped one posts overrides, so the
   assert.ok(copywriter !== "", "copywriter has an edit form");
   assert.doesNotMatch(copywriter, /define\[overrides\]/);
 });
+
+test("editor: a file starting with a blank line keeps it, since the parser drops one newline after <textarea>", () => {
+  const vm = JSON.parse(JSON.stringify(fx("team.full")).replace('"# Tone\\nBe brief."', '"\\n# Tone\\nBe brief."'));
+  assert.match(team(vm), /<textarea name="define\[files\]\[skills\/tone\/SKILL\.md\]" rows="8">\n\n# Tone\nBe brief\.<\/textarea>/);
+  for (const m of full.matchAll(/<textarea name="define\[files\][^>]*>(.)/g)) assert.equal(m[1], "\n", "every file textarea opens with the newline the parser drops");
+});

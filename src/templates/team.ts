@@ -226,7 +226,7 @@ function fileFields(files: Record<string, string>): SafeHtml {
       persona || p === "AGENTS.md"
         ? ""
         : html`<label class="check"><input type="checkbox" name="@remove-file" value="${p}">Remove this file when I save</label>`;
-    return html`<div><label><span class="path">${p}</span>${note}<textarea name="${`define[files][${p}]`}" rows="8">${files[p] ?? ""}</textarea></label>${remove}</div>`;
+    return html`<div><label><span class="path">${p}</span>${note}<textarea name="${`define[files][${p}]`}" rows="8">\n${files[p] ?? ""}</textarea></label>${remove}</div>`;
   })}`;
 }
 
