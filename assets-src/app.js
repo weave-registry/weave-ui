@@ -100,7 +100,6 @@
       if (elt && typeof elt === "object" && getElts.has(elt)) return null;
       var entries = [];
       if (parameters && typeof parameters.forEach === "function") parameters.forEach(function (v, k) { entries.push([k, v]); });
-      if (!entries.length) return null;
       xhr.overrideMimeType("text/json");
       return JSON.stringify(encode(entries));
     },

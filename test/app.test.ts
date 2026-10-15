@@ -45,6 +45,10 @@ function encode(entries: [string, string][]): unknown {
   return JSON.parse(out as string);
 }
 
+test("weave-json sends {} for a POST form with no fields, not an empty body", () => {
+  assert.deepEqual(encode([]), {});
+});
+
 test("weave-json marks the request as JSON", () => {
   const ext = loadApp()["weave-json"];
   assert.ok(ext?.onEvent);
