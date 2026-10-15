@@ -370,17 +370,23 @@ function renderText(v: unknown): string {
   throw new HtmlSiteError(`html: cannot render a value of type ${describe(v)}`);
 }
 
-function renderAttr(v: unknown, ctx: Ctx): string {
-  let s: string;
-  if (typeof v === "string") s = v;
-  else if (typeof v === "number") s = String(v);
-  else if (v === null || v === undefined || v === false) return "";
-  else if (isSafeHtml(v)) throw new HtmlSiteError("html: SafeHtml cannot be interpolated into an attribute");
-  else if (Array.isArray(v)) {
+/** An attribute value as one raw string; arrays join first so URL checks see the whole result. */
+function attrString(v: unknown): string {
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return String(v);
+  if (v === null || v === undefined || v === false) return "";
+  if (isSafeHtml(v)) throw new HtmlSiteError("html: SafeHtml cannot be interpolated into an attribute");
+  if (Array.isArray(v)) {
     let out = "";
-    for (const item of v) out += renderAttr(item, ctx);
+    for (const item of v) out += attrString(item);
     return out;
-  } else throw new HtmlSiteError(`html: cannot render a value of type ${describe(v)} in an attribute`);
+  }
+  throw new HtmlSiteError(`html: cannot render a value of type ${describe(v)} in an attribute`);
+}
+
+function renderAttr(v: unknown, ctx: Ctx): string {
+  if (v === null || v === undefined || v === false) return "";
+  const s = attrString(v);
 
   switch (ctx) {
     case URL_WHOLE:

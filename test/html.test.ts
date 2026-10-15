@@ -63,6 +63,12 @@ test("href, src, action, formaction: a whole-value interpolation goes through sa
   assert.equal(s(html`<button formaction="${"javascript:x"}"></button>`), `<button formaction="#"></button>`);
 });
 
+test("an array in a whole-URL attribute is joined, then checked once", () => {
+  assert.equal(s(html`<a href="${["/", "/evil.com"]}">x</a>`), `<a href="#">x</a>`);
+  assert.equal(s(html`<div hx-get="${["/", "/evil.com"]}"></div>`), `<div hx-get="#"></div>`);
+  assert.equal(s(html`<a href="${["/task", "?id=1"]}">x</a>`), `<a href="/task?id=1">x</a>`);
+});
+
 test("a URL attribute's interpolation after a static prefix is percent-encoded as one component", () => {
   assert.equal(s(html`<a href="/task?id=${`a&b c/"<`}">x</a>`), `<a href="/task?id=a%26b%20c%2F%22%3C">x</a>`);
   assert.equal(s(html`<a href="/audit?thread=factory:${"12#x"}">x</a>`), `<a href="/audit?thread=factory:12%23x">x</a>`);
