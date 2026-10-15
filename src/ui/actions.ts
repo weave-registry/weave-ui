@@ -42,6 +42,8 @@ export interface ActionFormOptions {
 }
 
 const HTTP_ABSOLUTE = /^https?:\/\//i;
+/** Nesting levels of a body's inner object kept; deeper values are skipped, so a hostile body cannot overflow the stack. */
+const FIELD_DEPTH = 8;
 
 function isPlainObject(x: unknown): x is Readonly<Record<string, unknown>> {
   if (typeof x !== "object" || x === null || Array.isArray(x)) return false;
@@ -58,7 +60,7 @@ function hidden(name: string, value: string): SafeHtml {
 }
 
 /** The hidden inputs for one value at `path`, appended to `out`; values with no JSON type here are skipped. */
-function fieldsFor(path: string, v: unknown, out: SafeHtml[]): void {
+function fieldsFor(path: string, v: unknown, out: SafeHtml[], depth: number): void {
   if (typeof v === "string") {
     out.push(hidden(path, v));
   } else if (isFiniteNumber(v)) {
@@ -72,8 +74,8 @@ function fieldsFor(path: string, v: unknown, out: SafeHtml[]): void {
     } else if (items.every(isFiniteNumber)) {
       for (const x of items) out.push(hidden(`${path}:num[]`, String(x)));
     }
-  } else if (isPlainObject(v)) {
-    for (const k of Object.keys(v)) fieldsFor(`${path}[${k}]`, v[k], out);
+  } else if (isPlainObject(v) && depth < FIELD_DEPTH) {
+    for (const k of Object.keys(v)) fieldsFor(`${path}[${k}]`, v[k], out, depth + 1);
   }
 }
 
@@ -82,7 +84,7 @@ function innerFields(inner: unknown): SafeHtml[] {
   if (typeof inner === "string") out.push(hidden("@", inner));
   else if (isFiniteNumber(inner)) out.push(hidden("@:num", String(inner)));
   else if (typeof inner === "boolean") out.push(hidden("@:bool", inner ? "true" : "false"));
-  else if (isPlainObject(inner)) for (const k of Object.keys(inner)) fieldsFor(k, inner[k], out);
+  else if (isPlainObject(inner)) for (const k of Object.keys(inner)) fieldsFor(k, inner[k], out, 1);
   return out;
 }
 

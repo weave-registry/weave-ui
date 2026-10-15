@@ -60,3 +60,13 @@ test("attention actions: tone, confirm, and closing an issue always asks first",
   assert.match(h, /data-confirm="Sure\?".*<button class="btn danger" type="submit">Deny/);
   assert.match(h, /<a class="btn" href="\/audit\?id=x">Read<\/a>/);
 });
+
+test("a deeply nested body renders its shallow fields and skips the rest, never overflowing the stack", () => {
+  let deep: Record<string, unknown> = { k: "bottom" };
+  for (let i = 0; i < 20_000; i++) deep = { a: deep };
+  const h = toHtml(actionForm({ fleet: { id: "f-1", deep } }, { label: "Go" }));
+  assert.match(h, /<input type="hidden" name="id" value="f-1">/);
+  assert.doesNotMatch(h, /bottom/);
+  assert.match(toHtml(attentionActions([{ label: "Go", body: { fleet: deep } }])), /<form class="act" hx-post="\/ui\/a\/fleet"/);
+  assert.match(toHtml(actionForm({ fleet: { a: { b: { c: "kept" } } } }, { label: "Go" })), /name="a\[b\]\[c\]" value="kept"/);
+});
