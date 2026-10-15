@@ -1,0 +1,25 @@
+{
+  "taskId": "task-w1",
+  "title": "Fix the flaky test",
+  "state": "working",
+  "asked": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12",
+  "usd": 0.0042,
+  "declaredTs": 1792102359378,
+  "grants": [
+    {
+      "requestId": "g-7",
+      "tool": "bash",
+      "detail": "$ bun test"
+    }
+  ],
+  "files": [
+    "/work/out/report.md",
+    "/work/out/data.csv"
+  ],
+  "result": "## Partial\n\n- one\n- two",
+  "agent": "max-dev",
+  "claimedTs": 1792102359403,
+  "model": "claude-sonnet-5",
+  "thread": "console:operator",
+  "parent": "task-p0"
+}

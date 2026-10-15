@@ -1,0 +1,618 @@
+{
+  "report": {
+    "contradictions": [],
+    "costs": {
+      "rows": [
+        {
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0,
+          "cites": {
+            "claimed": {
+              "id": "83c78fab-db92-432c-b1f7-a6f8234ecfba",
+              "seq": 12
+            },
+            "settled": {
+              "id": "f85681ae-4b47-4f40-89f3-ba43d98e81aa",
+              "seq": 14
+            }
+          },
+          "id": "declared:chat-6d325491:e97068bc85c1b7ef",
+          "inputTokens": 0,
+          "latencyMs": 12,
+          "measured": true,
+          "outputTokens": 0,
+          "seq": 11,
+          "subject": "chat-6d325491",
+          "tokens": 0,
+          "usd": 0,
+          "wallMs": 4
+        },
+        {
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0,
+          "cites": {
+            "claimed": {
+              "id": "c6bd16db-429c-476e-bed7-153fb102dd8d",
+              "seq": 16
+            },
+            "settled": {
+              "id": "eb86bdea-5b46-4058-89e4-56c2b9211ca6",
+              "seq": 18
+            }
+          },
+          "id": "declared:chat-d8a4c438:a40b9d26a5a3902a",
+          "inputTokens": 0,
+          "latencyMs": 22,
+          "measured": true,
+          "outputTokens": 0,
+          "seq": 15,
+          "subject": "chat-d8a4c438",
+          "tokens": 0,
+          "usd": 0,
+          "wallMs": 0
+        },
+        {
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0,
+          "cites": {
+            "claimed": {
+              "id": "fce262dd-00b9-4726-b849-3a8fc320f332",
+              "seq": 24
+            },
+            "settled": {
+              "id": "c03c8e6a-bf62-4bdc-b774-3549f73231e1",
+              "seq": 26
+            }
+          },
+          "id": "declared:task-71de9ec3:79fa3cad9a3b0f5f",
+          "inputTokens": 0,
+          "latencyMs": 37,
+          "measured": true,
+          "outputTokens": 0,
+          "seq": 23,
+          "subject": "task-71de9ec3",
+          "tokens": 0,
+          "usd": 0,
+          "wallMs": 1
+        },
+        {
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0,
+          "cites": {
+            "claimed": {
+              "id": "270a56df-7c26-4d93-8ab8-82c45583d3af",
+              "seq": 28
+            },
+            "settled": {
+              "id": "d288af4e-adad-429d-90e1-966c7f8544f5",
+              "seq": 30
+            }
+          },
+          "id": "declared:task-1a87c38d:c18012f34d57c115",
+          "inputTokens": 0,
+          "latencyMs": 15,
+          "measured": true,
+          "outputTokens": 0,
+          "seq": 27,
+          "subject": "task-1a87c38d",
+          "tokens": 0,
+          "usd": 0,
+          "wallMs": 1
+        },
+        {
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0,
+          "cites": {
+            "claimed": {
+              "id": "82367fab-674d-4698-ac6c-38f09cc9dca6",
+              "seq": 32
+            },
+            "settled": {
+              "id": "201d2289-6424-4923-8e99-022f7068003b",
+              "seq": 34
+            }
+          },
+          "id": "declared:task-dbbe8dc8:1a0b1c7e96079796",
+          "inputTokens": 0,
+          "latencyMs": 25,
+          "measured": true,
+          "outputTokens": 0,
+          "seq": 31,
+          "subject": "task-dbbe8dc8",
+          "tokens": 0,
+          "usd": 0,
+          "wallMs": 0
+        }
+      ],
+      "totals": {
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "inputTokens": 0,
+        "measured": true,
+        "outputTokens": 0,
+        "tasks": 5,
+        "tokens": 0,
+        "usd": 0,
+        "wallMs": 6
+      }
+    },
+    "fold": 2,
+    "memory": {
+      "calls": [],
+      "events": [],
+      "grounding": [
+        {
+          "id": "declared:chat-6d325491:e97068bc85c1b7ef",
+          "notes": [],
+          "recalled": [],
+          "seq": 11,
+          "subject": "chat-6d325491"
+        },
+        {
+          "id": "declared:chat-d8a4c438:a40b9d26a5a3902a",
+          "notes": [],
+          "recalled": [],
+          "seq": 15,
+          "subject": "chat-d8a4c438"
+        }
+      ],
+      "summaries": []
+    },
+    "mistakes": [
+      {
+        "cites": [
+          {
+            "id": "83c78fab-db92-432c-b1f7-a6f8234ecfba",
+            "seq": 12
+          }
+        ],
+        "detail": "claimed by bazzite-712bbd26-main-peer, which advertised version 0.2.180 (#9), yet no task.prompt row followed — a capture gap, which ADR-0115 calls a bug",
+        "id": "83c78fab-db92-432c-b1f7-a6f8234ecfba",
+        "seq": 12,
+        "subject": "chat-6d325491",
+        "type": "missing-prompt-capture"
+      },
+      {
+        "cites": [
+          {
+            "id": "c6bd16db-429c-476e-bed7-153fb102dd8d",
+            "seq": 16
+          }
+        ],
+        "detail": "claimed by bazzite-712bbd26-main-peer, which advertised version 0.2.180 (#9), yet no task.prompt row followed — a capture gap, which ADR-0115 calls a bug",
+        "id": "c6bd16db-429c-476e-bed7-153fb102dd8d",
+        "seq": 16,
+        "subject": "chat-d8a4c438",
+        "type": "missing-prompt-capture"
+      },
+      {
+        "cites": [
+          {
+            "id": "fce262dd-00b9-4726-b849-3a8fc320f332",
+            "seq": 24
+          }
+        ],
+        "detail": "claimed by bazzite-712bbd26-main-peer, which advertised version 0.2.180 (#21), yet no task.prompt row followed — a capture gap, which ADR-0115 calls a bug",
+        "id": "fce262dd-00b9-4726-b849-3a8fc320f332",
+        "seq": 24,
+        "subject": "task-71de9ec3",
+        "type": "missing-prompt-capture"
+      },
+      {
+        "cites": [
+          {
+            "id": "270a56df-7c26-4d93-8ab8-82c45583d3af",
+            "seq": 28
+          }
+        ],
+        "detail": "claimed by bazzite-712bbd26-main-peer, which advertised version 0.2.180 (#21), yet no task.prompt row followed — a capture gap, which ADR-0115 calls a bug",
+        "id": "270a56df-7c26-4d93-8ab8-82c45583d3af",
+        "seq": 28,
+        "subject": "task-1a87c38d",
+        "type": "missing-prompt-capture"
+      },
+      {
+        "cites": [
+          {
+            "id": "82367fab-674d-4698-ac6c-38f09cc9dca6",
+            "seq": 32
+          }
+        ],
+        "detail": "claimed by bazzite-712bbd26-main-peer, which advertised version 0.2.180 (#21), yet no task.prompt row followed — a capture gap, which ADR-0115 calls a bug",
+        "id": "82367fab-674d-4698-ac6c-38f09cc9dca6",
+        "seq": 32,
+        "subject": "task-dbbe8dc8",
+        "type": "missing-prompt-capture"
+      }
+    ],
+    "models": [
+      {
+        "cites": [],
+        "id": "declared:chat-6d325491:e97068bc85c1b7ef",
+        "reason": "derived:spec.model",
+        "requested": "claude-haiku-4-5-20251001",
+        "seq": 11,
+        "source": "derived",
+        "subject": "chat-6d325491"
+      },
+      {
+        "cites": [],
+        "id": "declared:chat-d8a4c438:a40b9d26a5a3902a",
+        "reason": "derived:spec.model",
+        "requested": "claude-haiku-4-5-20251001",
+        "seq": 15,
+        "source": "derived",
+        "subject": "chat-d8a4c438"
+      },
+      {
+        "cites": [],
+        "id": "declared:task-71de9ec3:79fa3cad9a3b0f5f",
+        "reason": "derived:spec.model",
+        "requested": "qwen2.5-coder:14b",
+        "seq": 23,
+        "source": "derived",
+        "subject": "task-71de9ec3"
+      },
+      {
+        "cites": [],
+        "id": "declared:task-1a87c38d:c18012f34d57c115",
+        "reason": "derived:spec.model",
+        "requested": "qwen2.5-coder:14b",
+        "seq": 27,
+        "source": "derived",
+        "subject": "task-1a87c38d"
+      },
+      {
+        "cites": [],
+        "id": "declared:task-dbbe8dc8:1a0b1c7e96079796",
+        "reason": "derived:spec.model",
+        "requested": "qwen3:8b",
+        "seq": 31,
+        "source": "derived",
+        "subject": "task-dbbe8dc8"
+      }
+    ],
+    "notes": [],
+    "order": {
+      "omitted": [],
+      "rows": [
+        {
+          "actor": "gateway",
+          "detail": "ask: summarize what weave is · thread console:operator · model claude-haiku-4-5-20251001 · routed by rules · skill claude (soft)",
+          "id": "declared:chat-6d325491:e97068bc85c1b7ef",
+          "kind": "task.declared",
+          "seq": 11,
+          "subject": "chat-6d325491",
+          "ts": 1792102349774
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "lease 30000ms",
+          "id": "83c78fab-db92-432c-b1f7-a6f8234ecfba",
+          "kind": "task.claimed",
+          "seq": 12,
+          "subject": "chat-6d325491",
+          "ts": 1792102349782
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "skill: echo",
+          "id": "7658cab7-c99b-4481-b6f9-69e123783445",
+          "kind": "task.progress",
+          "seq": 13,
+          "subject": "chat-6d325491",
+          "ts": 1792102349784
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "✓ echo: [Network context: you are the conversational agent of this weave swarm Fleet ground truth, computed from the replicated log at ask time — trust this over…",
+          "id": "f85681ae-4b47-4f40-89f3-ba43d98e81aa",
+          "kind": "task.completed",
+          "seq": 14,
+          "subject": "chat-6d325491",
+          "ts": 1792102349786
+        },
+        {
+          "actor": "gateway",
+          "detail": "ask: write a haiku about logs · thread console:operator · model claude-haiku-4-5-20251001 · routed by rules · skill claude (soft)",
+          "id": "declared:chat-d8a4c438:a40b9d26a5a3902a",
+          "kind": "task.declared",
+          "seq": 15,
+          "subject": "chat-d8a4c438",
+          "ts": 1792102349811
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "lease 30000ms",
+          "id": "c6bd16db-429c-476e-bed7-153fb102dd8d",
+          "kind": "task.claimed",
+          "seq": 16,
+          "subject": "chat-d8a4c438",
+          "ts": 1792102349833
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "skill: echo",
+          "id": "92513859-ab1f-41fb-9995-c7f7e36373c9",
+          "kind": "task.progress",
+          "seq": 17,
+          "subject": "chat-d8a4c438",
+          "ts": 1792102349833
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "✓ echo: [Network context: you are the conversational agent of this weave swarm Fleet ground truth, computed from the replicated log at ask time — trust this over…",
+          "id": "eb86bdea-5b46-4058-89e4-56c2b9211ca6",
+          "kind": "task.completed",
+          "seq": 18,
+          "subject": "chat-d8a4c438",
+          "ts": 1792102349833
+        },
+        {
+          "actor": "cli",
+          "detail": "goal: summarize the readme · model qwen2.5-coder:14b · routed by rules",
+          "id": "declared:task-71de9ec3:79fa3cad9a3b0f5f",
+          "kind": "task.declared",
+          "seq": 23,
+          "subject": "task-71de9ec3",
+          "ts": 1792102359063
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "lease 30000ms",
+          "id": "fce262dd-00b9-4726-b849-3a8fc320f332",
+          "kind": "task.claimed",
+          "seq": 24,
+          "subject": "task-71de9ec3",
+          "ts": 1792102359099
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "skill: echo",
+          "id": "b98dd710-c293-4fe3-a417-d4af93f1160b",
+          "kind": "task.progress",
+          "seq": 25,
+          "subject": "task-71de9ec3",
+          "ts": 1792102359100
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "✓ echo: summarize the readme",
+          "id": "c03c8e6a-bf62-4bdc-b774-3549f73231e1",
+          "kind": "task.completed",
+          "seq": 26,
+          "subject": "task-71de9ec3",
+          "ts": 1792102359100
+        },
+        {
+          "actor": "cli",
+          "detail": "goal: list three risks of the release · model qwen2.5-coder:14b · routed by rules",
+          "id": "declared:task-1a87c38d:c18012f34d57c115",
+          "kind": "task.declared",
+          "seq": 27,
+          "subject": "task-1a87c38d",
+          "ts": 1792102359238
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "lease 30000ms",
+          "id": "270a56df-7c26-4d93-8ab8-82c45583d3af",
+          "kind": "task.claimed",
+          "seq": 28,
+          "subject": "task-1a87c38d",
+          "ts": 1792102359252
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "skill: echo",
+          "id": "ab129858-d8e9-404b-968d-218c85e47504",
+          "kind": "task.progress",
+          "seq": 29,
+          "subject": "task-1a87c38d",
+          "ts": 1792102359252
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "✓ echo: list three risks of the release",
+          "id": "d288af4e-adad-429d-90e1-966c7f8544f5",
+          "kind": "task.completed",
+          "seq": 30,
+          "subject": "task-1a87c38d",
+          "ts": 1792102359253
+        },
+        {
+          "actor": "cli",
+          "detail": "goal: draft release notes · model qwen3:8b · routed by rules",
+          "id": "declared:task-dbbe8dc8:1a0b1c7e96079796",
+          "kind": "task.declared",
+          "seq": 31,
+          "subject": "task-dbbe8dc8",
+          "ts": 1792102359378
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "lease 30000ms",
+          "id": "82367fab-674d-4698-ac6c-38f09cc9dca6",
+          "kind": "task.claimed",
+          "seq": 32,
+          "subject": "task-dbbe8dc8",
+          "ts": 1792102359403
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "skill: echo",
+          "id": "ce2a7aa6-ae58-4ae5-b03b-501996002670",
+          "kind": "task.progress",
+          "seq": 33,
+          "subject": "task-dbbe8dc8",
+          "ts": 1792102359403
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "✓ echo: draft release notes",
+          "id": "201d2289-6424-4923-8e99-022f7068003b",
+          "kind": "task.completed",
+          "seq": 34,
+          "subject": "task-dbbe8dc8",
+          "ts": 1792102359403
+        }
+      ]
+    },
+    "prompts": [
+      {
+        "attempt": 1,
+        "goal": "[Network context: you are the conversational agent of this weave swarm\nFleet ground truth, computed from the replicated log at ask time — trust this over your own guesses; when asked what happened, answer FROM these facts:\nGood evening. Nothing needs you — the fleet is quiet.\nlast hour: 0 declared · 0 completed · 0 failed\nIf the operator states a durable fact or preference about themselves or their setup, keep it with the `remember` tool; if they say a kept fact is wrong, retract it with `forget <handle>`; if they ask about something you would expect to have been told, search with `recall_memory { query }` before saying you do not know.] summarize what weave is",
+        "grounding": "you are the conversational agent of this weave swarm\nFleet ground truth, computed from the replicated log at ask time — trust this over your own guesses; when asked what happened, answer FROM these facts:\nGood evening. Nothing needs you — the fleet is quiet.\nlast hour: 0 declared · 0 completed · 0 failed\nIf the operator states a durable fact or preference about themselves or their setup, keep it with the `remember` tool; if they say a kept fact is wrong, retract it with `forget <handle>`; if they ask about something you would expect to have been told, search with `recall_memory { query }` before saying you do not know.",
+        "id": "declared:chat-6d325491:e97068bc85c1b7ef",
+        "seq": 11,
+        "source": "task.declared",
+        "subject": "chat-6d325491",
+        "system": null,
+        "utterance": "summarize what weave is"
+      },
+      {
+        "attempt": 1,
+        "context": "--- Earlier in this conversation (context only — the request to answer is at the end) ---\n\nQ: summarize what weave is\nA: echo: [Network context: you are the conversational agent of this weave swarm\nFleet ground truth, computed from the replicated log at ask time — trust this over your own guesses; when asked what happened, answer FROM these facts:\nGood evening. Nothing needs you — the fleet is quiet.\nlast hour: 0 declared · 0 completed · 0 failed\nIf the operator states a durable fact or preference about themselve…\n\n--- The operator's request — answer this now ---\n\nwrite a haiku about logs\n\nIf it is short or refers back (\"yes\", \"all of that\", \"do it\"), it means the conversation above: act on what was last offered or asked there.",
+        "goal": "[Network context: you are the conversational agent of this weave swarm\nFleet ground truth, computed from the replicated log at ask time — trust this over your own guesses; when asked what happened, answer FROM these facts:\nGood evening. Nothing needs you — the fleet is quiet.\nlast hour: 1 declared · 1 completed · 0 failed\nIf the operator states a durable fact or preference about themselves or their setup, keep it with the `remember` tool; if they say a kept fact is wrong, retract it with `forget <handle>`; if they ask about something you would expect to have been told, search with `recall_memory { query }` before saying you do not know.] write a haiku about logs\n\n--- Earlier in this conversation (context only — the request to answer is at the end) ---\n\nQ: summarize what weave is\nA: echo: [Network context: you are the conversational agent of this weave swarm\nFleet ground truth, computed from the replicated log at ask time — trust this over your own guesses; when asked what happened, answer FROM these facts:\nGood evening. Nothing needs you — the fleet is quiet.\nlast hour: 0 declared · 0 completed · 0 failed\nIf the operator states a durable fact or preference about themselve…\n\n--- The operator's request — answer this now ---\n\nwrite a haiku about logs\n\nIf it is short or refers back (\"yes\", \"all of that\", \"do it\"), it means the conversation above: act on what was last offered or asked there.",
+        "grounding": "you are the conversational agent of this weave swarm\nFleet ground truth, computed from the replicated log at ask time — trust this over your own guesses; when asked what happened, answer FROM these facts:\nGood evening. Nothing needs you — the fleet is quiet.\nlast hour: 1 declared · 1 completed · 0 failed\nIf the operator states a durable fact or preference about themselves or their setup, keep it with the `remember` tool; if they say a kept fact is wrong, retract it with `forget <handle>`; if they ask about something you would expect to have been told, search with `recall_memory { query }` before saying you do not know.",
+        "id": "declared:chat-d8a4c438:a40b9d26a5a3902a",
+        "seq": 15,
+        "source": "task.declared",
+        "subject": "chat-d8a4c438",
+        "system": null,
+        "utterance": "write a haiku about logs"
+      },
+      {
+        "attempt": 1,
+        "goal": "summarize the readme",
+        "id": "declared:task-71de9ec3:79fa3cad9a3b0f5f",
+        "seq": 23,
+        "source": "task.declared",
+        "subject": "task-71de9ec3",
+        "system": null
+      },
+      {
+        "attempt": 1,
+        "goal": "list three risks of the release",
+        "id": "declared:task-1a87c38d:c18012f34d57c115",
+        "seq": 27,
+        "source": "task.declared",
+        "subject": "task-1a87c38d",
+        "system": null
+      },
+      {
+        "attempt": 1,
+        "goal": "draft release notes",
+        "id": "declared:task-dbbe8dc8:1a0b1c7e96079796",
+        "seq": 31,
+        "source": "task.declared",
+        "subject": "task-dbbe8dc8",
+        "system": null
+      }
+    ],
+    "provenance": {
+      "origins": [],
+      "unstamped": 20
+    },
+    "selector": {
+      "kind": "window",
+      "since": 1792015977608,
+      "until": 1792102377608
+    },
+    "summary": {
+      "completed": 5,
+      "contradictions": 0,
+      "failed": 0,
+      "mistakes": 5,
+      "open": 0,
+      "tasks": 5,
+      "tokens": 0,
+      "usd": 0
+    },
+    "tasks": [
+      {
+        "actor": "bazzite-712bbd26-main-peer",
+        "declaredTs": 1792102349774,
+        "id": "declared:chat-6d325491:e97068bc85c1b7ef",
+        "model": "claude-haiku-4-5-20251001",
+        "origin": "summarize what weave is",
+        "seq": 11,
+        "settled": {
+          "id": "f85681ae-4b47-4f40-89f3-ba43d98e81aa",
+          "seq": 14
+        },
+        "skill": "claude",
+        "status": "completed",
+        "subject": "chat-6d325491",
+        "thread": "console:operator"
+      },
+      {
+        "actor": "bazzite-712bbd26-main-peer",
+        "declaredTs": 1792102349811,
+        "id": "declared:chat-d8a4c438:a40b9d26a5a3902a",
+        "model": "claude-haiku-4-5-20251001",
+        "origin": "write a haiku about logs",
+        "seq": 15,
+        "settled": {
+          "id": "eb86bdea-5b46-4058-89e4-56c2b9211ca6",
+          "seq": 18
+        },
+        "skill": "claude",
+        "status": "completed",
+        "subject": "chat-d8a4c438",
+        "thread": "console:operator"
+      },
+      {
+        "actor": "bazzite-712bbd26-main-peer",
+        "declaredTs": 1792102359063,
+        "id": "declared:task-71de9ec3:79fa3cad9a3b0f5f",
+        "model": "qwen2.5-coder:14b",
+        "seq": 23,
+        "settled": {
+          "id": "c03c8e6a-bf62-4bdc-b774-3549f73231e1",
+          "seq": 26
+        },
+        "status": "completed",
+        "subject": "task-71de9ec3"
+      },
+      {
+        "actor": "bazzite-712bbd26-main-peer",
+        "declaredTs": 1792102359238,
+        "id": "declared:task-1a87c38d:c18012f34d57c115",
+        "model": "qwen2.5-coder:14b",
+        "seq": 27,
+        "settled": {
+          "id": "d288af4e-adad-429d-90e1-966c7f8544f5",
+          "seq": 30
+        },
+        "status": "completed",
+        "subject": "task-1a87c38d"
+      },
+      {
+        "actor": "bazzite-712bbd26-main-peer",
+        "declaredTs": 1792102359378,
+        "id": "declared:task-dbbe8dc8:1a0b1c7e96079796",
+        "model": "qwen3:8b",
+        "seq": 31,
+        "settled": {
+          "id": "201d2289-6424-4923-8e99-022f7068003b",
+          "seq": 34
+        },
+        "status": "completed",
+        "subject": "task-dbbe8dc8"
+      }
+    ]
+  },
+  "verify": {
+    "sections": {
+      "contradictions": "4f53cda18c2baa0c",
+      "costs": "9adf7f53ce60d1b6",
+      "memory": "0a351aa98d8b0b41",
+      "mistakes": "e39597e7a0e600ea",
+      "models": "00d095c26c0bedb7",
+      "order": "4ad883d32828d9fb",
+      "prompts": "78cd76b9efc29c39"
+    },
+    "sha256": "aebc13d15ccc2fd115c525af79cbcd286ce2454fbaa719bb7de9bfd43e9a90c5"
+  }
+}
