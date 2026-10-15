@@ -91,6 +91,18 @@ test("refused sites: unquoted attribute, attribute name, tag name, script, style
   assert.throws(() => html`<!-- ${x} -->`, /comment/i);
 });
 
+test("a template that ends inside a tag, attribute, raw-text element or comment is refused", () => {
+  assert.throws(() => html`<a href="`, /ends inside/);
+  assert.throws(() => html`<script>`, /ends inside <script>/);
+  assert.throws(() => html`<textarea>`, /ends inside <textarea>/);
+  assert.throws(() => html`<!-- x`, /ends inside/);
+  assert.throws(() => html`<p class="a"`, /ends inside/);
+  assert.throws(() => html`<p>${"x"}</p`, /ends inside/);
+  assert.throws(() => html`${html`<a href="`}${"javascript:alert(1)"}">x</a>`, /ends inside/);
+  assert.throws(() => html`${html`<script>`}${"alert(document.cookie)"}`, /ends inside/);
+  assert.equal(s(html`<p>x</p><script></script><!-- c -->`), "<p>x</p><script></script><!-- c -->");
+});
+
 test("refused sites: on* and hx-on* handlers, style and srcdoc attributes, non-URL hx-* values", () => {
   const x = "v";
   assert.throws(() => html`<a onclick="${x}">x</a>`, /handler|on\*/i);

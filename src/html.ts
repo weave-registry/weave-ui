@@ -330,6 +330,12 @@ function analyze(strings: readonly string[]): Ctx[] {
         refuse("inside a comment");
     }
   }
+  // A fragment must close everything it opens, or its SafeHtml would change the context of what follows it.
+  if (state !== S_TEXT) {
+    throw new HtmlSiteError(
+      `html: refused template: it ends inside ${state === S_RAW || state === S_RCDATA ? `<${special}>` : "a tag, attribute or comment"}`,
+    );
+  }
   return ctxs;
 }
 
