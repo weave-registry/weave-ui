@@ -246,3 +246,28 @@ test("a failed submit keeps the form dirty, so the view's next poll does not wip
   fire("htmx:afterRequest", { elt: form, xhr: retry, successful: true });
   assert.equal(poll(), false, "once the submit succeeds the form is clean and the poll goes ahead");
 });
+
+test("a running duration (data-fmt=dur, no data-to) counts up to now, not from 1970", () => {
+  const docOn: Record<string, Handler[]> = {};
+  const fakeTime = (attrs: Record<string, string>) => ({
+    textContent: "",
+    getAttribute: (a: string) => attrs[a] ?? null,
+    setAttribute: noopFn,
+    removeAttribute: noopFn,
+  });
+  const started = Date.now() - 5 * 60000;
+  const running = fakeTime({ "data-ts": String(started), "data-fmt": "dur" });
+  const emptyTo = fakeTime({ "data-ts": String(started), "data-fmt": "dur", "data-to": "" });
+  const finished = fakeTime({ "data-ts": String(started), "data-fmt": "dur", "data-to": String(started + 2 * 3600000) });
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    addEventListener: (n: string, h: Handler) => void (docOn[n] ??= []).push(h),
+    querySelectorAll: (sel: string) => (sel === "time[data-ts]" ? [running, emptyTo, finished] : []),
+  });
+  (docOn["DOMContentLoaded"] ?? []).forEach((h) => h({}));
+
+  assert.equal(running.textContent, "5m", "no data-to: measured up to now");
+  assert.equal(emptyTo.textContent, "5m", "an empty data-to is the same as none");
+  assert.equal(finished.textContent, "2h", "a data-to still ends the duration");
+});

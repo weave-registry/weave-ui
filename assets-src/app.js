@@ -188,7 +188,8 @@
       if (fmt === "local") text = date.toLocaleString();
       else if (fmt === "time") text = date.toLocaleTimeString();
       else if (fmt === "dur") {
-        var to = Number(t.getAttribute("data-to"));
+        var toAttr = t.getAttribute("data-to");
+        var to = toAttr ? Number(toAttr) : NaN; // a missing or empty data-to is a running duration, not 0 (1970)
         var ms = Number.isFinite(to) ? to - ts : now - ts;
         text = span(ms) || Math.round(Math.abs(ms) / 86400000) + "d";
       } else {
