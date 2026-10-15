@@ -239,13 +239,16 @@
 
   // ── 7. Clear a stale #weave-error once a later request succeeds ──
   // htmx:oobAfterSwap carries no xhr; its response is the one whose htmx:beforeSwap ran just before.
-  var errorXhr = null, swapXhr = null;
+  // "Later" is by send order: a request sent before the error's request does not clear it, however late it ends.
+  var sent = 0, sentSeq = new WeakMap(), errorSeq = 0, swapXhr = null;
+  function seqOf(xhr) { var n = xhr && sentSeq.get(xhr); return n === undefined ? sent : n; }
+  htmx.on("htmx:beforeRequest", function (evt) { if (evt.detail.xhr) sentSeq.set(evt.detail.xhr, ++sent); });
   htmx.on("htmx:beforeSwap", function (evt) { swapXhr = evt.detail.xhr; });
   htmx.on("htmx:oobAfterSwap", function (evt) {
-    if (evt.detail.target && evt.detail.target.id === "weave-error") errorXhr = swapXhr;
+    if (evt.detail.target && evt.detail.target.id === "weave-error") errorSeq = seqOf(swapXhr);
   });
   htmx.on("htmx:afterSwap", function (evt) {
-    if (evt.detail.target && evt.detail.target.id === "weave-error") errorXhr = evt.detail.xhr;
+    if (evt.detail.target && evt.detail.target.id === "weave-error") errorSeq = seqOf(evt.detail.xhr);
   });
   // htmx:beforeSwap on an error status: nothing to do — responseHandling already swaps 4xx/5xx.
 
@@ -259,7 +262,7 @@
     if (elt && elt.tagName === "FORM") elt.removeAttribute("data-dirty");
     if (!d.successful) return;
     var err = doc.getElementById("weave-error");
-    if (err && !err.hidden && d.xhr !== errorXhr) { err.replaceChildren(); err.hidden = true; }
+    if (err && !err.hidden && d.xhr && sentSeq.get(d.xhr) > errorSeq) { err.replaceChildren(); err.hidden = true; }
     var pick = elt && picks.get(elt);
     if (pick) history.replaceState(history.state, "", "?" + encodeURIComponent(pick[0]) + "=" + encodeURIComponent(pick[1]));
   });

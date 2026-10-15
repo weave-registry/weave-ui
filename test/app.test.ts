@@ -143,15 +143,42 @@ test("an OOB #weave-error from a 2xx response stays shown; the next successful r
 
   // htmx 2.0.11: htmx:oobAfterSwap's detail is {shouldSwap, target, fragment} — no xhr.
   const xhr1 = {};
+  fire("htmx:beforeRequest", { xhr: xhr1, elt: null });
   fire("htmx:beforeSwap", { xhr: xhr1, target: {} });
   fire("htmx:oobAfterSwap", { shouldSwap: true, target: err, fragment: {} });
   fire("htmx:afterRequest", { xhr: xhr1, successful: true, elt: null });
   assert.equal(err.hidden, false, "the error this response just swapped in is kept");
   assert.equal(err.cleared, 0);
 
-  fire("htmx:afterRequest", { xhr: {}, successful: true, elt: null });
+  const xhr2 = {};
+  fire("htmx:beforeRequest", { xhr: xhr2, elt: null });
+  fire("htmx:afterRequest", { xhr: xhr2, successful: true, elt: null });
   assert.equal(err.hidden, true, "a later successful request clears the stale error");
   assert.equal(err.cleared, 1);
+});
+
+test("a request sent before the failing one, finishing after it, does not clear the newer #weave-error", () => {
+  const on: Record<string, Handler[]> = {};
+  const err = { id: "weave-error", hidden: true, cleared: 0, replaceChildren() { this.cleared++; } };
+  loadApp({ getElementById: (id: string) => (id === "weave-error" ? err : null), title: "weave" }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+
+  const load = {}, action = {};
+  fire("htmx:beforeRequest", { xhr: load, elt: null }); // a view's load GET is in flight
+  fire("htmx:beforeRequest", { xhr: action, elt: null }); // the operator's action fails…
+  fire("htmx:beforeSwap", { xhr: action, target: {} });
+  fire("htmx:oobAfterSwap", { shouldSwap: true, target: err, fragment: {} }); // …into #weave-error
+  err.hidden = false;
+  fire("htmx:afterRequest", { xhr: action, successful: false, elt: null });
+
+  fire("htmx:afterRequest", { xhr: load, successful: true, elt: null }); // the earlier load finishes late
+  assert.equal(err.hidden, false, "a request sent before the failure is not a later request");
+  assert.equal(err.cleared, 0);
+
+  const next = {};
+  fire("htmx:beforeRequest", { xhr: next, elt: null });
+  fire("htmx:afterRequest", { xhr: next, successful: true, elt: null });
+  assert.equal(err.hidden, true, "a request sent after the failure clears it");
 });
 
 test("the audit check is finished by the audit request's own settle, not by an unrelated swap that settles first", () => {
