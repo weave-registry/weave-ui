@@ -1,0 +1,14 @@
+{
+  "ok": false,
+  "error": "the console template 'home' failed (timeout): template 'home' ran past 50 ms",
+  "code": "render-failed",
+  "resolution": {
+    "code": "render-failed",
+    "commands": [
+      { "run": "weave dev --console-ui <dir>", "ready": false, "why": "a weave-ui build directory holding templates.js, manifest.json and assets/" },
+      { "run": "weave status", "ready": true }
+    ],
+    "paths": ["console.ui"],
+    "steps": ["rebuild weave-ui"]
+  }
+}

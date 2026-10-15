@@ -1,0 +1,69 @@
+{
+  "id": "user:touchstone-design-system-2",
+  "name": "weave",
+  "wordmark": "weave",
+  "wordmarkCase": "always lowercase",
+  "title": "weave / Touchstone",
+  "lineage": "Agentic",
+  "description": "Dark operations HUD for a cooperative-agent harness. Makes distributed state legible in real time and stops cold at irreversible effects.",
+  "source": {
+    "project": "Touchstone",
+    "projectId": "8e5b32ea-c44c-4efd-b0aa-53f74112dc6c",
+    "importedFrom": "/Volumes/SSD/Development/weave",
+    "evidence": "context/provenance.md"
+  },
+  "colorScheme": "dark only",
+  "lightThemeSupported": false,
+  "core": {
+    "background": "#0b1020",
+    "surface": "#131b2f",
+    "foreground": "#f8fafc",
+    "muted": "#8ea0b8",
+    "border": "#293653",
+    "accent": "#60a5fa",
+    "accentOn": "#06111f"
+  },
+  "status": {
+    "success": "#22c55e",
+    "warn": "#fbbf24",
+    "danger": "#fb7185",
+    "auto": "#a78bfa",
+    "claimed": "color-mix(in oklab, var(--accent) 52%, var(--danger))"
+  },
+  "typography": {
+    "display": "Inter, system-ui, sans-serif",
+    "body": "Inter, system-ui, sans-serif",
+    "mono": "\"JetBrains Mono\", ui-monospace, Menlo, monospace",
+    "webfonts": "Inter 400/500/600/700 + JetBrains Mono 400/500/600 (Google Fonts; no font files ship)",
+    "rule": "Inter for what a human wrote, mono for what a machine produced."
+  },
+  "assets": {
+    "mark": "assets/brand/weave-mark.svg",
+    "markAccent": "assets/brand/weave-mark-accent.svg",
+    "lockup": "assets/brand/weave-lockup.svg",
+    "appIcon": "build/icon.svg",
+    "favicon": "build/favicon.svg",
+    "screenshot": "assets/screens/cold-start.png"
+  },
+  "assetRules": [
+    "currentColor does not cross an <img>: inline weave-mark.svg, or use weave-mark-accent.svg.",
+    "No double hyphen inside an SVG comment — strict XML parse, silent failure."
+  ],
+  "voice": {
+    "register": "Terse, technically precise, quietly confident. Written for an operator who already knows what a lease is.",
+    "rules": [
+      "Lowercase product name, always.",
+      "Sentence case headings; uppercase only in the mono register.",
+      "Lead with the state, then the caveat.",
+      "Numbers are specific or absent."
+    ]
+  },
+  "entrypoints": {
+    "rules": "DESIGN.md",
+    "agentUsage": "SKILL.md",
+    "css": "variables.css",
+    "tokens": "theme.json",
+    "review": "preview/index.html",
+    "appliedKit": "ui_kits/app/index.html"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "file": "console-views-v1.d.ts",
+  "contract": "1.0",
+  "weaveTag": "v0.2.180",
+  "weaveCommit": "2e067ba0",
+  "from": "https://git.local/gary/weave/src/tag/v0.2.180/docs/api/console-views-v1.d.ts",
+  "sha256": "ebbbe31c7acaea4e6aa09f47c98ed24b36814217da22f10ceaf5fc533786d62c",
+  "note": "First generated at c4e6e3a7 (ADR-0234 Phase 1); byte-identical at the v0.2.180 tag."
+}

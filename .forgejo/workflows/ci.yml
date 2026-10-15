@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# bash, explicitly: a `run:` step in a `container:` job otherwise gets `sh -e` (dash), which has no pipefail
+# (the same lesson as weave's ci.yml, 2026-09-15).
+defaults:
+  run:
+    shell: bash
+
+# ADR-0234 §7. Branch protection on `main` requires both job names below, verbatim — renaming a job is a
+# protection change too.
+jobs:
+  node:
+    name: typecheck · tests · purity · lint
+    runs-on: ubuntu-latest
+    container: node:22-bookworm
+    steps:
+      - uses: actions/checkout@v4
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      # bun from npm, not oven-sh/setup-bun (weave's ci.yml: setup-bun hits api.github.com unauthenticated).
+      - run: npm install -g bun && bun --version && node --version
+      - run: bun install --frozen-lockfile
+      - name: Vendored files match their recorded sha256 (contract, htmx, the shape tokenizer)
+        run: sha256sum -c vendor/SHA256SUMS
+      - name: Typecheck — every template against the vendored contract
+        run: bun run typecheck
+      # `bun run test` builds dist/ first, then runs node --test over test/: the template tests, the hostile-fixture
+      # shape test, the purity scan over the built templates.js (weave's token list), the hx-on / inline-handler lint,
+      # and the loader emulation (node:vm, weave's context options and caps).
+      - name: Tests — templates, hostile-fixture shape, purity scan, hx-on / inline-handler lint
+        run: bun run test
+
+  build:
+    name: tokens · build · size budget
+    runs-on: ubuntu-latest
+    container: node:22-bookworm
+    steps:
+      - uses: actions/checkout@v4
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - run: npm install -g bun && bun --version && node --version
+      - run: bun install --frozen-lockfile
+      - name: Design tokens — drift and the 4.5:1 contrast floor
+        run: bun run check:tokens
+      - name: Production build
+        run: bun run build
+      - name: Size budget, token contrast of the stylesheet, purity of the built bundle
+        run: node --import tsx --test test/size.test.ts test/tokens.test.ts test/purity.test.ts
+      - name: The bundle weave would load — manifest and digests
+        run: |
+          set -euo pipefail
+          cat dist/manifest.json
+          (cd dist && sha256sum templates.js && find assets -type f | sort | xargs sha256sum)
