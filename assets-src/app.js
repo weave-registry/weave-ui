@@ -13,7 +13,8 @@
 
   // ── 1. weave-json (ADR-0234 §4): every /ui action is sent as the typed JSON body weave's handlers expect ──
   var FORBIDDEN = ["__proto__", "constructor", "prototype"];
-  var TYPE_RE = /:(bool|num|str\[\]|num\[\])$/;
+  var TYPE_RE = /:(bool|num|str\[\]|num\[\]|csv\[\])$/;
+  var FILE_RE = /^(?:[A-Za-z0-9_-][A-Za-z0-9._-]*|skills\/[a-z0-9-]+\/SKILL\.md)$/;
   var PATH_RE = /^([^[\]]+)((?:\[[^\]]*\])*)$/;
   var getElts = new WeakSet();
 
@@ -23,16 +24,32 @@
       var n = v.trim() === "" ? NaN : Number(v);
       return Number.isFinite(n) ? n : undefined;
     }
+    if (type === "csv[]") return v.split(",").map(function (p) { return p.trim(); }).filter(Boolean);
     return v;
+  }
+
+  // The object at root.define.files, created as needed (the role editor's add/remove-a-file fields act on it).
+  function filesOf(root) {
+    var cur = root;
+    ["define", "files"].forEach(function (k) {
+      var next = Object.prototype.hasOwnProperty.call(cur, k) ? cur[k] : undefined;
+      if (!next || typeof next !== "object" || Array.isArray(next)) { next = {}; cur[k] = next; }
+      cur = next;
+    });
+    return cur;
   }
 
   function encode(entries) {
     var root = {};
     var body;
     var hasBody = false;
+    var newPath = "", newBody = "", removes = [];
     entries.forEach(function (kv) {
       var name = kv[0];
       var v = typeof kv[1] === "string" ? kv[1] : "";
+      if (name === "@new-file:path") { newPath = v; return; }
+      if (name === "@new-file:body") { newBody = v; return; }
+      if (name === "@remove-file") { removes.push(v); return; }
       var tm = TYPE_RE.exec(name);
       var type = tm ? tm[1] : "str";
       var path = tm ? name.slice(0, -tm[0].length) : name;
@@ -52,7 +69,9 @@
         cur = next;
       }
       var last = segs[segs.length - 1];
-      if (type === "str[]" || type === "num[]") {
+      if (type === "csv[]") {
+        cur[last] = val;
+      } else if (type === "str[]" || type === "num[]") {
         if (!Array.isArray(cur[last]) || !Object.prototype.hasOwnProperty.call(cur, last)) cur[last] = [];
         if (val !== undefined) cur[last].push(val);
       } else if (val !== undefined) {
@@ -61,6 +80,11 @@
         delete cur[last];
       }
     });
+    if (newPath && FILE_RE.test(newPath) && FORBIDDEN.indexOf(newPath) === -1) filesOf(root)[newPath] = newBody;
+    if (removes.length) {
+      var files = filesOf(root);
+      removes.forEach(function (f) { if (Object.prototype.hasOwnProperty.call(files, f)) delete files[f]; });
+    }
     return hasBody ? body : root;
   }
 
