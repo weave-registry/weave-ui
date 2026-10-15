@@ -123,7 +123,7 @@ test("kept <details>/scroll state of the main target survives an OOB swap that r
   els["weave-error"] = oobTarget;
 
   // htmx 2.0.11 order: beforeSwap (main) → OOB swaps → main swap → afterSettle.
-  fire("htmx:beforeSwap", { target: oldMain });
+  fire("htmx:beforeSwap", { target: oldMain, shouldSwap: true });
   fire("htmx:oobBeforeSwap", { target: oobTarget });
   fire("htmx:oobAfterSwap", { target: oobTarget });
   const newMain = fakeView("view-runs", false, 0);
@@ -133,6 +133,30 @@ test("kept <details>/scroll state of the main target survives an OOB swap that r
 
   assert.equal(newMain.details.open, true, "the fresh <details data-keep> keeps the operator's open state");
   assert.equal(newMain.log.scrollTop, 300, "the fresh [data-keep-scroll] keeps its scroll position");
+});
+
+test("a beforeSwap that is not followed by a swap (204) leaves no snapshot for a later settle to replay", () => {
+  const els: Record<string, unknown> = {};
+  const on: Record<string, Handler[]> = {};
+  loadApp({ getElementById: (id: string) => els[id] ?? null, querySelector: () => null, title: "weave" }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+
+  // The operator has the details open and the log scrolled up when an action answers 204.
+  const view = fakeView("view-runs", true, 300);
+  els["view-runs"] = view;
+  els["view-runs-log"] = view.log;
+  fire("htmx:beforeSwap", { xhr: { status: 204 }, target: view, shouldSwap: false });
+
+  // Afterwards the operator closes the details and scrolls; then an unrelated swap settles.
+  view.details.open = false;
+  view.log.scrollTop = 500;
+  const other = { id: "weave-count", querySelectorAll: () => [] };
+  els["weave-count"] = other;
+  fire("htmx:beforeSwap", { xhr: { status: 200 }, target: other, shouldSwap: true });
+  fire("htmx:afterSettle", { xhr: { status: 200 } });
+
+  assert.equal(view.details.open, false, "the operator's own close is not undone by a stale snapshot");
+  assert.equal(view.log.scrollTop, 500, "the operator's own scroll is not undone by a stale snapshot");
 });
 
 test("an OOB #weave-error from a 2xx response stays shown; the next successful request clears it", () => {

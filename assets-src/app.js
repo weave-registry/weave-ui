@@ -149,7 +149,9 @@
   }
 
   htmx.on("htmx:oobBeforeSwap", function (evt) { remember(evt.detail.target); });
-  htmx.on("htmx:beforeSwap", function (evt) { remember(evt.detail.target); });
+  // A response that is not swapped (204, or one htmx is told not to swap) never settles: no snapshot, or a
+  // later unrelated settle would replay it over the operator's own toggles and scrolling.
+  htmx.on("htmx:beforeSwap", function (evt) { if (evt.detail.shouldSwap) remember(evt.detail.target); });
   // htmx 2 runs the OOB swaps before the main swap: an OOB swap restores only its own target, so the main
   // target's entry survives until afterSettle, when its new content is in the DOM.
   htmx.on("htmx:oobAfterSwap", function (evt) {
