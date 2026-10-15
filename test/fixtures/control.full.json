@@ -1,0 +1,304 @@
+{
+  "now": 1792102391042,
+  "control": {
+    "budget": {
+      "usd": 25,
+      "source": "log",
+      "setBy": "gary",
+      "setAt": 1792098791042
+    },
+    "perTaskUsd": {
+      "usd": 2,
+      "source": "startup"
+    },
+    "windowHours": 24,
+    "halt": {
+      "halted": true,
+      "drain": true,
+      "cause": "budget",
+      "reason": "over budget",
+      "by": "gateway",
+      "since": 1792102331042,
+      "origin": {
+        "user": "gary",
+        "host": "bazzite",
+        "pid": 123,
+        "parent": "bash",
+        "cwd": "/home/gary"
+      }
+    },
+    "yolo": {
+      "on": true,
+      "until": 1792105991042,
+      "by": "gary",
+      "since": 1792102390042
+    },
+    "guard": {
+      "mode": "strict",
+      "since": 1792015991042,
+      "by": "gary"
+    },
+    "config": {
+      "results": [
+        {
+          "path": "model.default",
+          "value": "opus",
+          "by": "gary",
+          "at": 1792101891042
+        },
+        {
+          "path": "limits",
+          "value": {
+            "a": 1
+          },
+          "by": "bot",
+          "at": 1792102382042
+        }
+      ],
+      "count": 2,
+      "total": 5,
+      "note": "2 of 5"
+    },
+    "digest": "a75346c97bc9",
+    "peers": {
+      "results": [
+        {
+          "agent": "max-peer",
+          "node": "max",
+          "digest": "abc",
+          "state": "behind",
+          "difference": "budget 20 vs 25",
+          "kind": "peer"
+        },
+        {
+          "agent": "gw",
+          "node": "bazzite",
+          "digest": "def",
+          "state": "settling",
+          "kind": "gateway"
+        }
+      ],
+      "count": 2,
+      "total": 2,
+      "note": "all"
+    }
+  },
+  "models": {
+    "windowHours": 24,
+    "tasks": {
+      "results": [
+        {
+          "task": "task-1",
+          "title": "Fix it",
+          "ts": 1792102291042,
+          "model": "opus",
+          "ran": "claude-opus-5-5",
+          "backend": "claude",
+          "runtime": "sdk",
+          "by": "max-peer",
+          "routedBy": "tier:hard",
+          "rerouted": "failover:usage-limit"
+        },
+        {
+          "task": "task-2",
+          "title": "",
+          "ts": 1792102191042
+        }
+      ],
+      "count": 2,
+      "total": 9,
+      "note": "2 of 9"
+    },
+    "byModel": {
+      "results": [
+        {
+          "model": "opus",
+          "tasks": 3
+        },
+        {
+          "model": "qwen",
+          "tasks": 1
+        }
+      ],
+      "count": 2,
+      "total": 2,
+      "note": "all"
+    },
+    "hosts": {
+      "results": [
+        {
+          "node": "max",
+          "agents": [
+            "m-peer"
+          ],
+          "backend": "claude",
+          "defaultModel": "opus",
+          "lanes": [
+            "openrouter"
+          ],
+          "accounts": [],
+          "openBreakers": [
+            {
+              "key": "claude",
+              "cause": "429"
+            }
+          ]
+        },
+        {
+          "node": "mini",
+          "agents": [],
+          "accounts": [],
+          "openBreakers": [],
+          "note": "lanes unknown"
+        }
+      ],
+      "count": 2,
+      "total": 2,
+      "note": "all"
+    },
+    "declarers": {
+      "results": [
+        {
+          "gateway": "bazzite:8788",
+          "node": "bazzite",
+          "settings": [
+            {
+              "setting": "model.default",
+              "value": "opus",
+              "source": "log"
+            },
+            {
+              "setting": "model.hard",
+              "source": "default"
+            }
+          ]
+        }
+      ],
+      "count": 1,
+      "total": 1,
+      "note": "all"
+    },
+    "usageLimit": {
+      "key": "claude",
+      "until": 1792105991042,
+      "lanes": [],
+      "remedy": "weave plugin enable openrouter"
+    },
+    "unavailable": {
+      "why": "no peer reports",
+      "remedy": "weave upgrade"
+    }
+  },
+  "costs": {
+    "spentUsd": 26.5,
+    "budgetUsd": 25,
+    "remainingUsd": 0,
+    "over": true,
+    "fraction": 1.06,
+    "windowHours": 24,
+    "perTaskUsd": 2,
+    "tokens": 0,
+    "basis": "partly estimated",
+    "byModel": {
+      "results": [
+        {
+          "model": "opus",
+          "usd": 20,
+          "tokens": 1000,
+          "tasks": 3,
+          "basis": "measured"
+        }
+      ],
+      "count": 1,
+      "total": 1,
+      "note": "all"
+    },
+    "byPeer": {
+      "results": [
+        {
+          "peer": "max-peer",
+          "usd": 26.5,
+          "basis": "estimated"
+        }
+      ],
+      "count": 1,
+      "total": 1,
+      "note": "all"
+    },
+    "byTask": {
+      "results": [
+        {
+          "task": "task-1",
+          "title": "Fix it",
+          "usd": 12,
+          "basis": "measured"
+        }
+      ],
+      "count": 1,
+      "total": 4,
+      "note": "1 of 4"
+    },
+    "unavailable": {
+      "why": "nothing was metered in the last 24 h",
+      "remedy": "peers meter each turn as it runs — a fleet that has not worked yet reports nothing; weave status shows whether any is running"
+    }
+  },
+  "raft": {
+    "mode": "shadow",
+    "summary": "Raft control plane (shadow): 1 of 2 voters diverge",
+    "quorum": false,
+    "frozen": {
+      "message": "no quorum: control frozen",
+      "since": 1792102331042,
+      "nodes": [
+        "max"
+      ]
+    },
+    "silent": {
+      "message": "no report for 2m",
+      "nodes": [
+        "mini"
+      ]
+    },
+    "voters": {
+      "results": [
+        {
+          "node": "bazzite",
+          "agent": "b-peer",
+          "role": "leader",
+          "term": 3,
+          "leader": "bazzite",
+          "commit": 10,
+          "applied": 10,
+          "fresh": true,
+          "lastContactAt": 1792102390042,
+          "reportedAt": 1792102389042,
+          "reportedSec": 2,
+          "shadow": "agrees",
+          "apDigest": "a",
+          "raftDigest": "a"
+        },
+        {
+          "node": "max",
+          "agent": "m-peer",
+          "role": "follower",
+          "term": 3,
+          "applied": 8,
+          "fresh": false,
+          "reportedAt": 1792102301042,
+          "reportedSec": 90,
+          "shadow": "diverges",
+          "divergentSec": 30,
+          "apDigest": "a",
+          "raftDigest": "b",
+          "stale": true,
+          "lastSeenAt": 1792102301042,
+          "lastSeenSec": 90
+        }
+      ],
+      "count": 2,
+      "total": 3,
+      "note": "2 of 3"
+    }
+  }
+}
