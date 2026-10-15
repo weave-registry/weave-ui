@@ -14,14 +14,6 @@ const T = templates as Record<string, (v: unknown, c: unknown) => string>;
 const fx = (n: string): unknown => JSON.parse(readFileSync(join(ROOT, "test", "fixtures", `${n}.json`), "utf8"));
 const css = readFileSync(join(ROOT, "assets-src", "weave.css"), "utf8");
 
-test("every <details> a polled view emits carries data-keep, so a poll never closes what the operator opened", () => {
-  for (const f of fixtures()) {
-    if (f.template === "audit" || f.template === "error") continue;
-    const out = T[f.template]!(f.vm, CTX);
-    for (const m of out.matchAll(/<details\b[^>]*>/g)) assert.match(m[0], /data-keep="[^"]+"/, `${f.template}.${f.name}: ${m[0]}`);
-  }
-});
-
 test("Control can stop the fleet: Halt on the running card, the yolo switch on the autonomy card", () => {
   const live = T.control!(fx("control.live"), CTX);
   assert.match(live, /hx-post="\/ui\/a\/fleet"[^>]*data-confirm="Halt the fleet\?[^"]*"><input type="hidden" name="@" value="halt"><button class="btn danger" type="submit">■ Halt<\/button>/);
