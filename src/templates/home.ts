@@ -24,7 +24,7 @@ export function home(vm: HomeViewModel, ctx: RenderCtx): string {
   const help = n0(rec(work["summary"])["help"]);
 
   return toHtml(
-    html`<section id="view-home" class="view home" hx-get="/ui/f/home" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true" data-needs-count="${needsCount}" data-nav-count="work:${help}"><div class="home-grid"><div class="home-main">${pageHead(v)}${harness(v["status"])}${needsSection(needs, needsCount, now)}${decidedSection(v["decided"], now)}${workingSection(v["working"], v["queued"], now)}${doneSection(v["done"], now)}</div> ${chatAside(v["chat"], now)}</div></section>`,
+    html`<section id="view-home" class="view home" hx-get="/ui/f/home" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true" data-needs-count="${needsCount}" data-nav-count="work:${help}"><div>${pageHead(v)}${harness(v["status"])}${needsSection(needs, needsCount, now)}${decidedSection(v["decided"], now)}${workingSection(v["working"], v["queued"], now)}${doneSection(v["done"], now)}</div>${chatAside(v["chat"], now)}</section>`,
   );
 }
 
@@ -71,7 +71,7 @@ const VERDICTS = ["halted", "degraded", "working", "idle"] as const;
 
 function harness(status: unknown): SafeHtml {
   if (typeof status !== "object" || status === null) {
-    return html`<div class="harness" data-verdict="idle" role="status" aria-label="Harness status"><p class="muted">Reading the harness…</p></div>`;
+    return html`<div class="harness" data-verdict="idle" role="status" aria-label="Harness status"><span class="muted">Reading the harness…</span></div>`;
   }
   const s = rec(status);
   const verdict = VERDICTS.find((x) => x === s["verdict"]) ?? "idle";
@@ -80,7 +80,7 @@ function harness(status: unknown): SafeHtml {
   const facts = rec(s["facts"]);
   const halted = verdict === "halted" || reasons.some((r) => r["key"] === "halt");
   const list = reasons.length > 0 ? html`<ul class="harness-reasons">${reasons.map(harnessReason)}</ul>` : "";
-  return html`<div class="harness" data-verdict="${verdict}" role="status" aria-label="Harness status"><div class="harness-head"><span class="harness-word">${str(s["word"])}</span> <span class="harness-sentence">${str(s["sentence"])}</span></div>${list}<div class="harness-facts">${harnessFacts(facts, now)}</div>${fleetControls(halted, rec(facts["yolo"]), now)}</div>`;
+  return html`<div class="harness" data-verdict="${verdict}" role="status" aria-label="Harness status"><div class="harness-head"><span class="harness-word">${str(s["word"])}</span><span class="harness-sentence">${str(s["sentence"])}</span></div>${list}<div class="harness-facts">${harnessFacts(facts, now)}</div>${fleetControls(halted, rec(facts["yolo"]), now)}</div>`;
 }
 
 function yoloPick(): SafeHtml {
@@ -106,7 +106,7 @@ function harnessReason(r: Rec): SafeHtml {
   } else if (fix["kind"] === "link") {
     control = actionLink(fix["href"], label);
   }
-  return html`<li class="harness-reason" data-key="${str(r["key"])}">${str(r["text"])} ${control}</li>`;
+  return html`<li class="harness-reason" data-key="${str(r["key"])}"><span class="grow">${str(r["text"])}</span>${control}</li>`;
 }
 
 function fact(body: SafeHtml): SafeHtml {
@@ -375,7 +375,7 @@ function grantCard(n: Rec, now: number | undefined): SafeHtml {
   const task = str(n["task"]);
   const id = str(n["grantId"]);
   const call = strs(n["call"]);
-  return html`<div class="card-title">${task !== "" ? task : "A task"} ${toolPhrase(n["tool"])}</div>${cardMeta(n, now)}${call.length > 0 ? html`<pre>${call.join("\n")}</pre>` : ""}<div class="card-foot">${actionForm({ grant: { approve: id } }, { label: "Allow" })} ${actionForm({ grant: { deny: id } }, { label: "Deny", tone: "quiet" })}</div>`;
+  return html`<div class="card-title">${task !== "" ? task : "A task"} ${toolPhrase(n["tool"])}</div>${cardMeta(n, now)}${call.length > 0 ? html`<pre>${call.join("\n")}</pre>` : ""}<div class="actions">${actionForm({ grant: { approve: id } }, { label: "Allow" })} ${actionForm({ grant: { deny: id } }, { label: "Deny", tone: "quiet" })}</div>`;
 }
 
 function stageCard(n: Rec, now: number | undefined): SafeHtml {
@@ -383,35 +383,35 @@ function stageCard(n: Rec, now: number | undefined): SafeHtml {
   const stage = str(n["stage"]);
   const name = stageName(stage);
   const note = str(n["note"]);
-  return html`<div class="card-title"><span class="ref">#${issue} ${str(n["title"])} — </span>ready for ${name}</div>${cardMeta(n, now)}<div class="card-why">${name} will ${stageVerb(stage)}.${note !== "" ? ` The last stage said: ${note}` : ""}</div><div class="card-foot">${actionForm({ factoryAdvance: { issue } }, { label: `Start ${name}` })} ${actionForm({ factoryClose: { issue } }, { label: "Close", tone: "quiet", confirm: CLOSE_CONFIRM(String(issue)) })} ${actionLink("/factory", "Open Factory", "btn link")}</div>`;
+  return html`<div class="card-title"><span class="ref">#${issue} ${str(n["title"])} — </span>ready for ${name}</div>${cardMeta(n, now)}<div class="card-why">${name} will ${stageVerb(stage)}.${note !== "" ? ` The last stage said: ${note}` : ""}</div><div class="actions">${actionForm({ factoryAdvance: { issue } }, { label: `Start ${name}` })} ${actionForm({ factoryClose: { issue } }, { label: "Close", tone: "quiet", confirm: CLOSE_CONFIRM(String(issue)) })} ${actionLink("/factory", "Open Factory", "btn link")}</div>`;
 }
 
 function planStep(step: Rec, i: number): SafeHtml {
   const cost = num(step["costUsd"]);
-  const costLine = cost !== undefined ? html`<span class="card-why">about ${money(cost)}</span>` : "";
+  const costLine = cost !== undefined ? html`<div class="card-why">about ${money(cost)}</div>` : "";
   const what =
     step["kind"] === "factory"
-      ? html`<span class="badge" data-tone="work">factory</span> <strong>${str(step["title"])}</strong><span class="card-why">${str(step["body"])}</span>`
-      : html`<span class="badge">${str(step["role"])}</span> ${str(step["goal"])}`;
-  return html`<label class="plan-step"><input type="checkbox" name="steps:num[]" value="${i}" checked> ${what}${costLine}</label>`;
+      ? html`<span class="badge" data-tone="work">factory</span> <strong>${str(step["title"])}</strong><div class="card-why">${str(step["body"])}</div>`
+      : html`<span class="badge">${str(step["role"])}</span> <span>${str(step["goal"])}</span>`;
+  return html`<label class="plan-step"><input type="checkbox" name="steps:num[]" value="${i}" checked><div class="grow">${what}${costLine}</div></label>`;
 }
 
 function planRole(role: Rec): SafeHtml {
-  return html`<label class="plan-step"><input type="checkbox" name="roles:str[]" value="${str(role["name"])}"> <span class="badge" data-tone="needs">new role</span> <strong>${str(role["name"])}</strong> — ${str(role["purpose"])}<span class="card-why">Why: ${str(role["why"])} · Tools: ${strs(role["tools"]).join(", ")}</span></label>`;
+  return html`<label class="plan-step"><input type="checkbox" name="roles:str[]" value="${str(role["name"])}"><div class="grow"><span class="badge" data-tone="needs">new role</span> <strong>${str(role["name"])}</strong> — ${str(role["purpose"])}<div class="card-why">Why: ${str(role["why"])} · Tools: ${strs(role["tools"]).join(", ")}</div></div></label>`;
 }
 
 function planCard(n: Rec, now: number | undefined): SafeHtml {
   const plan = rec(n["plan"]);
   const id = str(plan["id"]);
   const task = str(n["task"]);
-  const forLine = task !== "" ? html`<p class="card-why">For: <a href="/task?id=${str(plan["request"])}">${task}</a></p>` : "";
-  const extra = [...arr(plan["steps"]).map((s, i) => planStep(rec(s), i)), ...arr(plan["roles"]).map((r) => planRole(rec(r)))];
-  return html`<div class="card-title">The chief of staff proposes: ${str(plan["summary"])}</div>${cardMeta(n, now)}${forLine}${actionForm({ plan: { accept: id } }, { label: "Start ticked", extra })}<div class="card-foot">${actionForm({ plan: { decline: id } }, { label: "Decline", tone: "quiet" })}</div>`;
+  const forLine = task !== "" ? html`<div class="card-why">For: <a href="/task?id=${str(plan["request"])}">${task}</a></div>` : "";
+  const extra = html`<div class="plan-steps">${arr(plan["steps"]).map((s, i) => planStep(rec(s), i))}${arr(plan["roles"]).map((r) => planRole(rec(r)))}</div>`;
+  return html`<div class="card-title">The chief of staff proposes: ${str(plan["summary"])}</div>${cardMeta(n, now)}${forLine}${actionForm({ plan: { accept: id } }, { label: "Start ticked", extra })}<div class="actions">${actionForm({ plan: { decline: id } }, { label: "Decline", tone: "quiet" })}</div>`;
 }
 
 function haltCard(n: Rec, now: number | undefined): SafeHtml {
   const usd = html`<input type="number" name="usd:num" min="0" step="5" placeholder="$ per day" aria-label="New budget in dollars per day" required>`;
-  return html`<div class="card-title">${str(n["title"])}</div>${cardMeta(n, now)}<div class="card-foot">${actionForm({ fleet: "resume" }, { label: "Resume" })} ${actionForm({ budget: {} }, { label: "Raise budget", tone: "quiet", extra: usd })}</div>`;
+  return html`<div class="card-title">${str(n["title"])}</div>${cardMeta(n, now)}<div class="actions">${actionForm({ fleet: "resume" }, { label: "Resume" })} ${actionForm({ budget: {} }, { label: "Raise budget", tone: "quiet", extra: usd })}</div>`;
 }
 
 function attentionCard(n: Rec, now: number | undefined): SafeHtml {
@@ -421,7 +421,7 @@ function attentionCard(n: Rec, now: number | undefined): SafeHtml {
   const hasActions = arr(n["actions"]).length > 0;
   const whoLine = who !== "" ? html`<p class="card-who" data-tone="${who.startsWith("Yolo") ? "auto" : "needs"}">${who}</p>` : "";
   const fix = action !== "" ? html`<details class="fix"><summary>${hasActions ? "Details" : "How to fix"}</summary><pre>${action}</pre></details>` : "";
-  const acts = hasActions ? html`<div class="card-foot">${attentionActions(n["actions"])}</div>` : "";
+  const acts = hasActions ? html`<div class="actions">${attentionActions(n["actions"])}</div>` : "";
   return html`<div class="card-title">${str(n["title"])}</div>${cardMeta(n, now)}${detail !== "" ? html`<div class="card-why">${detail}</div>` : ""}${whoLine}${acts}${fix}`;
 }
 
@@ -433,7 +433,7 @@ function decidedSection(decided: unknown, now: number | undefined): SafeHtml {
   if (rows.length === 0) return html`${head}<p class="note" id="decided">Nothing was decided for you in the last 24 hours.</p>`;
   const items = rows.map((d) => {
     const why = str(d["why"]);
-    return html`<div class="row"><span class="badge" data-tone="auto">${str(d["by"])}</span><div class="main">${str(d["what"])}${why !== "" ? html` <span class="sub">${why}</span>` : ""}</div><div class="end">${time(d["ts"], opt(now))} · <a href="${str(d["href"])}">Audit</a></div></div>`;
+    return html`<div class="row"><span class="badge" data-tone="auto">${str(d["by"])}</span><div class="grow">${str(d["what"])}${why !== "" ? html`<div class="sub">${why}</div>` : ""}</div><span class="meta">${time(d["ts"], opt(now))} · <a href="${str(d["href"])}">Audit</a></span></div>`;
   });
   return html`${head}<div class="card" id="decided">${items}</div>`;
 }
@@ -445,17 +445,18 @@ function workingSection(working: unknown, queued: unknown, now: number | undefin
   const q = n0(queued);
   const head = html`<h2 class="section" id="working-h">Working now</h2>`;
   const waiting = q > 0 ? html`<p class="muted small">${plural(q, "task")} waiting for a worker.</p>` : "";
-  if (rows.length === 0) return html`${head}<p class="note" id="working">Nothing is running.</p>${waiting}`;
+  if (rows.length === 0 && q === 0) return html`${head}<p class="note" id="working">Nothing is running.</p>`;
   const items = rows.map((w) => {
     const id = str(w["taskId"]);
     const title = str(w["title"]);
+    const agent = str(w["agent"]);
     const stop = actionForm(
       { cancel: id },
       { label: "Stop", buttonClass: "btn link", confirm: `Stop "${title}"? The worker aborts; what it did so far is kept.` },
     );
-    return html`<div class="row"><div class="main"><a href="/task?id=${id}">${title}</a> <span class="sub">by ${str(w["agent"])}</span></div><div class="end">${time(w["sinceTs"], opt(now))} ${stop}</div></div>`;
+    return html`<div class="row"><div class="grow"><a href="/task?id=${id}">${title}</a><div class="sub">${agent !== "" ? `by ${agent}` : ""}</div></div><span class="meta">${time(w["sinceTs"], opt(now))}</span>${stop}</div>`;
   });
-  return html`${head}<div class="card" id="working">${items}</div>${waiting}`;
+  return html`${head}<div class="card" id="working">${items}${waiting}</div>`;
 }
 
 // ---- 6. done recently ----
@@ -470,7 +471,7 @@ function doneSection(done: unknown, now: number | undefined): SafeHtml {
     const state = d["state"] === "failed" ? "failed" : d["state"] === "cancelled" ? "cancelled" : "done";
     const summary = str(d["summary"]);
     const sub = state === "failed" ? `Failed: ${summary}` : summary;
-    return html`<div class="row"><span class="mark" data-state="${state}">${MARKS[state] ?? ""}</span><div class="main"><a href="/task?id=${str(d["taskId"])}">${str(d["title"])}</a> <span class="sub">${sub}</span></div><div class="end">${time(d["ts"], opt(now))}</div></div>`;
+    return html`<div class="row"><span class="mark" data-state="${state}">${MARKS[state] ?? ""}</span><div class="grow"><a href="/task?id=${str(d["taskId"])}">${str(d["title"])}</a>${summary !== "" ? html`<div class="sub">${sub}</div>` : ""}</div><span class="meta">${time(d["ts"], opt(now))}</span></div>`;
   });
   return html`${head}<div class="card" id="done">${items}</div>`;
 }
@@ -490,8 +491,8 @@ function chatAside(chat: unknown, now: number | undefined): SafeHtml {
   const log =
     turns.length > 0
       ? turns.map((t) => chatTurn(t, now))
-      : html`<p class="note">Ask anything — what the fleet is doing, or work you want done.</p>`;
-  return html`<aside class="chat" id="chat-panel" aria-label="Ask weave"><div class="chat-head"><h2>Ask weave</h2> ${reset}</div><div class="chat-log" id="chat-log" data-keep-scroll>${log}</div><form class="composer" hx-post="/ui/a/chat" hx-swap="none"><textarea name="text" rows="2" placeholder="Ask a question or describe work to do" aria-label="Ask weave" data-enter-submits required></textarea><p class="hint">Enter sends · Shift+Enter for a new line. Anything permanent comes to Needs you first.</p><button class="btn primary" type="submit">Send</button></form></aside>`;
+      : html`<p class="muted">Ask anything — what the fleet is doing, or work you want done.</p>`;
+  return html`<aside class="chat" id="chat-panel" aria-label="Ask weave"><div class="chat-head"><h2>Ask weave</h2> ${reset}</div><div class="chat-log" id="chat-log" data-keep-scroll>${log}</div><form class="composer" hx-post="/ui/a/chat" hx-swap="none"><textarea name="text" rows="2" placeholder="Ask a question or describe work to do" aria-label="Ask weave" data-enter-submits required></textarea><div class="actions"><span class="hint">Enter sends · Shift+Enter for a new line. Anything permanent comes to Needs you first.</span><button class="btn primary" type="submit">Send</button></div></form></aside>`;
 }
 
 function basename(path: string): string {
@@ -500,19 +501,19 @@ function basename(path: string): string {
 }
 
 function chatTurn(t: Rec, now: number | undefined): SafeHtml {
-  const you = html`<div class="turn you"><p class="text">${str(t["asked"])}</p></div>`;
+  const you = html`<div class="turn you"><div class="said">${str(t["asked"])}</div></div>`;
   const answer = t["answer"];
   let body: SafeHtml | "" = "";
   if (typeof answer === "string" && answer !== "") {
-    body = html`<div class="md">${markdown(answer)}</div>`;
+    body = html`<div class="said md">${markdown(answer)}</div>`;
   } else if (t["state"] === "working") {
     const since = num(t["sinceTs"]);
     const progress = strs(t["progress"]);
     body = html`<div class="working">Working on it${since !== undefined ? html` · ${time(since, opt(now))}` : ""}${progress.length > 0 ? html`<ul>${progress.map((p) => html`<li>${p}</li>`)}</ul>` : ""}</div>`;
   } else if (t["state"] === "waiting") {
-    body = html`<p class="muted">Waiting for a worker…</p>`;
+    body = html`<div class="said muted">Waiting for a worker…</div>`;
   } else if (t["state"] === "failed") {
-    body = html`<p class="muted">${"That didn't work."}</p>`;
+    body = html`<div class="said muted">${"That didn't work."}</div>`;
   }
   const panels = arr(t["panels"]).map(panel);
   const files = strs(t["files"]).map(
