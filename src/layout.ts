@@ -35,6 +35,8 @@ export interface LayoutView {
   readonly name: string;
   readonly fromLocation?: boolean;
   readonly poll?: boolean;
+  /** The view needs a query: without one app.js drops its hx-get, so the slot asks for one instead of loading. */
+  readonly queryRequired?: boolean;
 }
 
 export interface LayoutOptions {
@@ -58,10 +60,18 @@ function navLink(n: NavEntry, page: string): SafeHtml {
 }
 
 function viewSlot(v: LayoutView): SafeHtml {
-  const loading = html`<p class="note loading" role="status">Loading…</p>`;
-  return v.fromLocation === true
-    ? html`<div id="view-${v.name}" hx-get="/ui/f/${v.name}" hx-trigger="load" hx-swap="none" data-query-from-location>${loading}</div>`
-    : html`<div id="view-${v.name}" hx-get="/ui/f/${v.name}" hx-trigger="load" hx-swap="none">${loading}</div>`;
+  const required = v.queryRequired === true;
+  const note = required
+    ? html`<p class="note">Pick a task, an issue or conversation, or a time window — or search for words.</p>`
+    : html`<p class="note loading" role="status">Loading…</p>`;
+  if (v.fromLocation === true) {
+    return required
+      ? html`<div id="view-${v.name}" hx-get="/ui/f/${v.name}" hx-trigger="load" hx-swap="none" data-query-from-location data-query-required>${note}</div>`
+      : html`<div id="view-${v.name}" hx-get="/ui/f/${v.name}" hx-trigger="load" hx-swap="none" data-query-from-location>${note}</div>`;
+  }
+  return required
+    ? html`<div id="view-${v.name}" hx-get="/ui/f/${v.name}" hx-trigger="load" hx-swap="none" data-query-required>${note}</div>`
+    : html`<div id="view-${v.name}" hx-get="/ui/f/${v.name}" hx-trigger="load" hx-swap="none">${note}</div>`;
 }
 
 export function layout(o: LayoutOptions): string {
