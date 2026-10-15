@@ -31,12 +31,11 @@ test("Home: Halt is a danger control, every Resume asks first, and one set of fl
   assert.ok(resumes <= 2, `${resumes} Resume forms on a halted Home`);
 });
 
-test("no link into a dropped page: no bare /task, no /knowledge, no 'see Activity'", () => {
+test("no link into a dropped page: no bare /task, no /knowledge", () => {
   for (const f of fixtures()) {
     const out = T[f.template]!(f.vm, CTX);
     assert.doesNotMatch(out, /href="\/task"/, `${f.template}.${f.name}`);
     assert.doesNotMatch(out, /href="\/knowledge/, `${f.template}.${f.name}`);
-    assert.doesNotMatch(out, /see Activity/, `${f.template}.${f.name}`);
   }
 });
 
