@@ -70,3 +70,25 @@ test("a deeply nested body renders its shallow fields and skips the rest, never 
   assert.match(toHtml(attentionActions([{ label: "Go", body: { fleet: deep } }])), /<form class="act" hx-post="\/ui\/a\/fleet"/);
   assert.match(toHtml(actionForm({ fleet: { a: { b: { c: "kept" } } } }, { label: "Go" })), /name="a\[b\]\[c\]" value="kept"/);
 });
+
+test("a body whose keys app.js would re-type or re-nest is shown, never posted", () => {
+  const disabled = /<span class="btn" aria-disabled="true"[^>]*>Go<\/span>/;
+  for (const inner of [
+    { "x:num": "12" },
+    { "x:bool": "yes" },
+    { "a[b]": "v" },
+    { "a]": "v" },
+    { "@": "v" },
+    { "": "v" },
+    { opts: { "k[0]": "v" } },
+    { opts: { "": "v" } },
+  ]) {
+    const h = toHtml(actionForm({ agent: inner }, { label: "Go" }));
+    assert.match(h, disabled, JSON.stringify(inner));
+    assert.doesNotMatch(h, /<form/, JSON.stringify(inner));
+  }
+  assert.match(toHtml(attentionActions([{ label: "Go", body: { agent: { "x:num": "12" } } }])), disabled);
+  const ok = toHtml(actionForm({ agent: { "ns:id": "a", opts: { "x:num": "12" } } }, { label: "Go" }));
+  assert.match(ok, /name="ns:id" value="a"/);
+  assert.match(ok, /name="opts\[x:num\]" value="12"/);
+});

@@ -59,8 +59,19 @@ function hidden(name: string, value: string): SafeHtml {
   return html`<input type="hidden" name="${name}" value="${value}">`;
 }
 
-/** The hidden inputs for one value at `path`, appended to `out`; values with no JSON type here are skipped. */
-function fieldsFor(path: string, v: unknown, out: SafeHtml[], depth: number): void {
+/**
+ * Whether object key `k` survives app.js's name parsing unchanged. Names have no escaping, so a key with '[' or ']',
+ * an empty key, or a top-level '@' or one ending in a type suffix (':bool', ':num') would be dropped or re-typed.
+ */
+function encodableKey(k: string, top: boolean): boolean {
+  return k !== "" && !/[[\]]/.test(k) && !(top && (k === "@" || /:(bool|num)$/.test(k)));
+}
+
+/**
+ * The hidden inputs for one value at `path`, appended to `out`; values with no JSON type here are skipped.
+ * False when an object key cannot be encoded, so the body would not arrive as given.
+ */
+function fieldsFor(path: string, v: unknown, out: SafeHtml[], depth: number): boolean {
   if (typeof v === "string") {
     out.push(hidden(path, v));
   } else if (isFiniteNumber(v)) {
@@ -75,16 +86,22 @@ function fieldsFor(path: string, v: unknown, out: SafeHtml[], depth: number): vo
       for (const x of items) out.push(hidden(`${path}:num[]`, String(x)));
     }
   } else if (isPlainObject(v) && depth < FIELD_DEPTH) {
-    for (const k of Object.keys(v)) fieldsFor(`${path}[${k}]`, v[k], out, depth + 1);
+    for (const k of Object.keys(v)) {
+      if (!encodableKey(k, false) || !fieldsFor(`${path}[${k}]`, v[k], out, depth + 1)) return false;
+    }
   }
+  return true;
 }
 
-function innerFields(inner: unknown): SafeHtml[] {
+/** The hidden inputs for a body's inner value, or undefined when one of its keys cannot be encoded. */
+function innerFields(inner: unknown): SafeHtml[] | undefined {
   const out: SafeHtml[] = [];
   if (typeof inner === "string") out.push(hidden("@", inner));
   else if (isFiniteNumber(inner)) out.push(hidden("@:num", String(inner)));
   else if (typeof inner === "boolean") out.push(hidden("@:bool", inner ? "true" : "false"));
-  else if (isPlainObject(inner)) for (const k of Object.keys(inner)) fieldsFor(k, inner[k], out, 1);
+  else if (isPlainObject(inner)) {
+    for (const k of Object.keys(inner)) if (!encodableKey(k, true) || !fieldsFor(k, inner[k], out, 1)) return undefined;
+  }
   return out;
 }
 
@@ -98,10 +115,10 @@ function buttonClassFor(o: ActionFormOptions): string {
 export function actionForm(body: Readonly<Record<string, unknown>>, o: ActionFormOptions): SafeHtml {
   const keys = isPlainObject(body) ? Object.keys(body) : [];
   const verb = keys.length === 1 ? keys[0] : undefined;
-  if (verb === undefined || !KNOWN_VERBS.includes(verb)) {
+  const fields = verb !== undefined && KNOWN_VERBS.includes(verb) ? innerFields(body[verb]) : undefined;
+  if (verb === undefined || fields === undefined) {
     return html`<span class="btn" aria-disabled="true" title="This action is not one this console can send.">${o.label}</span>`;
   }
-  const fields = innerFields(body[verb]);
   const extra = o.extra ?? [];
   const button = html`<button class="${buttonClassFor(o)}" type="submit">${o.label}</button>`;
   return o.confirm !== undefined
