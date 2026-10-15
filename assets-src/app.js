@@ -42,16 +42,22 @@
   function fileOk(path) { return FILE_RE.test(path) && FORBIDDEN.indexOf(path) === -1; }
 
   // Why the role editor's add-a-file fields can't be sent as they are ("" when they can): encode drops a file whose
-  // path is empty or not allowed, so typed text would be thrown away with no word to the operator.
-  function newFileProblem(path, body) {
+  // path is empty or not allowed, or one the editor already shows, so typed text would be thrown away with no word to
+  // the operator (or, for the last, would have to overwrite that file's text).
+  function newFileProblem(path, body, params) {
     if (!path && !body) return "";
     if (!path) return "Give the new file a path, or clear its text.";
-    if (fileOk(path)) return "";
-    return "A file path is one name of letters, digits, '.', '-' or '_' (no spaces or folders), or skills/<name>/SKILL.md with a lowercase <name>.";
+    if (!fileOk(path)) return "A file path is one name of letters, digits, '.', '-' or '_' (no spaces or folders), or skills/<name>/SKILL.md with a lowercase <name>.";
+    if (hasParam(params, "define[files][" + path + "]")) return "This role already has a file named " + path + ". Edit it above, or give the new file another path.";
+    return "";
   }
   function param(params, k) {
     var v = params && (typeof params.get === "function" ? params.get(k) : params[k]);
     return typeof v === "string" ? v : "";
+  }
+  function hasParam(params, k) {
+    if (!params) return false;
+    return typeof params.has === "function" ? params.has(k) : Object.prototype.hasOwnProperty.call(params, k);
   }
 
   function encode(entries) {
@@ -95,7 +101,10 @@
         delete cur[last];
       }
     });
-    if (newPath && fileOk(newPath)) filesOf(root)[newPath] = newBody;
+    if (newPath && fileOk(newPath)) {
+      var into = filesOf(root);
+      if (!Object.prototype.hasOwnProperty.call(into, newPath)) into[newPath] = newBody;
+    }
     if (removes.length) {
       var files = filesOf(root);
       removes.forEach(function (f) { if (Object.prototype.hasOwnProperty.call(files, f)) delete files[f]; });
@@ -109,7 +118,7 @@
       var d = evt.detail;
       if (isGet(d.verb)) { if (d.elt) getElts.add(d.elt); return; }
       if (d.elt) getElts.delete(d.elt);
-      var bad = newFileProblem(param(d.parameters, "@new-file:path"), param(d.parameters, "@new-file:body"));
+      var bad = newFileProblem(param(d.parameters, "@new-file:path"), param(d.parameters, "@new-file:body"), d.parameters);
       if (bad) {
         evt.preventDefault();
         var input = d.elt && d.elt.querySelector ? d.elt.querySelector('[name="@new-file:path"]') : null;

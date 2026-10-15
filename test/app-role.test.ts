@@ -83,3 +83,25 @@ test("a new file's text with an empty or rejected path blocks the save and tells
   assert.deepEqual(send("style-guide.md", "# Style"), { sent: true, warned: "" });
   assert.deepEqual(send("skills/tone/SKILL.md", "t"), { sent: true, warned: "" });
 });
+
+test("a new file named like a file the editor already shows never replaces that file's text, and the save is blocked with a warning", () => {
+  for (const body of ["# new text", ""]) {
+    assert.deepEqual(
+      encode([["define[files][AGENTS.md]", "edited agents"], ["define[files][persona.md]", "p"], ["@new-file:path", "AGENTS.md"], ["@new-file:body", body]]),
+      { define: { files: { "AGENTS.md": "edited agents", "persona.md": "p" } } },
+      JSON.stringify(body),
+    );
+  }
+  let warned = "";
+  let sent = true;
+  const input = { setCustomValidity: (m: string) => void (warned = m), reportValidity: () => true };
+  const form = { querySelector: (sel: string) => (sel === '[name="@new-file:path"]' ? input : null) };
+  const params = new FormData();
+  params.append("define[files][persona.md]", "my edits");
+  params.append("@new-file:path", "persona.md");
+  params.append("@new-file:body", "");
+  const evt = { detail: { verb: "post", elt: form, parameters: params, headers: {} as Record<string, string> }, preventDefault: () => void (sent = false) };
+  if (ext().onEvent!("htmx:configRequest", evt) === false) sent = false;
+  assert.equal(sent, false);
+  assert.match(warned, /persona\.md/);
+});
