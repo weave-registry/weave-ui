@@ -230,6 +230,31 @@ test("a failed audit check does not report that the log still gives exactly this
   assert.equal(out.tone, "");
 });
 
+test("an audit check whose response is not swapped (204) leaves no pending check to give a verdict later", () => {
+  const on: Record<string, Handler[]> = {};
+  let sha = "aaa";
+  const out = { textContent: "", tone: "", setAttribute(a: string, v: string) { if (a === "data-tone") this.tone = v; } };
+  const shaEl = { getAttribute: (a: string) => (a === "data-audit-sha" ? sha : null) };
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    querySelector: (sel: string) => (sel === "#view-audit [data-audit-sha]" ? shaEl : sel === "#view-audit [data-audit-result]" ? out : null),
+  }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+  const button = { hasAttribute: (a: string) => a === "data-audit-check", getAttribute: () => null };
+
+  const noContent = { status: 204 };
+  fire("htmx:beforeRequest", { elt: button, xhr: noContent });
+  fire("htmx:beforeSwap", { xhr: noContent, shouldSwap: false }); // htmx skips the swap, so no settle follows
+  fire("htmx:afterRequest", { xhr: noContent, successful: true, elt: button });
+
+  sha = "bbb"; // the operator picks a new selection
+  fire("htmx:afterSettle", { xhr: { status: 200 } });
+  fire("htmx:afterSettle", { xhr: noContent });
+  assert.equal(out.textContent, "", "no check was run to completion, so no verdict is shown");
+  assert.equal(out.tone, "");
+});
+
 test("a failed submit keeps the form dirty, so the view's next poll does not wipe the unsent draft", () => {
   const on: Record<string, Handler[]> = {};
   const docOn: Record<string, Handler[]> = {};

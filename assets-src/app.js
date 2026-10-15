@@ -337,6 +337,10 @@
     auditSha = cur ? cur.getAttribute("data-audit-sha") : "";
     auditXhr = evt.detail.xhr;
   });
+  // A response that is not swapped (204, or one htmx is told not to swap) never settles: drop the pending check.
+  htmx.on("htmx:beforeSwap", function (evt) {
+    if (evt.detail.xhr && evt.detail.xhr === auditXhr && !evt.detail.shouldSwap) { auditSha = null; auditXhr = null; }
+  });
 
   // Only the audit request's own settle finishes the check; other swaps (polls, counts) settle too.
   function auditResult(xhr) {
