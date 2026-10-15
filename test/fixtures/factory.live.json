@@ -1,0 +1,19 @@
+{
+  "board": [],
+  "supervisor": {
+    "autonomous": false,
+    "everyS": 30,
+    "advanced": [],
+    "problems": []
+  },
+  "yolo": {
+    "on": false,
+    "set": false,
+    "source": "env",
+    "grants": {
+      "factory": false,
+      "merge": false,
+      "fleet": false
+    }
+  }
+}

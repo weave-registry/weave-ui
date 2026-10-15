@@ -1,0 +1,91 @@
+{
+  "now": 1792102377572,
+  "newestVersion": "0.2.180",
+  "machines": [
+    {
+      "node": "This machine",
+      "lastHeardTs": 1792102374504,
+      "quiet": false,
+      "allDeparted": false,
+      "agents": [
+        {
+          "agent": "bazzite-712bbd26-main-peer",
+          "name": "bazzite-712bbd26-main-peer",
+          "lastSeenTs": 1792102374504,
+          "state": "idle",
+          "outdated": false,
+          "backend": "echo",
+          "version": "0.2.180"
+        }
+      ]
+    },
+    {
+      "node": "max",
+      "lastHeardTs": 1792095177572,
+      "quiet": true,
+      "remedy": "weave peers check max",
+      "allDeparted": false,
+      "agents": [
+        {
+          "agent": "max-dev",
+          "name": "dev",
+          "role": "developer",
+          "backend": "claude",
+          "version": "0.2.170",
+          "outdated": true,
+          "state": "working",
+          "lastSeenTs": 1792102376572,
+          "doing": {
+            "taskId": "t-1",
+            "title": "Dark mode",
+            "sinceTs": 1792102317572
+          }
+        },
+        {
+          "agent": "max-p",
+          "name": "p",
+          "outdated": false,
+          "state": "paused",
+          "lastSeenTs": 1792102377572,
+          "paused": {
+            "by": "gary",
+            "reason": "maintenance",
+            "ts": 1792102372572
+          }
+        },
+        {
+          "agent": "max-s",
+          "name": "s",
+          "outdated": false,
+          "state": "silent",
+          "lastSeenTs": 1792093377572
+        },
+        {
+          "agent": "max-old",
+          "name": "old",
+          "version": "0.2.100",
+          "outdated": true,
+          "state": "silent",
+          "lastSeenTs": 1792012377572,
+          "departed": true
+        }
+      ]
+    },
+    {
+      "node": "gone",
+      "lastHeardTs": 1792003377572,
+      "quiet": true,
+      "allDeparted": true,
+      "agents": [
+        {
+          "agent": "gone-a",
+          "name": "a",
+          "outdated": false,
+          "state": "silent",
+          "lastSeenTs": 1792003377572,
+          "departed": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "now": 1792102377577,
+  "scopes": [
+    {
+      "scope": "default",
+      "active": true,
+      "state": "live",
+      "liveAgents": 1,
+      "departedAgents": 0,
+      "silentNodes": 0,
+      "nodeCount": 1,
+      "lastEventTs": 1792102374504,
+      "downLinks": [],
+      "why": "1 node · last event 3s ago",
+      "nodes": [
+        {
+          "node": "bazzite-712bbd26",
+          "self": true,
+          "silent": false,
+          "lastEventTs": 1792102374504,
+          "links": [],
+          "agents": [
+            {
+              "agent": "bazzite-712bbd26-main-peer",
+              "version": "0.2.180",
+              "lastSeenTs": 1792102374504,
+              "live": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scope": "lab",
+      "active": false,
+      "state": "attention",
+      "liveAgents": 1,
+      "departedAgents": 2,
+      "silentNodes": 1,
+      "nodeCount": 2,
+      "lastEventTs": 1792102372577,
+      "downLinks": [
+        {
+          "node": "max",
+          "url": "https://mini.lan:8790/",
+          "forSec": 600,
+          "error": "ECONNREFUSED"
+        }
+      ],
+      "why": "a node cannot reach its peer",
+      "nodes": [
+        {
+          "node": "max",
+          "self": false,
+          "silent": true,
+          "lastEventTs": 1792101777577,
+          "address": {
+            "url": "https://max.lan:8790",
+            "fresh": false
+          },
+          "links": [
+            {
+              "url": "https://mini.lan:8790",
+              "up": false,
+              "forSec": 600,
+              "error": "ECONNREFUSED"
+            }
+          ],
+          "agents": [
+            {
+              "agent": "max-a",
+              "version": "0.2.180",
+              "lastSeenTs": 1792101777577,
+              "live": false
+            },
+            {
+              "agent": "max-b",
+              "lastSeenTs": 1792012377577,
+              "live": false,
+              "departed": true
+            }
+          ]
+        },
+        {
+          "node": "mini",
+          "self": false,
+          "silent": false,
+          "lastEventTs": 0,
+          "links": [
+            {
+              "url": "https://max.lan:8790",
+              "up": true,
+              "forSec": 0
+            }
+          ],
+          "agents": []
+        }
+      ]
+    },
+    {
+      "scope": "empty",
+      "active": false,
+      "state": "empty",
+      "liveAgents": 0,
+      "departedAgents": 0,
+      "silentNodes": 0,
+      "nodeCount": 0,
+      "lastEventTs": 0,
+      "downLinks": [],
+      "why": "no log",
+      "nodes": [],
+      "error": "cannot open"
+    }
+  ],
+  "totals": {
+    "scopes": 3,
+    "liveAgents": 2,
+    "departedAgents": 2,
+    "silentNodes": 1,
+    "attention": 1,
+    "dormantOrEmpty": 1
+  }
+}

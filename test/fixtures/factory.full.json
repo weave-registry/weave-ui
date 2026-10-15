@@ -1,0 +1,218 @@
+{
+  "board": [
+    {
+      "issue": 12,
+      "title": "Dark mode",
+      "url": "https://git.local/gary/app/issues/12",
+      "stages": [
+        {
+          "stage": "triage",
+          "taskId": "f-triage",
+          "attempt": 1,
+          "state": "done",
+          "usd": 0.1,
+          "hexaUsd": 0
+        },
+        {
+          "stage": "plan",
+          "taskId": "f-plan",
+          "attempt": 1,
+          "state": "done",
+          "usd": 0.1,
+          "hexaUsd": 0,
+          "model": "claude-opus-5-5",
+          "routedBy": "tier:hard"
+        },
+        {
+          "stage": "build",
+          "taskId": "f-build",
+          "attempt": 1,
+          "state": "running",
+          "usd": 0.1,
+          "hexaUsd": 0,
+          "model": "claude-sonnet-5",
+          "escalatedFrom": "qwen3:8b"
+        }
+      ],
+      "usd": 1.25,
+      "hexaUsd": 0.5,
+      "next": "factory:verify — prove it",
+      "runs": {
+        "total": 4,
+        "done": 2,
+        "failed": 1,
+        "open": 1,
+        "cancelled": 0
+      },
+      "waiting": 1,
+      "pending": [
+        {
+          "requestId": "gr-1",
+          "taskId": "f-build",
+          "tool": "bash",
+          "detail": "$ bun test"
+        }
+      ],
+      "updatedTs": 1792103650195
+    },
+    {
+      "issue": 13,
+      "title": "Typo",
+      "stages": [
+        {
+          "stage": "triage",
+          "taskId": "f-triage",
+          "attempt": 1,
+          "state": "done",
+          "usd": 0.1,
+          "hexaUsd": 0
+        }
+      ],
+      "usd": 0,
+      "hexaUsd": 0,
+      "next": "factory:plan — write it",
+      "waiting": 0,
+      "pending": [],
+      "updatedTs": 1792103650195
+    },
+    {
+      "issue": 14,
+      "title": "Queued",
+      "stages": [
+        {
+          "stage": "build",
+          "taskId": "f-build",
+          "attempt": 1,
+          "state": "queued",
+          "usd": 0.1,
+          "hexaUsd": 0
+        }
+      ],
+      "usd": 0,
+      "hexaUsd": 0,
+      "waiting": 0,
+      "pending": [],
+      "updatedTs": 1792103650195
+    },
+    {
+      "issue": 9,
+      "title": "Old",
+      "stages": [
+        {
+          "stage": "close",
+          "taskId": "f-close",
+          "attempt": 1,
+          "state": "done",
+          "usd": 0.1,
+          "hexaUsd": 0
+        }
+      ],
+      "usd": 2,
+      "hexaUsd": 0,
+      "next": "none — merged",
+      "completed": {
+        "ts": 1792017250195
+      },
+      "waiting": 0,
+      "pending": [],
+      "updatedTs": 1792103650195
+    }
+  ],
+  "supervisor": {
+    "autonomous": false,
+    "everyS": 30,
+    "lastScanTs": 1792103640195,
+    "advanced": [
+      {
+        "issue": 12,
+        "stage": "build",
+        "ok": true,
+        "ts": 1792103590195
+      },
+      {
+        "issue": 13,
+        "stage": "plan",
+        "ok": false,
+        "error": "no slot",
+        "ts": 1792103620195
+      }
+    ],
+    "problems": [
+      {
+        "key": "p1",
+        "severity": "needs-you",
+        "title": "Merge PR #40?",
+        "detail": "CI green",
+        "actions": [
+          {
+            "label": "Merge",
+            "body": {
+              "factoryDecide": {
+                "key": "merge:40",
+                "label": "merge"
+              }
+            }
+          },
+          {
+            "label": "Close",
+            "body": {
+              "factoryClose": {
+                "issue": 12
+              }
+            }
+          },
+          {
+            "label": "PR",
+            "href": "https://git.local/gary/app/pulls/40"
+          }
+        ]
+      },
+      {
+        "key": "p2",
+        "severity": "needs-you",
+        "title": "Stuck",
+        "action": "weave factory unstick 13"
+      },
+      {
+        "key": "w1",
+        "severity": "watch",
+        "title": "Retrying build",
+        "actions": [
+          {
+            "label": "Log",
+            "href": "/audit?thread=factory:12"
+          }
+        ]
+      }
+    ]
+  },
+  "yolo": {
+    "on": false,
+    "set": true,
+    "source": "log",
+    "grants": {
+      "factory": true,
+      "merge": true,
+      "fleet": false
+    },
+    "ended": "expired",
+    "endedAt": 1792100050195
+  },
+  "backlog": {
+    "repo": "gary/app",
+    "issues": [
+      {
+        "number": 20,
+        "title": "New idea",
+        "url": "https://git.local/gary/app/issues/20",
+        "createdAt": "2026-10-01"
+      },
+      {
+        "number": 21,
+        "title": "No url",
+        "url": "",
+        "createdAt": "2026-10-02"
+      }
+    ]
+  }
+}

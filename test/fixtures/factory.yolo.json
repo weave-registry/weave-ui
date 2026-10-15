@@ -1,0 +1,87 @@
+{
+  "board": [],
+  "supervisor": {
+    "autonomous": true,
+    "everyS": 30,
+    "lastScanTs": 1792103640195,
+    "advanced": [
+      {
+        "issue": 12,
+        "stage": "build",
+        "ok": true,
+        "ts": 1792103590195
+      },
+      {
+        "issue": 13,
+        "stage": "plan",
+        "ok": false,
+        "error": "no slot",
+        "ts": 1792103620195
+      }
+    ],
+    "problems": [
+      {
+        "key": "p1",
+        "severity": "needs-you",
+        "title": "Merge PR #40?",
+        "detail": "CI green",
+        "actions": [
+          {
+            "label": "Merge",
+            "body": {
+              "factoryDecide": {
+                "key": "merge:40",
+                "label": "merge"
+              }
+            }
+          },
+          {
+            "label": "Close",
+            "body": {
+              "factoryClose": {
+                "issue": 12
+              }
+            }
+          },
+          {
+            "label": "PR",
+            "href": "https://git.local/gary/app/pulls/40"
+          }
+        ]
+      },
+      {
+        "key": "p2",
+        "severity": "needs-you",
+        "title": "Stuck",
+        "action": "weave factory unstick 13"
+      },
+      {
+        "key": "w1",
+        "severity": "watch",
+        "title": "Retrying build",
+        "actions": [
+          {
+            "label": "Log",
+            "href": "/audit?thread=factory:12"
+          }
+        ]
+      }
+    ],
+    "held": "usage limit until 18:00"
+  },
+  "yolo": {
+    "on": true,
+    "set": true,
+    "source": "log",
+    "grants": {
+      "factory": true,
+      "merge": true,
+      "fleet": true
+    },
+    "since": 1792103590195,
+    "expiresAt": 1792110850195,
+    "by": "console",
+    "user": "gary",
+    "reason": "weekend"
+  }
+}
