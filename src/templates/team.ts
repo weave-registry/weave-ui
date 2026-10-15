@@ -237,7 +237,8 @@ function editor(mode: Mode, r: Rec, tools: readonly string[], starter: Rec): Saf
     mode === "new"
       ? field("Name", "lowercase, with dashes", html`<input name="define[name]" type="text" maxlength="40" placeholder="copywriter" autocomplete="off" required>`)
       : html`<input type="hidden" name="define[name]" value="${name}">`;
-  const overrides = mode === "copy" ? html`<input type="hidden" name="define[overrides]:bool" value="true">` : "";
+  const overrides =
+    mode === "copy" || (mode === "edit" && str(r["source"]) === "replaces-shipped") ? html`<input type="hidden" name="define[overrides]:bool" value="true">` : "";
   const title = mode === "edit" ? `Edit ${name}` : mode === "copy" ? `Replace ${name} with your own` : "New role";
   const note =
     mode === "copy"

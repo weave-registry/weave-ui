@@ -52,3 +52,13 @@ test("editor: define posts the role with typed fields; shipped roles offer a cop
   assert.match(full, /<summary class="btn primary">New role<\/summary>/);
   assert.doesNotMatch(full, /data-key="developer"[^]*Replace with my own[^]*data-key="designer"/);
 });
+
+test("editor: editing a role that replaces a shipped one posts overrides, so the save is not refused", () => {
+  const form = (key: string): string => new RegExp(`<details class="editor" data-keep="${key}">[^]*?</details>`).exec(full)?.[0] ?? "";
+  const designer = form("edit:designer");
+  assert.ok(designer !== "", "designer has an edit form");
+  assert.match(designer, /<input type="hidden" name="define\[overrides\]:bool" value="true">/);
+  const copywriter = form("edit:copywriter");
+  assert.ok(copywriter !== "", "copywriter has an edit form");
+  assert.doesNotMatch(copywriter, /define\[overrides\]/);
+});
