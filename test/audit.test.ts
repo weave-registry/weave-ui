@@ -32,6 +32,20 @@ test("summary card: the selector's title, status line, cost line, notes, the sha
   assert.match(one, /<span class="result" data-audit-result role="status"><\/span>/);
 });
 
+test("summary card: a token count that rounds up to 1000k reads 1.0M", () => {
+  const at = (tokens: number): string => {
+    const vm = structuredClone(fx("audit.search")) as { report: { summary: Record<string, unknown> } };
+    vm.report.summary["tokens"] = tokens;
+    return audit(vm);
+  };
+  assert.ok(at(999_499).includes(" · 999k tokens"));
+  for (const n of [999_500, 999_999, 1_000_000]) {
+    const out = at(n);
+    assert.ok(out.includes(" · 1.0M tokens"), `${n}`);
+    assert.ok(!out.includes("1000k"), `${n}`);
+  }
+});
+
 test("sections: matches, what went wrong, conflicting answers, corrected, said no, tasks", () => {
   assert.match(search, /<summary>Matches \(1\)<\/summary>/);
   assert.ok(search.includes(" · goal · score 0.87"));

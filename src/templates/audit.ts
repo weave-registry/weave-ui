@@ -93,7 +93,8 @@ const STATUS: Readonly<Record<string, string>> = {
 
 function tokens(x: unknown): string {
   const n = n0(x);
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
+  // Pick the unit after rounding: 999,500 rounds to 1000k, which is 1.0M.
+  if (Math.round(n / 1e3) >= 1e3) return (n / 1e6).toFixed(1) + "M";
   if (n >= 1e3) return Math.round(n / 1e3) + "k";
   return String(n);
 }
