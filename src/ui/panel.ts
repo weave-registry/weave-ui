@@ -86,7 +86,8 @@ function chartEl(series: unknown): SafeHtml {
     const v = Number(x["value"]);
     const pct = max > 0 && Number.isFinite(v) ? Math.max(0, Math.round((100 * v) / max)) : 0;
     const t = tone(x["status"]);
-    return html`<div class="bar-row" data-tone="${t}"><span class="bar-label">${str(x["label"])}</span><meter min="0" max="100" value="${pct}"></meter><span class="num">${str(x["value"])}</span></div>`;
+    const meter = t ? html`<meter min="0" max="100" value="${pct}" data-tone="${t}"></meter>` : html`<meter min="0" max="100" value="${pct}"></meter>`;
+    return html`<div class="bar-row"><span class="bar-label">${str(x["label"])}</span>${meter}<span class="num">${str(x["value"])}</span></div>`;
   });
   return html`<div class="bars">${rows}</div>`;
 }
