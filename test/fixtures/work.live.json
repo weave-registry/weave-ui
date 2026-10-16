@@ -1,0 +1,39 @@
+{
+  "now": 1792102377559,
+  "summary": {
+    "machines": 1,
+    "slots": 2,
+    "inUse": 0,
+    "issues": 0,
+    "queued": 0,
+    "merged": 0,
+    "help": 0,
+    "sentence": "0 of 2 slots in use on 1 machine · no issues in progress, nothing queued, 0 merged today · nothing needs you"
+  },
+  "machines": [
+    {
+      "node": "This machine",
+      "quiet": false,
+      "lastHeardTs": 1792102374504,
+      "slots": 2,
+      "inUse": 0,
+      "agents": [
+        {
+          "agent": "bazzite-712bbd26-main-peer",
+          "name": "bazzite-712bbd26-main-peer",
+          "state": "idle",
+          "slots": 2,
+          "inUse": 0,
+          "doing": [],
+          "idleWhy": "nothing queued",
+          "lastSeenTs": 1792102374504
+        }
+      ],
+      "idleWhy": "nothing queued"
+    }
+  ],
+  "issues": [],
+  "other": [],
+  "otherMore": 0,
+  "help": []
+}

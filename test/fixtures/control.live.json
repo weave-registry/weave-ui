@@ -1,0 +1,242 @@
+{
+  "now": 1792102377569,
+  "control": {
+    "budget": {
+      "usd": 25,
+      "source": "startup"
+    },
+    "perTaskUsd": {
+      "usd": 2,
+      "source": "startup"
+    },
+    "windowHours": 24,
+    "halt": {
+      "halted": false,
+      "drain": false
+    },
+    "yolo": {
+      "on": false
+    },
+    "guard": {
+      "mode": "off"
+    },
+    "config": {
+      "results": [],
+      "count": 0,
+      "total": 0,
+      "note": "no config paths set"
+    },
+    "digest": "e3b0c44298fc",
+    "peers": {
+      "results": [
+        {
+          "agent": "bazzite-712bbd26-main-peer",
+          "node": "local",
+          "digest": "e3b0c44298fc",
+          "state": "in sync",
+          "kind": "peer"
+        },
+        {
+          "agent": "bazzite:18912",
+          "node": "bazzite",
+          "digest": "e3b0c44298fc",
+          "state": "in sync",
+          "kind": "gateway"
+        }
+      ],
+      "count": 2,
+      "total": 2,
+      "note": "all 2 peers reporting a control digest"
+    }
+  },
+  "models": {
+    "windowHours": 24,
+    "tasks": {
+      "results": [
+        {
+          "task": "task-dbbe8dc8",
+          "title": "draft release notes",
+          "ts": 1792102359378,
+          "model": "qwen3:8b",
+          "routedBy": "rules"
+        },
+        {
+          "task": "task-1a87c38d",
+          "title": "list three risks of the release",
+          "ts": 1792102359238,
+          "model": "qwen2.5-coder:14b",
+          "routedBy": "rules"
+        },
+        {
+          "task": "task-71de9ec3",
+          "title": "summarize the readme",
+          "ts": 1792102359063,
+          "model": "qwen2.5-coder:14b",
+          "routedBy": "rules"
+        },
+        {
+          "task": "chat-d8a4c438",
+          "title": "[Network context: you are the conversational agent of this weave swarm",
+          "ts": 1792102349811,
+          "model": "claude-haiku-4-5-20251001",
+          "routedBy": "rules"
+        },
+        {
+          "task": "chat-6d325491",
+          "title": "[Network context: you are the conversational agent of this weave swarm",
+          "ts": 1792102349774,
+          "model": "claude-haiku-4-5-20251001",
+          "routedBy": "rules"
+        }
+      ],
+      "count": 5,
+      "total": 5,
+      "note": "all 5 tasks in the window"
+    },
+    "byModel": {
+      "results": [
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "tasks": 2
+        },
+        {
+          "model": "qwen2.5-coder:14b",
+          "tasks": 2
+        },
+        {
+          "model": "qwen3:8b",
+          "tasks": 1
+        }
+      ],
+      "count": 3,
+      "total": 3,
+      "note": "all 3 models"
+    },
+    "hosts": {
+      "results": [
+        {
+          "node": "local",
+          "agents": [
+            "bazzite-712bbd26-main-peer"
+          ],
+          "backend": "echo",
+          "lanes": [],
+          "accounts": [],
+          "openBreakers": []
+        }
+      ],
+      "count": 1,
+      "total": 1,
+      "note": "all 1 hosts heard from"
+    },
+    "declarers": {
+      "results": [
+        {
+          "gateway": "bazzite:18912",
+          "node": "bazzite",
+          "settings": [
+            {
+              "setting": "models.tier0",
+              "value": "qwen3:4b",
+              "source": "default"
+            },
+            {
+              "setting": "models.tier1",
+              "value": "qwen2.5-coder:14b",
+              "source": "default"
+            },
+            {
+              "setting": "models.tier2",
+              "value": "qwen3:8b",
+              "source": "default"
+            },
+            {
+              "setting": "models.tier3",
+              "value": "claude-haiku-4-5-20251001",
+              "source": "default"
+            },
+            {
+              "setting": "models.tier4",
+              "value": "claude-sonnet-5-5",
+              "source": "default"
+            },
+            {
+              "setting": "models.tier5",
+              "value": "claude-opus-5-5",
+              "source": "default"
+            },
+            {
+              "setting": "router.enabled",
+              "value": "false",
+              "source": "default"
+            },
+            {
+              "setting": "router.model",
+              "value": "qwen3:4b",
+              "source": "default"
+            },
+            {
+              "setting": "router.personaModel",
+              "source": "default"
+            },
+            {
+              "setting": "factory.reviewModel",
+              "source": "default"
+            }
+          ]
+        }
+      ],
+      "count": 1,
+      "total": 1,
+      "note": "all 1 gateways reporting their model settings"
+    }
+  },
+  "costs": {
+    "spentUsd": 0,
+    "budgetUsd": 25,
+    "remainingUsd": 25,
+    "over": false,
+    "fraction": 0,
+    "windowHours": 24,
+    "perTaskUsd": 2,
+    "tokens": 0,
+    "basis": "measured",
+    "byModel": {
+      "results": [],
+      "count": 0,
+      "total": 0,
+      "note": "no models with spend"
+    },
+    "byPeer": {
+      "results": [],
+      "count": 0,
+      "total": 0,
+      "note": "no peers with spend"
+    },
+    "byTask": {
+      "results": [],
+      "count": 0,
+      "total": 0,
+      "note": "no tasks with spend"
+    },
+    "unavailable": {
+      "why": "nothing was metered in the last 24 h",
+      "remedy": "peers meter each turn as it runs — a fleet that has not worked yet reports nothing; weave status shows whether any is running"
+    }
+  },
+  "raft": {
+    "mode": "log",
+    "quorum": false,
+    "voters": {
+      "results": [],
+      "count": 0,
+      "total": 0,
+      "note": "no voter reporting"
+    },
+    "summary": "Raft control plane: off (log mode) — every peer acts on the AP fold, as before ADR-0216",
+    "unavailable": {
+      "why": "no live peer reports a Raft voter — the control plane runs in log mode (the default)",
+      "remedy": "to run the Raft group in shadow beside the AP fold, start the replicating peer on each voter with --control-plane=shadow (or WEAVE_CONTROL_PLANE=shadow; --control-voters names them) — peers keep acting on the AP fold"
+    }
+  }
+}

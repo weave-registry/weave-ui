@@ -1,0 +1,186 @@
+{
+  "now": 1792102377559,
+  "summary": {
+    "machines": 2,
+    "slots": 4,
+    "inUse": 2,
+    "issues": 2,
+    "queued": 3,
+    "merged": 1,
+    "help": 2,
+    "sentence": "2 of 4 slots in use on 2 machines · 2 issues in progress · 2 things need you"
+  },
+  "machines": [
+    {
+      "node": "max",
+      "quiet": false,
+      "lastHeardTs": 1792102372559,
+      "slots": 2,
+      "inUse": 2,
+      "agents": [
+        {
+          "agent": "max-dev",
+          "name": "dev",
+          "role": "developer",
+          "state": "working",
+          "slots": 2,
+          "inUse": 2,
+          "doing": [
+            {
+              "taskId": "t-1",
+              "words": "building #12 “Dark mode”",
+              "title": "Dark mode",
+              "issue": 12,
+              "step": "build",
+              "sinceTs": 1792101777559,
+              "model": "Sonnet"
+            }
+          ],
+          "lastSeenTs": 1792102372559
+        },
+        {
+          "agent": "max-p",
+          "name": "p",
+          "state": "paused",
+          "slots": 1,
+          "inUse": 0,
+          "doing": [],
+          "idleWhy": "paused by gary",
+          "lastSeenTs": 1792102377559
+        }
+      ]
+    },
+    {
+      "node": "mini",
+      "quiet": true,
+      "lastHeardTs": 1792095177559,
+      "slots": 0,
+      "inUse": 0,
+      "agents": [
+        {
+          "agent": "mini-x",
+          "name": "x",
+          "state": "silent",
+          "slots": 1,
+          "inUse": 0,
+          "doing": [],
+          "lastSeenTs": 1792095177559
+        }
+      ],
+      "idleWhy": "not heard"
+    }
+  ],
+  "issues": [
+    {
+      "issue": 12,
+      "title": "Dark mode",
+      "url": "https://git.local/gary/app/issues/12",
+      "step": "build",
+      "state": "running",
+      "words": "running on max (dev)",
+      "steps": [
+        {
+          "step": "triage",
+          "state": "done"
+        },
+        {
+          "step": "design",
+          "state": "skipped"
+        },
+        {
+          "step": "plan",
+          "state": "done"
+        },
+        {
+          "step": "build",
+          "state": "current"
+        },
+        {
+          "step": "verify",
+          "state": "todo"
+        },
+        {
+          "step": "review",
+          "state": "todo"
+        },
+        {
+          "step": "merge",
+          "state": "todo"
+        }
+      ],
+      "pr": {
+        "number": 40,
+        "url": "https://git.local/gary/app/pulls/40"
+      },
+      "sinceTs": 1792101777559
+    },
+    {
+      "issue": 13,
+      "title": "Held",
+      "step": "verify",
+      "state": "held",
+      "words": "held — usage limit",
+      "steps": [
+        {
+          "step": "verify",
+          "state": "current"
+        }
+      ],
+      "sinceTs": 1792102317559
+    }
+  ],
+  "other": [
+    {
+      "taskId": "t-9",
+      "title": "Summarise the log",
+      "state": "running",
+      "words": "running on max",
+      "sinceTs": 1792102347559
+    },
+    {
+      "taskId": "t-10",
+      "title": "Queued thing",
+      "state": "queued",
+      "words": "queued",
+      "sinceTs": 1792102376559
+    }
+  ],
+  "otherMore": 4,
+  "help": [
+    {
+      "key": "g",
+      "title": "Allow a command",
+      "why": "It runs outside the allow-list",
+      "action": {
+        "label": "Allow",
+        "body": {
+          "grant": {
+            "approve": "g-9"
+          }
+        }
+      },
+      "more": [
+        {
+          "label": "Deny",
+          "body": {
+            "grant": {
+              "deny": "g-9"
+            }
+          },
+          "confirm": "Deny it?"
+        }
+      ],
+      "detail": "$ rm -rf build"
+    },
+    {
+      "key": "h",
+      "title": "Fix the forge token",
+      "why": "Only you hold it",
+      "how": "weave secrets set FORGE_TOKEN",
+      "action": {
+        "label": "Open Control",
+        "href": "/control"
+      }
+    }
+  ]
+}

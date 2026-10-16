@@ -537,6 +537,12 @@ meter.meter[data-tone="over"]::-moz-meter-bar { background: var(--bad); }
 .bars meter[data-tone="needs"]::-moz-meter-bar { background: var(--needs); }
 .bars meter[data-tone="bad"]::-webkit-meter-optimum-value, .bars meter[data-tone="bad"]::-webkit-meter-suboptimum-value, .bars meter[data-tone="bad"]::-webkit-meter-even-less-good-value { background: var(--bad); }
 .bars meter[data-tone="bad"]::-moz-meter-bar { background: var(--bad); }
+/* The Control costs card's meter spans the card, as weave's full-width .meter did; Home's harness meter stays 80px. */
+.view.control meter.meter { display: block; width: 100%; height: 8px; margin: 6px 0 0; }
+.view.control meter.meter[data-tone="needs"]::-webkit-meter-optimum-value, .view.control meter.meter[data-tone="needs"]::-webkit-meter-suboptimum-value, .view.control meter.meter[data-tone="needs"]::-webkit-meter-even-less-good-value { background: var(--needs); }
+.view.control meter.meter[data-tone="needs"]::-moz-meter-bar { background: var(--needs); }
+.view.control meter.meter[data-tone="bad"]::-webkit-meter-optimum-value, .view.control meter.meter[data-tone="bad"]::-webkit-meter-suboptimum-value, .view.control meter.meter[data-tone="bad"]::-webkit-meter-even-less-good-value { background: var(--bad); }
+.view.control meter.meter[data-tone="bad"]::-moz-meter-bar { background: var(--bad); }
 
 /* The Ask weave aside has no open/close script: under 1000px it sits in the flow below the main column. */
 @media (max-width: 1000px) { .home .chat { display: flex; position: static; height: auto; max-height: 80vh; } }
