@@ -565,3 +565,49 @@ test("a view poll that swaps in a still-pending draft leaves the fresh form busy
   assert.equal(g.attrs["data-dirty"], "1", "the unsent draft still holds the poll");
   assert.equal(submit(g), false);
 });
+
+test("a view poll that swaps a form mid-submit leaves the fresh form clean once the send succeeds", () => {
+  const on: Record<string, Handler[]> = {};
+  const docOn: Record<string, Handler[]> = {};
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    activeElement: { tagName: "BODY" },
+    addEventListener: (n: string, h: Handler) => void (docOn[n] ??= []).push(h),
+  }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail, preventDefault: noopFn }));
+  const type = (form: { field: { value: string } }, v: string): void => { form.field.value = v; (docOn["input"] ?? []).forEach((h) => h({ target: form.field })); };
+  const poll = (view: unknown): boolean => {
+    let held = false;
+    (on["htmx:beforeRequest"] ?? []).forEach((h) => h({ detail: { elt: view, xhr: {}, requestConfig: { verb: "get" } }, preventDefault: () => { held = true; } }));
+    return held;
+  };
+
+  // The poll goes out while the form is clean; then the operator types and submits.
+  const v1 = fakeForms("view-work", ["/ui/a/note"]);
+  const pollXhr = {};
+  assert.equal(poll(v1), false);
+  const f = v1.forms[0]!;
+  type(f, "ship it");
+  const xhrF = {};
+  fire("htmx:beforeRequest", { elt: f, xhr: xhrF, requestConfig: { verb: "post" } });
+
+  // The poll's reply lands first: the in-flight draft rides along into the fresh form, which is busy too.
+  const v2 = fakeForms("view-work", ["/ui/a/note"]);
+  fire("htmx:beforeSwap", { xhr: pollXhr });
+  fire("htmx:oobBeforeSwap", { target: v1, fragment: v2 });
+  const g = v2.forms[0]!;
+  assert.equal(g.field.value, "ship it");
+  assert.equal(g.attrs["aria-busy"], "true", "the fresh form cannot be submitted again while the first send is in flight");
+
+  // Then the POST's reply swaps the view: the server took the draft, so it is not poured back over the fresh values.
+  const v3 = fakeForms("view-work", ["/ui/a/note"]);
+  fire("htmx:beforeSwap", { xhr: xhrF });
+  fire("htmx:oobBeforeSwap", { target: v2, fragment: v3 });
+  fire("htmx:afterRequest", { elt: f, xhr: xhrF, successful: true });
+  assert.equal(v3.forms[0]!.field.value, "", "the sent draft is not copied back in");
+  assert.equal("data-dirty" in v3.forms[0]!.attrs, false, "the live form is clean after a successful save");
+  assert.equal("data-dirty" in g.attrs, false);
+  assert.equal("aria-busy" in g.attrs, false);
+  assert.equal(poll(v3), false, "the view's poll is not held");
+});
