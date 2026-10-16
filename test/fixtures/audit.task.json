@@ -1,0 +1,175 @@
+{
+  "report": {
+    "contradictions": [],
+    "costs": {
+      "rows": [
+        {
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0,
+          "cites": {
+            "claimed": {
+              "id": "82367fab-674d-4698-ac6c-38f09cc9dca6",
+              "seq": 32
+            },
+            "settled": {
+              "id": "201d2289-6424-4923-8e99-022f7068003b",
+              "seq": 34
+            }
+          },
+          "id": "declared:task-dbbe8dc8:1a0b1c7e96079796",
+          "inputTokens": 0,
+          "latencyMs": 25,
+          "measured": true,
+          "outputTokens": 0,
+          "seq": 31,
+          "subject": "task-dbbe8dc8",
+          "tokens": 0,
+          "usd": 0,
+          "wallMs": 0
+        }
+      ],
+      "totals": {
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0,
+        "inputTokens": 0,
+        "measured": true,
+        "outputTokens": 0,
+        "tasks": 1,
+        "tokens": 0,
+        "usd": 0,
+        "wallMs": 0
+      }
+    },
+    "fold": 2,
+    "memory": {
+      "calls": [],
+      "events": [],
+      "grounding": [],
+      "summaries": []
+    },
+    "mistakes": [
+      {
+        "cites": [
+          {
+            "id": "82367fab-674d-4698-ac6c-38f09cc9dca6",
+            "seq": 32
+          }
+        ],
+        "detail": "claimed by bazzite-712bbd26-main-peer, which advertised version 0.2.180 (#21), yet no task.prompt row followed — a capture gap, which ADR-0115 calls a bug",
+        "id": "82367fab-674d-4698-ac6c-38f09cc9dca6",
+        "seq": 32,
+        "subject": "task-dbbe8dc8",
+        "type": "missing-prompt-capture"
+      }
+    ],
+    "models": [
+      {
+        "cites": [],
+        "id": "declared:task-dbbe8dc8:1a0b1c7e96079796",
+        "reason": "derived:spec.model",
+        "requested": "qwen3:8b",
+        "seq": 31,
+        "source": "derived",
+        "subject": "task-dbbe8dc8"
+      }
+    ],
+    "notes": [],
+    "order": {
+      "omitted": [],
+      "rows": [
+        {
+          "actor": "cli",
+          "detail": "goal: draft release notes · model qwen3:8b · routed by rules",
+          "id": "declared:task-dbbe8dc8:1a0b1c7e96079796",
+          "kind": "task.declared",
+          "seq": 31,
+          "subject": "task-dbbe8dc8",
+          "ts": 1792102359378
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "lease 30000ms",
+          "id": "82367fab-674d-4698-ac6c-38f09cc9dca6",
+          "kind": "task.claimed",
+          "seq": 32,
+          "subject": "task-dbbe8dc8",
+          "ts": 1792102359403
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "skill: echo",
+          "id": "ce2a7aa6-ae58-4ae5-b03b-501996002670",
+          "kind": "task.progress",
+          "seq": 33,
+          "subject": "task-dbbe8dc8",
+          "ts": 1792102359403
+        },
+        {
+          "actor": "bazzite-712bbd26-main-peer",
+          "detail": "✓ echo: draft release notes",
+          "id": "201d2289-6424-4923-8e99-022f7068003b",
+          "kind": "task.completed",
+          "seq": 34,
+          "subject": "task-dbbe8dc8",
+          "ts": 1792102359403
+        }
+      ]
+    },
+    "prompts": [
+      {
+        "attempt": 1,
+        "goal": "draft release notes",
+        "id": "declared:task-dbbe8dc8:1a0b1c7e96079796",
+        "seq": 31,
+        "source": "task.declared",
+        "subject": "task-dbbe8dc8",
+        "system": null
+      }
+    ],
+    "provenance": {
+      "origins": [],
+      "unstamped": 4
+    },
+    "selector": {
+      "kind": "subject",
+      "subject": "task-dbbe8dc8"
+    },
+    "summary": {
+      "completed": 1,
+      "contradictions": 0,
+      "failed": 0,
+      "mistakes": 1,
+      "open": 0,
+      "tasks": 1,
+      "tokens": 0,
+      "usd": 0
+    },
+    "tasks": [
+      {
+        "actor": "bazzite-712bbd26-main-peer",
+        "declaredTs": 1792102359378,
+        "id": "declared:task-dbbe8dc8:1a0b1c7e96079796",
+        "model": "qwen3:8b",
+        "seq": 31,
+        "settled": {
+          "id": "201d2289-6424-4923-8e99-022f7068003b",
+          "seq": 34
+        },
+        "status": "completed",
+        "subject": "task-dbbe8dc8"
+      }
+    ]
+  },
+  "verify": {
+    "sections": {
+      "contradictions": "4f53cda18c2baa0c",
+      "costs": "45d3a0c21360b90f",
+      "memory": "c71e197e4b5635a3",
+      "mistakes": "0e39c79d4a40eb4c",
+      "models": "73f0837542e74cb6",
+      "order": "f5b09e0cd26e684f",
+      "prompts": "26c783361879ffe3"
+    },
+    "sha256": "001fe8f5a1c52b130e91ae69accf995519646f3863d8d0e6b6bd34dd9676d0db"
+  }
+}

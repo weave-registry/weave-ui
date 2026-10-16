@@ -56,7 +56,7 @@ const PAGES: readonly PageSpec[] = [
   { page: "machines", title: "Machines", views: [{ name: "machines", poll: true }, { name: "fleet", poll: true }] },
   { page: "team", title: "Team", views: [{ name: "team", poll: true }] },
   { page: "task", title: "Task", views: [{ name: "task", fromLocation: true, poll: true }] },
-  { page: "audit", title: "Full record", views: [{ name: "audit", fromLocation: true }], intro: AUDIT_INTRO },
+  { page: "audit", title: "Full record", views: [{ name: "audit", fromLocation: true, queryRequired: true }], intro: AUDIT_INTRO },
 ];
 
 interface VendorEntry {
