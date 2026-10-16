@@ -457,13 +457,14 @@ function fakeForms(id: string, posts: string[]) {
   const forms = posts.map((post) => {
     const attrs: Record<string, string> = { "hx-post": post };
     const field = { tagName: "TEXTAREA", type: "textarea", name: "text", value: "", defaultValue: "", closest: (sel: string) => (sel === "form" ? form : null) };
+    const button = { disabled: false };
     const form = {
-      tagName: "FORM", attrs, field, elements: [field],
+      tagName: "FORM", attrs, field, button, elements: [field],
       getAttribute: (a: string) => attrs[a] ?? null,
       setAttribute: (a: string, v: string) => void (attrs[a] = v),
       removeAttribute: (a: string) => void delete attrs[a],
       hasAttribute: (a: string) => a in attrs,
-      querySelectorAll: (sel: string) => (sel === "input, textarea, select" ? [field] : []),
+      querySelectorAll: (sel: string) => (sel === "input, textarea, select" ? [field] : sel === "button" ? [button] : []),
     };
     return form;
   });
@@ -520,4 +521,47 @@ test("a sent draft carried into a fresh form by another response is not carried 
   assert.equal("data-dirty" in v3.forms[0]!.attrs, false);
   assert.equal("aria-busy" in v2.forms[0]!.attrs, false, "the carried form is no longer busy once its request ends");
   assert.equal(poll(v3), false, "nothing unsent is left, so the view's poll goes ahead");
+});
+
+test("a view poll that swaps in a still-pending draft leaves the fresh form busy until the send ends", () => {
+  const on: Record<string, Handler[]> = {};
+  const docOn: Record<string, Handler[]> = {};
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    activeElement: { tagName: "BODY" },
+    addEventListener: (n: string, h: Handler) => void (docOn[n] ??= []).push(h),
+  }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail, preventDefault: noopFn }));
+  const type = (form: { field: { value: string } }, v: string): void => { form.field.value = v; (docOn["input"] ?? []).forEach((h) => h({ target: form.field })); };
+  const submit = (form: unknown): boolean => {
+    let stopped = false;
+    (docOn["submit"] ?? []).forEach((h) => h({ target: form, preventDefault: () => { stopped = true; }, stopPropagation: noopFn }));
+    return stopped;
+  };
+
+  // The home poll went out before the operator typed; then Enter sends the chat.
+  const v1 = fakeForms("view-home", ["/ui/a/chat"]);
+  const f = v1.forms[0]!;
+  type(f, "ship it");
+  const xhrF = {};
+  fire("htmx:beforeRequest", { elt: f, xhr: xhrF, requestConfig: { verb: "post" } });
+  assert.equal(f.button.disabled, true);
+
+  // The poll's reply swaps view-home: the draft rides along, and the fresh composer is busy just as the old one was.
+  const v2 = fakeForms("view-home", ["/ui/a/chat"]);
+  fire("htmx:beforeSwap", { xhr: {} });
+  fire("htmx:oobBeforeSwap", { target: v1, fragment: v2 });
+  const g = v2.forms[0]!;
+  assert.equal(g.field.value, "ship it");
+  assert.equal(g.attrs["aria-busy"], "true");
+  assert.equal(g.button.disabled, true, "Send on the fresh composer is disabled while the chat is in flight");
+  assert.equal(submit(g), true, "Enter on the fresh composer cannot send the chat twice");
+
+  // The send fails without swapping the view: the draft is still unsent, and the composer on the page can send again.
+  fire("htmx:afterRequest", { elt: f, xhr: xhrF, successful: false });
+  assert.equal("aria-busy" in g.attrs, false);
+  assert.equal(g.button.disabled, false, "the fresh composer's Send is enabled again once the request ends");
+  assert.equal(g.attrs["data-dirty"], "1", "the unsent draft still holds the poll");
+  assert.equal(submit(g), false);
 });

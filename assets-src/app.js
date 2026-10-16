@@ -249,7 +249,7 @@
       copyField(el, to);
       if (dirty && toForm) {
         toForm.setAttribute("data-dirty", "1"); edits.set(toForm, edits.get(form) || 0); moved.set(form, toForm);
-        if (form.getAttribute("aria-busy") === "true") toForm.setAttribute("aria-busy", "true"); // still in flight: §12
+        if (form.getAttribute("aria-busy") === "true") hold(toForm); // still in flight: §12
       }
     });
     if (focused && focused.name) {
@@ -626,23 +626,32 @@
 
   // ── 12. Pending (finding 6): a form in flight is aria-busy with its buttons disabled, so Enter cannot send twice ──
   // Registered last, so a request another handler cancelled is never marked. Only buttons this disabled are re-enabled.
-  var busy = new WeakMap();
+  // §3b holds the fresh form a still-pending draft is carried into as well, so the form on the page is the busy one.
+  var busy = new WeakMap(), held = new WeakMap();
+  function hold(form) {
+    var buttons = list(form, "button").filter(function (b) { return !b.disabled; });
+    buttons.forEach(function (b) { b.disabled = true; });
+    form.setAttribute("aria-busy", "true");
+    held.set(form, buttons);
+  }
+  function release(form) {
+    form.removeAttribute("aria-busy");
+    (held.get(form) || []).forEach(function (b) { b.disabled = false; });
+    held.delete(form);
+  }
   htmx.on("htmx:beforeRequest", function (evt) {
     var d = evt.detail;
     var form = d.elt;
     if (evt.defaultPrevented || !form || form.tagName !== "FORM" || !d.xhr) return;
-    var buttons = list(form, "button").filter(function (b) { return !b.disabled; });
-    buttons.forEach(function (b) { b.disabled = true; });
-    form.setAttribute("aria-busy", "true");
-    busy.set(d.xhr, { form: form, buttons: buttons });
+    hold(form);
+    busy.set(d.xhr, form);
   });
   htmx.on("htmx:afterRequest", function (evt) {
-    var p = evt.detail.xhr && busy.get(evt.detail.xhr);
-    if (!p) return;
+    var form = evt.detail.xhr && busy.get(evt.detail.xhr);
+    if (!form) return;
     busy.delete(evt.detail.xhr);
-    p.form.removeAttribute("aria-busy");
-    current(p.form).removeAttribute("aria-busy");
-    p.buttons.forEach(function (b) { b.disabled = false; });
+    release(form);
+    if (current(form) !== form) release(current(form));
   });
   // requestSubmit (Enter) ignores disabled buttons: stop a busy form's submit before htmx sees it.
   doc.addEventListener("submit", function (e) {
