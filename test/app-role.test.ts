@@ -105,3 +105,26 @@ test("a new file named like a file the editor already shows never replaces that 
   assert.equal(sent, false);
   assert.match(warned, /persona\.md/);
 });
+
+test("a budget that isn't a plain number blocks the save and tells the operator, instead of being dropped from the body", () => {
+  const send = (budget: string): { sent: boolean; warned: string; body?: unknown } => {
+    let warned = "";
+    let sent = true;
+    const input = { setCustomValidity: (m: string) => void (warned = m), reportValidity: () => true };
+    const form = { querySelector: (sel: string) => (sel === '[name="define[budgetUsd]:num"]' ? input : null) };
+    const params = new FormData();
+    params.append("define[name]", "copy");
+    params.append("define[budgetUsd]:num", budget);
+    const evt = { detail: { verb: "post", elt: form, parameters: params, headers: {} as Record<string, string> }, preventDefault: () => void (sent = false) };
+    if (ext().onEvent!("htmx:configRequest", evt) === false) sent = false;
+    return { sent, warned };
+  };
+  for (const bad of ["$25", "1,000", "25,50", "abc"]) {
+    const r = send(bad);
+    assert.equal(r.sent, false, `sent with budget ${JSON.stringify(bad)}`);
+    assert.notEqual(r.warned, "", `no warning for budget ${JSON.stringify(bad)}`);
+  }
+  assert.deepEqual(send(""), { sent: true, warned: "" });
+  assert.deepEqual(send("25"), { sent: true, warned: "" });
+  assert.deepEqual(send(" 7.5 "), { sent: true, warned: "" });
+});

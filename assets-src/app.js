@@ -51,6 +51,18 @@
     if (hasParam(params, "define[files][" + path + "]")) return "This role already has a file named " + path + ". Edit it above, or give the new file another path.";
     return "";
   }
+  // The first :num field whose text isn't a number ([name, message], or null): encode would leave it out of the body,
+  // so the save would succeed and the swap would throw away what the operator typed.
+  function numProblem(params) {
+    var found = null;
+    var check = function (v, k) {
+      if (found || !/:num(?:\[\])?$/.test(k) || typeof v !== "string" || v.trim() === "") return;
+      if (typed("num", v) === undefined) found = [k, "Enter a plain number, like 25 or 7.5: no $ sign or thousands commas, and a dot for decimals."];
+    };
+    if (params && typeof params.forEach === "function") params.forEach(check);
+    else if (params) Object.keys(params).forEach(function (k) { check(params[k], k); });
+    return found;
+  }
   function param(params, k) {
     var v = params && (typeof params.get === "function" ? params.get(k) : params[k]);
     return typeof v === "string" ? v : "";
@@ -125,6 +137,13 @@
         if (input && input.setCustomValidity) { input.setCustomValidity(bad); input.reportValidity(); } else window.alert(bad);
         return false;
       }
+      var num = numProblem(d.parameters);
+      if (num) {
+        evt.preventDefault();
+        var field = d.elt && d.elt.querySelector ? d.elt.querySelector('[name="' + num[0].replace(/["\\]/g, "\\$&") + '"]') : null;
+        if (field && field.setCustomValidity) { field.setCustomValidity(num[1]); field.reportValidity(); } else window.alert(num[1]);
+        return false;
+      }
       d.headers["Content-Type"] = "application/json";
     },
     encodeParameters: function (xhr, parameters, elt) {
@@ -158,6 +177,7 @@
     var form = e.target && e.target.closest ? e.target.closest("form") : null;
     if (!form) return;
     if (/^@new-file:/.test(e.target.name || "")) each(form, '[name="@new-file:path"]', function (i) { if (i.setCustomValidity) i.setCustomValidity(""); });
+    if (/:num(?:\[\])?$/.test(e.target.name || "") && e.target.setCustomValidity) e.target.setCustomValidity("");
     edits.set(form, (edits.get(form) || 0) + 1);
     if (changed(form)) form.setAttribute("data-dirty", "1");
     else form.removeAttribute("data-dirty"); // emptied back to how it loaded: nothing left to lose, so the poll may run
