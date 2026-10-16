@@ -1,0 +1,242 @@
+{
+  "now": 1792102391034,
+  "brief": "Good evening. One thing needs you — it's below.",
+  "needs": [
+    {
+      "key": "halt",
+      "kind": "halt",
+      "severity": "needs-you",
+      "title": "The fleet is halted",
+      "action": "weave resume — or the Resume button on any page",
+      "detail": "halted from the console — by gateway",
+      "askedTs": 1792102385025
+    }
+  ],
+  "working": [],
+  "queued": 0,
+  "criticalQueued": 0,
+  "done": [
+    {
+      "taskId": "task-dbbe8dc8",
+      "title": "draft release notes",
+      "state": "done",
+      "summary": "echo: draft release notes",
+      "ts": 1792102359403
+    },
+    {
+      "taskId": "task-1a87c38d",
+      "title": "list three risks of the release",
+      "state": "done",
+      "summary": "echo: list three risks of the release",
+      "ts": 1792102359253
+    },
+    {
+      "taskId": "task-71de9ec3",
+      "title": "summarize the readme",
+      "state": "done",
+      "summary": "echo: summarize the readme",
+      "ts": 1792102359100
+    }
+  ],
+  "chat": [
+    {
+      "taskId": "chat-6d325491",
+      "asked": "summarize what weave is",
+      "ts": 1792102349786,
+      "state": "done",
+      "answer": "echo: [Network context: you are the conversational agent of this weave swarm\nFleet ground truth, computed from the replicated log at ask time — trust this over your own guesses; when asked what happened, answer FROM these facts:\nGood evening. Nothing needs you — the fleet is quiet.\nlast hour: 0 declared · 0 completed · 0 failed\nIf the operator states a durable fact or preference about themselves or their setup, keep it with the `remember` tool; if they say a kept fact is wrong, retract it with `forget <handle>`; if they ask about something you would expect to have been told, search with `recall_memory { query }` before saying you do not know.] summarize what weave is"
+    },
+    {
+      "taskId": "chat-d8a4c438",
+      "asked": "write a haiku about logs",
+      "ts": 1792102349833,
+      "state": "done",
+      "answer": "echo: [Network context: you are the conversational agent of this weave swarm\nFleet ground truth, computed from the replicated log at ask time — trust this over your own guesses; when asked what happened, answer FROM these facts:\nGood evening. Nothing needs you — the fleet is quiet.\nlast hour: 1 declared · 1 completed · 0 failed\nIf the operator states a durable fact or preference about themselves or their setup, keep it with the `remember` tool; if they say a kept fact is wrong, retract it with `forget <handle>`; if they ask about something you would expect to have been told, search with `recall_memory { query }` before saying you do not know.] write a haiku about logs\n\n--- Earlier in this conversation (context only — the request to answer is at the end) ---\n\nQ: summarize what weave is\nA: echo: [Network context: you are the conversational agent of this weave swarm\nFleet ground truth, computed from the replicated log at ask time — trust this over your own guesses; when asked what happened, answer FROM these facts:\nGood evening. Nothing needs you — the fleet is quiet.\nlast hour: 0 declared · 0 completed · 0 failed\nIf the operator states a durable fact or preference about themselve…\n\n--- The operator's request — answer this now ---\n\nwrite a haiku about logs\n\nIf it is short or refers back (\"yes\", \"all of that\", \"do it\"), it means the conversation above: act on what was last offered or asked there."
+    }
+  ],
+  "steward": {
+    "on": false,
+    "why": "yolo is off",
+    "everyH": 24,
+    "cap": 3,
+    "issuesToday": 0
+  },
+  "reconciler": {
+    "on": false,
+    "why": "yolo is off",
+    "everyMin": 15,
+    "fixedToday": 0
+  },
+  "decided": [],
+  "status": {
+    "now": 1792102391034,
+    "verdict": "halted",
+    "word": "HALTED",
+    "sentence": "The fleet is halted by gateway (1m ago): halted from the console. Nothing runs until it is resumed.",
+    "reasons": [
+      {
+        "key": "halt",
+        "text": "The fleet is halted by gateway (1m ago): halted from the console. Nothing runs until it is resumed.",
+        "fix": {
+          "kind": "command",
+          "label": "Resume",
+          "body": {
+            "fleet": "resume"
+          },
+          "confirm": "Resume the fleet? Peers start claiming work — and spending — again."
+        }
+      },
+      {
+        "key": "yolo-off",
+        "text": "Yolo is off — the factory waits for you at every stage, and its pull requests wait for a person to merge.",
+        "fix": {
+          "kind": "yolo",
+          "label": "Turn yolo on",
+          "confirm": "Turn yolo on? Until it ends, the factory advances and re-runs stages, small, evidenced factory pull requests merge themselves (within the cap), and fleet requests (install, start, stop, roles) run without your Approve."
+        }
+      },
+      {
+        "key": "nothing-queued",
+        "text": "Nothing queued."
+      }
+    ],
+    "facts": {
+      "hosts": {
+        "up": 1,
+        "total": 1,
+        "versions": [
+          "0.2.180"
+        ],
+        "down": []
+      },
+      "agents": {
+        "live": 1,
+        "total": 1
+      },
+      "running": 0,
+      "queued": 0,
+      "done24h": 3,
+      "failed24h": 0,
+      "spend": {
+        "usd": 0,
+        "budgetUsd": 25,
+        "fraction": 0,
+        "windowMs": 86400000
+      },
+      "yolo": {
+        "on": false
+      },
+      "chief": {
+        "on": false,
+        "why": "yolo is off",
+        "actsLastHour": 0
+      },
+      "needsYou": 1,
+      "decisions": {
+        "open": 27,
+        "proposed": 16,
+        "acceptedOpen": 11
+      },
+      "reconcile": {
+        "on": false,
+        "why": "yolo is off",
+        "findings": 0,
+        "fixed": 0,
+        "left": 0
+      },
+      "autonomy": {
+        "level": "standard",
+        "on": false,
+        "merges": 0,
+        "cap": 3,
+        "windowMs": 28800000
+      },
+      "machines": [
+        {
+          "node": "local",
+          "cpus": 32,
+          "load1": 2.06,
+          "load5": 2.82,
+          "memAvailablePct": 57
+        }
+      ],
+      "churn": {
+        "stages": 0,
+        "attempts": 0,
+        "retries": 0,
+        "perStage": 0,
+        "diverged": 0
+      },
+      "controlPlane": {
+        "peers": 1,
+        "inSync": 1,
+        "behind": [],
+        "gateways": {
+          "total": 1,
+          "inSync": 1
+        }
+      },
+      "controlRaft": {
+        "mode": "off"
+      },
+      "breakers": {
+        "open": 0,
+        "agree": true,
+        "disagree": []
+      },
+      "control": "/control"
+    }
+  },
+  "work": {
+    "now": 1792102391034,
+    "summary": {
+      "machines": 1,
+      "slots": 2,
+      "inUse": 0,
+      "issues": 0,
+      "queued": 0,
+      "merged": 0,
+      "help": 1,
+      "sentence": "0 of 2 slots in use on 1 machine · no issues in progress, nothing queued, 0 merged today · 1 thing needs you"
+    },
+    "machines": [
+      {
+        "node": "This machine",
+        "quiet": false,
+        "lastHeardTs": 1792102388503,
+        "slots": 2,
+        "inUse": 0,
+        "agents": [
+          {
+            "agent": "bazzite-712bbd26-main-peer",
+            "name": "bazzite-712bbd26-main-peer",
+            "state": "idle",
+            "slots": 2,
+            "inUse": 0,
+            "doing": [],
+            "idleWhy": "the fleet is halted — halted from the console",
+            "lastSeenTs": 1792102384506
+          }
+        ],
+        "idleWhy": "the fleet is halted — halted from the console"
+      }
+    ],
+    "issues": [],
+    "other": [],
+    "otherMore": 0,
+    "help": [
+      {
+        "key": "halt",
+        "title": "The fleet is halted — halted from the console",
+        "why": "Nothing runs until a person resumes it; the fleet never lifts its own halt.",
+        "action": {
+          "label": "Resume",
+          "body": {
+            "fleet": "resume"
+          },
+          "confirm": "Resume the fleet? Peers start claiming work — and spending — again."
+        }
+      }
+    ]
+  }
+}
