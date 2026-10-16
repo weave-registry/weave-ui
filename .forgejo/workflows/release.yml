@@ -1,0 +1,95 @@
+# Publish a weave-ui release to THIS forge (ADR-0234 §7): a tag v<semver> builds weave-ui-<ver>.tar.gz
+# (templates.js, assets/, manifest.json) and SHA256SUMS and attaches both to a forge release. weave pins
+# the tarball by sha256 in its own repository (Phase 3, `bun run fix:ui <version>`); the GitHub mirror
+# receives the tag through `ship.sh --mirror-only` and the same files are attached there by hand or a later
+# workflow — this one only speaks to the forge, like weave's .forgejo/workflows/release.yml it is modelled on.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    name: build · verify · publish to this forge
+    runs-on: ubuntu-latest
+    container: node:22-bookworm
+    steps:
+      - uses: actions/checkout@v4
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - run: npm install -g bun && bun --version && node --version
+      - run: bun install --frozen-lockfile
+
+      # The tag must name the version the tree declares; manifest.json carries package.json's version,
+      # and weave names the version it pins from that manifest.
+      - name: The tag matches package.json
+        run: |
+          tag="${GITHUB_REF_NAME:-${{ github.ref_name }}}"
+          declared=$(node -e 'process.stdout.write(require("./package.json").version)')
+          echo "tag=$tag package.json=$declared"
+          [ "v$declared" = "$tag" ] || { echo "::error::tag $tag != package.json $declared"; exit 1; }
+
+      # Everything CI proves, again, on the tagged commit: vendored digests, typecheck, the tests (shape,
+      # purity, lint, loader emulation), tokens, size budget. A release is never less checked than a PR.
+      - name: Gate
+        run: |
+          set -euo pipefail
+          sha256sum -c vendor/SHA256SUMS
+          bun run typecheck
+          bun run test
+          bun run check:tokens
+
+      # A reproducible tarball: sorted names, fixed owner and mtime, gzip without a timestamp — so the
+      # sha256 weave pins can be recomputed from the same commit.
+      - name: Build the tarball and its checksums
+        run: |
+          set -euo pipefail
+          ver="${GITHUB_REF_NAME#v}"
+          bun run build
+          mkdir -p out
+          tar --sort=name --owner=0 --group=0 --numeric-owner --mtime='@0' -C dist -cf - templates.js manifest.json assets \
+            | gzip -n -9 > "out/weave-ui-$ver.tar.gz"
+          (cd out && sha256sum "weave-ui-$ver.tar.gz" > SHA256SUMS && cat SHA256SUMS)
+          echo "templates.js: $(sha256sum dist/templates.js)"
+
+      - name: Publish the release and upload the tarball
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          cat > /tmp/publish.mjs <<'JS'
+          const [api, token, tag] = [process.env.API, process.env.TOKEN, process.env.TAG];
+          const files = process.argv.slice(2);
+          const H = { authorization: `token ${token}` };
+          const j = async (r) => { const t = await r.text(); try { return JSON.parse(t); } catch { return { _raw: t, _status: r.status }; } };
+          let rel = await j(await fetch(`${api}/releases/tags/${tag}`, { headers: H }));
+          if (!rel?.id) {
+            const r = await fetch(`${api}/releases`, { method: "POST", headers: { ...H, "content-type": "application/json" },
+              body: JSON.stringify({ tag_name: tag, name: tag, body: "weave-ui template bundle: templates.js, assets/, manifest.json. Pin it in weave by its sha256 (SHA256SUMS)." }) });
+            rel = await j(r);
+            if (!rel?.id) { console.error(`::error::create release ${tag} failed: HTTP ${r.status} ${JSON.stringify(rel).slice(0, 300)}`); process.exit(1); }
+            console.log(`created release ${tag} (id ${rel.id})`);
+          } else console.log(`reusing release ${tag} (id ${rel.id})`);
+          const { readFile } = await import("node:fs/promises");
+          for (const file of files) {
+            const assets = await j(await fetch(`${api}/releases/${rel.id}/assets`, { headers: H }));
+            const name = file.split("/").pop();
+            for (const a of Array.isArray(assets) ? assets : []) {
+              if (a.name === name) await fetch(`${api}/releases/${rel.id}/assets/${a.id}`, { method: "DELETE", headers: H });
+            }
+            const fd = new FormData();
+            fd.append("attachment", new Blob([await readFile(file)]), name);
+            const up = await fetch(`${api}/releases/${rel.id}/assets?name=${encodeURIComponent(name)}`, { method: "POST", headers: H, body: fd });
+            if (!up.ok) { console.error(`::error::upload ${name} failed: HTTP ${up.status} ${(await up.text()).slice(0, 300)}`); process.exit(1); }
+          }
+          const final = await j(await fetch(`${api}/releases/${rel.id}/assets`, { headers: H }));
+          console.log("assets now: " + (Array.isArray(final) ? final.map((a) => `${a.name} (${a.size} bytes)`).join(", ") : "?"));
+          JS
+          ver="${TAG#v}"
+          node /tmp/publish.mjs "out/weave-ui-$ver.tar.gz" out/SHA256SUMS
