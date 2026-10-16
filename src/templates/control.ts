@@ -151,8 +151,20 @@ function controlSection(c: Rec, now: number | undefined): SafeHtml {
     y["on"] === true
       ? html`on${num(y["until"]) !== undefined ? html` until ${time(y["until"], { fmt: "local" })}` : ""}${yBy !== "" ? ` · by ${yBy}` : ""}`
       : html`off${yEnded !== "" ? ` (${yEnded})` : ""}`;
+  const yoloSwitch =
+    y["on"] === true
+      ? actionForm({ yolo: { off: true } }, { label: "Turn yolo off", tone: "quiet" })
+      : actionForm(
+          { yolo: { on: true } },
+          {
+            label: "Turn yolo on",
+            confirm:
+              "Turn yolo on? Until it ends, the factory advances and re-runs stages, small, evidenced factory pull requests merge themselves (within the cap), and fleet requests run without your Approve.",
+            extra: html`<select name="for" class="yolo-pick" aria-label="For how long"><option value="1h">1 hour</option><option value="4h">4 hours</option><option value="8h" selected>8 hours</option><option value="24h">1 day</option><option value="72h">3 days</option></select>`,
+          },
+        );
   const autonomy = html`<div class="card"><div class="card-title">Autonomy and guard</div>${kv([
-    ["Yolo", yolo],
+    ["Yolo", html`${yolo} ${yoloSwitch}`],
     ["Guard", html`${str(g["mode"])}${gBy !== "" ? ` · set by ${gBy}` : ""}${gSince !== undefined ? html` · ${time(gSince, opt(now))}` : ""}`],
     ["Digest", mono(str(c["digest"]))],
   ])}</div>`;
@@ -189,7 +201,14 @@ function valueText(x: unknown): string {
 
 function haltCard(h: Rec, now: number | undefined): SafeHtml {
   if (h["halted"] !== true) {
-    return html`<div class="card"><div class="card-title">Running</div><div class="status" data-tone="ok">Not halted — peers claim normally.</div></div>`;
+    return html`<div class="card"><div class="card-title">Running</div><div class="status" data-tone="ok">Not halted — peers claim normally.</div><div class="actions">${actionForm(
+      { fleet: "halt" },
+      {
+        label: "■ Halt",
+        tone: "danger",
+        confirm: "Halt the fleet? Every worker stops what it is doing and takes nothing new until you resume. Yolo mode ends.",
+      },
+    )}</div></div>`;
   }
   const cause = str(h["cause"]);
   const reason = str(h["reason"]);

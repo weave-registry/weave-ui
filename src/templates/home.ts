@@ -24,7 +24,7 @@ export function home(vm: HomeViewModel, ctx: RenderCtx): string {
   const help = n0(rec(work["summary"])["help"]);
 
   return toHtml(
-    html`<section id="view-home" class="view home" hx-get="/ui/f/home" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true" data-needs-count="${needsCount}" data-nav-count="work:${help}"><div>${pageHead(v)}${harness(v["status"])}${needsSection(needs, needsCount, now)}${decidedSection(v["decided"], now)}${workingSection(v["working"], v["queued"], now)}${doneSection(v["done"], now)}</div>${chatAside(v["chat"], now)}</section>`,
+    html`<section id="view-home" class="view home" hx-get="/ui/f/home" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true" data-needs-count="${needsCount}" data-nav-count="work:${help}"><div>${pageHead(v)}${harness(v["status"])}${needsSection(needs, needsCount, now, resumeConfirm(rec(rec(v["status"])["facts"])))}${decidedSection(v["decided"], now)}${workingSection(v["working"], v["queued"], now)}${doneSection(v["done"], now)}</div>${chatAside(v["chat"], now)}</section>`,
   );
 }
 
@@ -79,8 +79,26 @@ function harness(status: unknown): SafeHtml {
   const reasons = arr(s["reasons"]).map(rec);
   const facts = rec(s["facts"]);
   const halted = verdict === "halted" || reasons.some((r) => r["key"] === "halt");
-  const list = reasons.length > 0 ? html`<ul class="harness-reasons">${reasons.map(harnessReason)}</ul>` : "";
-  return html`<div class="harness" data-verdict="${verdict}" role="status" aria-label="Harness status"><div class="harness-head"><span class="harness-word">${str(s["word"])}</span><span class="harness-sentence">${str(s["sentence"])}</span></div>${list}<div class="harness-facts">${harnessFacts(facts, now)}</div>${fleetControls(halted, rec(facts["yolo"]), now)}</div>`;
+  const resumeAsk = resumeConfirm(facts);
+  const list = reasons.length > 0 ? html`<ul class="harness-reasons">${reasons.map((r) => harnessReason(r, resumeAsk))}</ul>` : "";
+  const fixes = reasons.map((r) => rec(r["fix"]));
+  const reasonResume = fixes.some((f) => f["kind"] === "command" && isResume(f["body"]));
+  const reasonYolo = fixes.some((f) => f["kind"] === "yolo");
+  return html`<div class="harness" data-verdict="${verdict}" role="status" aria-label="Harness status"><div class="harness-head"><span class="harness-word">${str(s["word"])}</span><span class="harness-sentence">${str(s["sentence"])}</span></div>${list}<div class="harness-facts">${harnessFacts(facts, now)}</div>${fleetControls(halted, rec(facts["yolo"]), now, resumeAsk, reasonResume, reasonYolo)}</div>`;
+}
+
+const RESUME_CONFIRM = "Resume the fleet? Peers start claiming and spending again.";
+const RESUME_OVER = " The fleet is over its budget; a budget halt comes back while the spend is still over.";
+
+/** Whether a command body posts {fleet:'resume'}. */
+function isResume(body: unknown): boolean {
+  return rec(body)["fleet"] === "resume";
+}
+
+/** The Resume confirm; it warns when the spend is over the budget (from the harness facts). */
+function resumeConfirm(facts: Rec): string {
+  const spend = rec(facts["spend"]);
+  return Object.keys(spend).length > 0 && n0(spend["fraction"]) >= 1 ? `${RESUME_CONFIRM}${RESUME_OVER}` : RESUME_CONFIRM;
 }
 
 function yoloPick(): SafeHtml {
@@ -92,14 +110,15 @@ function yoloForm(label: string, confirm?: string): SafeHtml {
   return actionForm({ yolo: { on: true } }, confirm !== undefined ? { label, confirm, extra } : { label, extra });
 }
 
-function harnessReason(r: Rec): SafeHtml {
+function harnessReason(r: Rec, resumeAsk: string): SafeHtml {
   const fix = rec(r["fix"]);
   const label = str(fix["label"]);
   let control: SafeHtml | "" = "";
   if (fix["kind"] === "command") {
     const body = rec(fix["body"]);
     const confirm = fix["confirm"];
-    control = actionForm(body, typeof confirm === "string" ? { label, confirm } : { label });
+    const ask = typeof confirm === "string" ? confirm : isResume(body) ? resumeAsk : undefined;
+    control = actionForm(body, ask !== undefined ? { label, confirm: ask } : { label });
   } else if (fix["kind"] === "yolo") {
     const confirm = fix["confirm"];
     control = yoloForm(label, typeof confirm === "string" ? confirm : undefined);
@@ -320,7 +339,7 @@ function harnessFacts(f: Rec, now: number | undefined): SafeHtml[] {
   if (Object.keys(dec).length > 0) {
     out.push(
       fact(
-        html`<a href="/knowledge">${n0(dec["open"])} open decisions</a> (${n0(dec["proposed"])} proposed · ${n0(dec["acceptedOpen"])} accepted, not complete)`,
+        html`${n0(dec["open"])} open decisions (${n0(dec["proposed"])} proposed · ${n0(dec["acceptedOpen"])} accepted, not complete)`,
       ),
     );
   }
@@ -331,15 +350,24 @@ function harnessFacts(f: Rec, now: number | undefined): SafeHtml[] {
 const HALT_CONFIRM = "Halt the fleet? Every worker stops what it is doing and takes nothing new until you resume. Yolo mode ends.";
 
 /** weave's topbar: Halt or Resume fleet, and the yolo switch. */
-function fleetControls(halted: boolean, yolo: Rec, now: number | undefined): SafeHtml {
+function fleetControls(
+  halted: boolean,
+  yolo: Rec,
+  now: number | undefined,
+  resumeAsk: string,
+  reasonResume: boolean,
+  reasonYolo: boolean,
+): SafeHtml {
   const halt = halted
-    ? html`<span class="fleet-halt" data-halted="true">■ Fleet halted ${actionForm({ fleet: "resume" }, { label: "Resume fleet" })}</span>`
-    : html`<span class="fleet-halt">${actionForm({ fleet: "halt" }, { label: "Halt", tone: "quiet", confirm: HALT_CONFIRM })}</span>`;
+    ? html`<span class="fleet-halt" data-halted="true">■ Fleet halted${reasonResume ? "" : html` ${actionForm({ fleet: "resume" }, { label: "Resume fleet", confirm: resumeAsk })}`}</span>`
+    : html`<span class="fleet-halt">${actionForm({ fleet: "halt" }, { label: "■ Halt", tone: "danger", confirm: HALT_CONFIRM })}</span>`;
   const until = num(yolo["until"]);
   const switcher =
     yolo["on"] === true
       ? html`<span class="yolo-badge" data-on="true">Yolo on${until !== undefined ? html` · ${time(until, { ...opt(now), fmt: "until" })}` : ""} ${actionForm({ yolo: { off: true } }, { label: "Turn off", tone: "quiet" })}</span>`
-      : html`<span class="yolo-badge">Yolo off ${yoloForm("Turn on")}</span>`;
+      : reasonYolo
+        ? html`<span class="yolo-badge">Yolo off</span>`
+        : html`<span class="yolo-badge">Yolo off ${yoloForm("Turn on")}</span>`;
   return html`<div class="fleet-controls">${halt} ${switcher}</div>`;
 }
 
@@ -347,10 +375,10 @@ function fleetControls(halted: boolean, yolo: Rec, now: number | undefined): Saf
 
 const CLOSE_CONFIRM = (issue: string): string => `Close #${issue}? Its open stages are cancelled, and an issue on the forge is closed there.`;
 
-function needsSection(needs: readonly Rec[], count: number, now: number | undefined): SafeHtml {
+function needsSection(needs: readonly Rec[], count: number, now: number | undefined, resumeAsk: string): SafeHtml {
   const head = html`<h2 class="section" id="needs-h">Needs you${count > 0 ? html`<span class="count"> (${count})</span>` : ""}</h2>`;
   if (needs.length === 0) return html`${head}<div id="needs"><p class="note">Nothing needs you right now.</p></div>`;
-  return html`${head}<div id="needs">${needs.map((n) => needCard(n, now))}</div>`;
+  return html`${head}<div id="needs">${needs.map((n) => needCard(n, now, resumeAsk))}</div>`;
 }
 
 function cardMeta(n: Rec, now: number | undefined): SafeHtml {
@@ -359,14 +387,14 @@ function cardMeta(n: Rec, now: number | undefined): SafeHtml {
   return html`<div class="card-meta">Asked ${time(n["askedTs"], at)}${expires !== undefined ? html` · denied by silence ${time(expires, { ...at, fmt: "until" })}` : ""}</div>`;
 }
 
-function needCard(n: Rec, now: number | undefined): SafeHtml {
+function needCard(n: Rec, now: number | undefined, resumeAsk: string): SafeHtml {
   const cls = n["severity"] === "needs-you" ? "card needs" : "card";
   const kind = n["kind"];
   let body: SafeHtml;
   if (kind === "grant") body = grantCard(n, now);
   else if (kind === "stage") body = stageCard(n, now);
   else if (kind === "plan" && typeof n["plan"] === "object" && n["plan"] !== null) body = planCard(n, now);
-  else if (kind === "halt") body = haltCard(n, now);
+  else if (kind === "halt") body = haltCard(n, now, resumeAsk);
   else body = attentionCard(n, now);
   return html`<div class="${cls}" data-key="${str(n["key"])}">${body}</div>`;
 }
@@ -409,9 +437,9 @@ function planCard(n: Rec, now: number | undefined): SafeHtml {
   return html`<div class="card-title">The chief of staff proposes: ${str(plan["summary"])}</div>${cardMeta(n, now)}${forLine}${actionForm({ plan: { accept: id } }, { label: "Start ticked", extra })}<div class="actions">${actionForm({ plan: { decline: id } }, { label: "Decline", tone: "quiet" })}</div>`;
 }
 
-function haltCard(n: Rec, now: number | undefined): SafeHtml {
+function haltCard(n: Rec, now: number | undefined, resumeAsk: string): SafeHtml {
   const usd = html`<input type="number" name="usd:num" min="0" step="5" placeholder="$ per day" aria-label="New budget in dollars per day" required>`;
-  return html`<div class="card-title">${str(n["title"])}</div>${cardMeta(n, now)}<div class="actions">${actionForm({ fleet: "resume" }, { label: "Resume" })} ${actionForm({ budget: {} }, { label: "Raise budget", tone: "quiet", extra: usd })}</div>`;
+  return html`<div class="card-title">${str(n["title"])}</div>${cardMeta(n, now)}<div class="actions">${actionForm({ fleet: "resume" }, { label: "Resume", confirm: resumeAsk })} ${actionForm({ budget: {} }, { label: "Raise budget", tone: "quiet", extra: usd })}</div>`;
 }
 
 function attentionCard(n: Rec, now: number | undefined): SafeHtml {
@@ -465,7 +493,7 @@ const MARKS: Readonly<Record<string, string>> = { done: "✓", failed: "✗", ca
 
 function doneSection(done: unknown, now: number | undefined): SafeHtml {
   const rows = arr(done).map(rec);
-  const head = html`<h2 class="section" id="done-h">Done recently <a class="more" href="/task">All tasks</a></h2>`;
+  const head = html`<h2 class="section" id="done-h">Done recently <a class="more" href="/audit?since=24h">All tasks</a></h2>`;
   if (rows.length === 0) return html`${head}<div class="card" id="done"><p class="note">Nothing has finished yet.</p></div>`;
   const items = rows.map((d) => {
     const state = d["state"] === "failed" ? "failed" : d["state"] === "cancelled" ? "cancelled" : "done";

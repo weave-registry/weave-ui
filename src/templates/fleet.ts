@@ -123,7 +123,7 @@ function readOnlyNode(n: Rec, now: number | undefined): SafeHtml {
   const linkRow = links.length > 0 ? html`<div class="links">${links.map(linkBadge)}</div>` : "";
   const more =
     gone.length > 0
-      ? html`<details class="more"><summary>+${gone.length} departed</summary>${gone.map((a) => readOnlyAgent(a, now))}</details>`
+      ? html`<details class="more" data-keep="departed:${str(n["node"])}"><summary>+${gone.length} departed</summary>${gone.map((a) => readOnlyAgent(a, now))}</details>`
       : "";
   const none = agents.length > 0 ? "" : html`<p class="note">No agent has heartbeated from this node.</p>`;
   return html`<div class="${silent ? "card needs" : "card"}"><div class="card-title">${str(n["node"])}${self}</div>${status}<div class="card-why">${where}</div>${linkRow}${shown.map((a) => readOnlyAgent(a, now))}${more}${none}</div>`;

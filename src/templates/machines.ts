@@ -88,7 +88,7 @@ function machineCard(m: Rec, newest: string, now: number | undefined): SafeHtml 
   const why = remedy !== "" ? html`<div class="card-why">${remedy}</div>` : "";
   const more =
     gone.length > 0
-      ? html`<details class="more"><summary>+${gone.length} departed</summary>${gone.map((a) => departedLine(a, now))}</details>`
+      ? html`<details class="more" data-keep="${`departed:${node}`}"><summary>+${gone.length} departed</summary>${gone.map((a) => departedLine(a, now))}</details>`
       : "";
   return html`<div class="${quiet ? "card needs" : "card"}"><div class="card-title">${node}</div>${status}${why}${shown.map((a) => agentRow(a, newest, now))}${more}</div>`;
 }
