@@ -1,0 +1,84 @@
+# The factory's forge side (ADR-0131). Copy this file to .forgejo/workflows/factory.yml in the
+# repository the factory works on. It turns forge events into stage triggers and posts each one to
+# weave's gateway. It decides nothing, and holds one secret.
+#
+#   issue opened                    → triage
+#   label factory:<stage> added     → that stage  (intent, design, plan, build, verify, ship, review, close)
+#   pull request opened / updated   → review, for the issue its branch names (factory/<N>-…),
+#                                     else the one it closes ("Closes #N"); otherwise nothing
+#
+# Repository settings:
+#   variable  WEAVE_HOOK_URL          the gateway's hook, e.g. http://bazzite.lan:8787/hook
+#   secret    WEAVE_GATEWAY_SECRET    the gateway's operator secret (sent as X-Weave-Secret)
+#
+# Every field from the event reaches the script through `env:` — never `${{ }}` inside the script —
+# because an issue title is text anyone who can open an issue wrote.
+name: factory
+
+on:
+  issues:
+    types: [opened, labeled]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    container: node:22-bookworm
+    steps:
+      - name: Post the stage trigger to weave
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          LABEL: ${{ github.event.label.name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_IS_PR: ${{ github.event.issue.pull_request && 'true' || '' }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          REPO: ${{ github.repository }}
+          HOOK_URL: ${{ vars.WEAVE_HOOK_URL }}
+          HOOK_SECRET: ${{ secrets.WEAVE_GATEWAY_SECRET }}
+        run: |
+          node --input-type=module <<'JS'
+          const STAGES = ['triage', 'intent', 'design', 'plan', 'build', 'verify', 'ship', 'review', 'close'];
+          const e = process.env;
+          const say = (m) => console.log(`factory: ${m}`);
+          let t = null;
+          if (e.EVENT_NAME === 'issues') {
+            if (e.ISSUE_IS_PR === 'true') { say('an issue event on a pull request — the pull_request trigger handles it'); process.exit(0); }
+            let stage = null;
+            if (e.ACTION === 'opened') stage = 'triage';
+            // An ADDED label: `labeled` on GitHub, `label_updated` on Forgejo (a removal is `label_cleared`).
+            if (e.ACTION === 'labeled' || e.ACTION === 'label_updated') {
+              const m = /^factory:([a-z]+)$/.exec(e.LABEL || '');
+              if (m && STAGES.includes(m[1])) stage = m[1];
+            }
+            if (!stage) { say(`issue ${e.ACTION} ${e.LABEL || ''} is not a factory trigger`); process.exit(0); }
+            t = { issue: Number(e.ISSUE_NUMBER), stage, title: e.ISSUE_TITLE, url: e.ISSUE_URL, repo: e.REPO, body: e.ISSUE_BODY };
+          } else if (e.EVENT_NAME === 'pull_request') {
+            // The issue is the one this PR is the WORK of: its factory branch, else the issue it closes. Never the
+            // first #N anywhere in its text — "Depends on #346" started a review of #346 (seen live, 2026-10-08).
+            const m = /^factory\/(\d+)-/.exec(e.PR_HEAD_REF || '') || /\b(?:closes|fixes|resolves)\s+#(\d+)/i.exec(`${e.PR_TITLE || ''}\n${e.PR_BODY || ''}`);
+            if (!m) { say('the pull request is not on a factory/<N>- branch and closes no issue, so there is no factory review to start'); process.exit(0); }
+            t = { issue: Number(m[1]), stage: 'review', title: e.PR_TITLE, url: e.PR_URL, repo: e.REPO, body: e.PR_BODY };
+          } else {
+            say(`event ${e.EVENT_NAME} is not a factory trigger`);
+            process.exit(0);
+          }
+          if (!e.HOOK_URL) { console.error('factory: set the repository variable WEAVE_HOOK_URL to the gateway hook, e.g. http://bazzite.lan:8787/hook'); process.exit(1); }
+          if (!e.HOOK_SECRET) { console.error('factory: set the repository secret WEAVE_GATEWAY_SECRET to the gateway operator secret'); process.exit(1); }
+          const factory = Object.fromEntries(Object.entries(t).filter(([, v]) => v !== undefined && v !== ''));
+          const res = await fetch(e.HOOK_URL, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'x-weave-secret': e.HOOK_SECRET },
+            body: JSON.stringify({ factory }),
+          });
+          const text = await res.text();
+          if (!res.ok) { console.error(`factory: the gateway answered ${res.status}: ${text.slice(0, 500)}`); process.exit(1); }
+          say(`#${factory.issue} ${factory.stage} → ${text.slice(0, 300)}`);
+          JS
