@@ -150,6 +150,10 @@
   // A view's poll is still held while one of its forms carries an unsent draft (the poll tests pin this); typing alone
   // (focus) no longer holds it — §3b carries the operator's work into every fresh fragment instead.
   var edits = new WeakMap(), sentEdits = new WeakMap(), reqForm = new WeakMap();
+  // A dirty form whose draft §3b carried into a fresh fragment points at that fresh form, so a request sent from the
+  // old element still answers for (and cleans) the form now on the page.
+  var moved = new WeakMap();
+  function current(form) { var next; while (form && (next = moved.get(form))) form = next; return form; }
   doc.addEventListener("input", function (e) {
     var form = e.target && e.target.closest ? e.target.closest("form") : null;
     if (!form) return;
@@ -228,7 +232,7 @@
     var active = doc.activeElement;
     var focused = active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) && target.contains(active) ? active : null;
     // The form whose own request produced this response, if it sent every edit, takes the server's fresh values.
-    var own = swapXhr && reqForm.get(swapXhr);
+    var own = swapXhr && current(reqForm.get(swapXhr));
     var ownDone = own && sentEdits.get(swapXhr) === (edits.get(own) || 0);
     list(target, FIELD).forEach(function (el) {
       if (!carriable(el)) return;
@@ -243,7 +247,10 @@
       // A list that shifted puts a different form at this position: never pour a draft into another action.
       if (form && toForm && form.getAttribute("hx-post") !== toForm.getAttribute("hx-post")) return;
       copyField(el, to);
-      if (dirty && toForm) { toForm.setAttribute("data-dirty", "1"); edits.set(toForm, edits.get(form) || 0); }
+      if (dirty && toForm) {
+        toForm.setAttribute("data-dirty", "1"); edits.set(toForm, edits.get(form) || 0); moved.set(form, toForm);
+        if (form.getAttribute("aria-busy") === "true") toForm.setAttribute("aria-busy", "true"); // still in flight: §12
+      }
     });
     if (focused && focused.name) {
       var loc = locate(target, focused);
@@ -500,7 +507,8 @@
     var elt = d.elt;
     if (!d.successful) return;
     var sentAt = d.xhr && sentEdits.get(d.xhr);
-    if (elt && elt.tagName === "FORM" && (sentAt === undefined || sentAt === (edits.get(elt) || 0))) elt.removeAttribute("data-dirty");
+    var form = elt && elt.tagName === "FORM" ? current(elt) : null;
+    if (form && (sentAt === undefined || sentAt === (edits.get(form) || 0))) form.removeAttribute("data-dirty");
     var err = doc.getElementById("weave-error");
     var action = !isGet(d.requestConfig && d.requestConfig.verb);
     if (action && err && !err.hidden && d.xhr && sentSeq.get(d.xhr) > errorSeq) { err.replaceChildren(); err.hidden = true; localShown = false; }
@@ -633,6 +641,7 @@
     if (!p) return;
     busy.delete(evt.detail.xhr);
     p.form.removeAttribute("aria-busy");
+    current(p.form).removeAttribute("aria-busy");
     p.buttons.forEach(function (b) { b.disabled = false; });
   });
   // requestSubmit (Enter) ignores disabled buttons: stop a busy form's submit before htmx sees it.

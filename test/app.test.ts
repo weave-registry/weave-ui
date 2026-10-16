@@ -451,3 +451,73 @@ test("a time with an empty data-ts is skipped, not shown as 1 Jan 1970", () => {
     assert.deepEqual(t.set, {}, "no title or tone is set");
   }
 });
+
+// A view of forms, each holding one <textarea name="text">, as fake elements: enough DOM for §3b's carry-over.
+function fakeForms(id: string, posts: string[]) {
+  const forms = posts.map((post) => {
+    const attrs: Record<string, string> = { "hx-post": post };
+    const field = { tagName: "TEXTAREA", type: "textarea", name: "text", value: "", defaultValue: "", closest: (sel: string) => (sel === "form" ? form : null) };
+    const form = {
+      tagName: "FORM", attrs, field, elements: [field],
+      getAttribute: (a: string) => attrs[a] ?? null,
+      setAttribute: (a: string, v: string) => void (attrs[a] = v),
+      removeAttribute: (a: string) => void delete attrs[a],
+      hasAttribute: (a: string) => a in attrs,
+      querySelectorAll: (sel: string) => (sel === "input, textarea, select" ? [field] : []),
+    };
+    return form;
+  });
+  const view = {
+    id, forms, contains: () => true,
+    querySelectorAll: (sel: string) => (sel === "form" ? forms : sel === "input, textarea, select" ? forms.map((f) => f.field) : []),
+    querySelector: (sel: string) => (sel === "form[data-dirty]" ? forms.find((f) => "data-dirty" in f.attrs) ?? null : null),
+  };
+  return view;
+}
+
+test("a sent draft carried into a fresh form by another response is not carried again once its own request succeeds", () => {
+  const on: Record<string, Handler[]> = {};
+  const docOn: Record<string, Handler[]> = {};
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    activeElement: { tagName: "BODY" },
+    addEventListener: (n: string, h: Handler) => void (docOn[n] ??= []).push(h),
+  }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail, preventDefault: noopFn }));
+  const type = (form: { field: { value: string } }, v: string): void => { form.field.value = v; (docOn["input"] ?? []).forEach((h) => h({ target: form.field })); };
+  const poll = (view: unknown): boolean => {
+    let held = false;
+    (on["htmx:beforeRequest"] ?? []).forEach((h) => h({ detail: { elt: view, xhr: {}, requestConfig: { verb: "get" } }, preventDefault: () => { held = true; } }));
+    return held;
+  };
+  const posts = ["/ui/a/note", "/ui/a/answer"];
+
+  const v1 = fakeForms("view-work", posts);
+  const f = v1.forms[0]!, g = v1.forms[1]!;
+  type(f, "ship it");
+  const xhrF = {};
+  fire("htmx:beforeRequest", { elt: f, xhr: xhrF, requestConfig: { verb: "post" } });
+  type(g, "yes");
+  const xhrG = {};
+  fire("htmx:beforeRequest", { elt: g, xhr: xhrG, requestConfig: { verb: "post" } });
+
+  // G's answer swaps the view first: F's draft is still in flight, so it rides along and its form stays busy.
+  const v2 = fakeForms("view-work", posts);
+  fire("htmx:beforeSwap", { xhr: xhrG });
+  fire("htmx:oobBeforeSwap", { target: v1, fragment: v2 });
+  fire("htmx:afterRequest", { elt: g, xhr: xhrG, successful: true });
+  assert.equal(v2.forms[0]!.field.value, "ship it");
+  assert.equal(v2.forms[0]!.attrs["aria-busy"], "true", "the carried form is still in flight, so it cannot be sent twice");
+  assert.equal(v2.forms[1]!.field.value, "", "G's own sent text is not carried");
+
+  // Then F's answer swaps the view: the server accepted the draft, so the fresh form takes the server's values.
+  const v3 = fakeForms("view-work", posts);
+  fire("htmx:beforeSwap", { xhr: xhrF });
+  fire("htmx:oobBeforeSwap", { target: v2, fragment: v3 });
+  fire("htmx:afterRequest", { elt: f, xhr: xhrF, successful: true });
+  assert.equal(v3.forms[0]!.field.value, "", "the accepted draft is not copied back in as unsent");
+  assert.equal("data-dirty" in v3.forms[0]!.attrs, false);
+  assert.equal("aria-busy" in v2.forms[0]!.attrs, false, "the carried form is no longer busy once its request ends");
+  assert.equal(poll(v3), false, "nothing unsent is left, so the view's poll goes ahead");
+});
