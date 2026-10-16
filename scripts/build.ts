@@ -53,7 +53,7 @@ const PAGES: readonly PageSpec[] = [
   { page: "work", title: "Work", views: [{ name: "work", poll: true }] },
   { page: "control", title: "Control", views: [{ name: "control", poll: true }] },
   { page: "factory", title: "Factory", views: [{ name: "factory", poll: true }] },
-  { page: "machines", title: "Machines", views: [{ name: "fleet", poll: true }, { name: "machines", poll: true }] },
+  { page: "machines", title: "Machines", views: [{ name: "machines", poll: true }, { name: "fleet", poll: true }] },
   { page: "team", title: "Team", views: [{ name: "team", poll: true }] },
   { page: "task", title: "Task", views: [{ name: "task", fromLocation: true, poll: true }] },
   { page: "audit", title: "Full record", views: [{ name: "audit", fromLocation: true }], intro: AUDIT_INTRO },

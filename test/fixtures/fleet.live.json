@@ -1,0 +1,42 @@
+{
+  "now": 1792102377577,
+  "scopes": [
+    {
+      "scope": "default",
+      "active": true,
+      "state": "live",
+      "liveAgents": 1,
+      "departedAgents": 0,
+      "silentNodes": 0,
+      "nodeCount": 1,
+      "lastEventTs": 1792102374504,
+      "downLinks": [],
+      "why": "1 node · last event 3s ago",
+      "nodes": [
+        {
+          "node": "bazzite-712bbd26",
+          "self": true,
+          "silent": false,
+          "lastEventTs": 1792102374504,
+          "links": [],
+          "agents": [
+            {
+              "agent": "bazzite-712bbd26-main-peer",
+              "version": "0.2.180",
+              "lastSeenTs": 1792102374504,
+              "live": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "scopes": 1,
+    "liveAgents": 1,
+    "departedAgents": 0,
+    "silentNodes": 0,
+    "attention": 0,
+    "dormantOrEmpty": 0
+  }
+}

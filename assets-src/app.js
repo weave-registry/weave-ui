@@ -13,7 +13,8 @@
 
   // ── 1. weave-json (ADR-0234 §4): every /ui action is sent as the typed JSON body weave's handlers expect ──
   var FORBIDDEN = ["__proto__", "constructor", "prototype"];
-  var TYPE_RE = /:(bool|num|str\[\]|num\[\])$/;
+  var TYPE_RE = /:(bool|num|str\[\]|num\[\]|csv\[\])$/;
+  var FILE_RE = /^(?:[A-Za-z0-9_-][A-Za-z0-9._-]*|skills\/[a-z0-9-]+\/SKILL\.md)$/;
   var PATH_RE = /^([^[\]]+)((?:\[[^\]]*\])*)$/;
   var getElts = new WeakSet();
 
@@ -23,16 +24,53 @@
       var n = v.trim() === "" ? NaN : Number(v);
       return Number.isFinite(n) ? n : undefined;
     }
+    if (type === "csv[]") return v.split(",").map(function (p) { return p.trim(); }).filter(Boolean);
     return v;
+  }
+
+  // The object at root.define.files, created as needed (the role editor's add/remove-a-file fields act on it).
+  function filesOf(root) {
+    var cur = root;
+    ["define", "files"].forEach(function (k) {
+      var next = Object.prototype.hasOwnProperty.call(cur, k) ? cur[k] : undefined;
+      if (!next || typeof next !== "object" || Array.isArray(next)) { next = {}; cur[k] = next; }
+      cur = next;
+    });
+    return cur;
+  }
+
+  function fileOk(path) { return FILE_RE.test(path) && FORBIDDEN.indexOf(path) === -1; }
+
+  // Why the role editor's add-a-file fields can't be sent as they are ("" when they can): encode drops a file whose
+  // path is empty or not allowed, or one the editor already shows, so typed text would be thrown away with no word to
+  // the operator (or, for the last, would have to overwrite that file's text).
+  function newFileProblem(path, body, params) {
+    if (!path && !body) return "";
+    if (!path) return "Give the new file a path, or clear its text.";
+    if (!fileOk(path)) return "A file path is one name of letters, digits, '.', '-' or '_' (no spaces or folders), or skills/<name>/SKILL.md with a lowercase <name>.";
+    if (hasParam(params, "define[files][" + path + "]")) return "This role already has a file named " + path + ". Edit it above, or give the new file another path.";
+    return "";
+  }
+  function param(params, k) {
+    var v = params && (typeof params.get === "function" ? params.get(k) : params[k]);
+    return typeof v === "string" ? v : "";
+  }
+  function hasParam(params, k) {
+    if (!params) return false;
+    return typeof params.has === "function" ? params.has(k) : Object.prototype.hasOwnProperty.call(params, k);
   }
 
   function encode(entries) {
     var root = {};
     var body;
     var hasBody = false;
+    var newPath = "", newBody = "", removes = [];
     entries.forEach(function (kv) {
       var name = kv[0];
       var v = typeof kv[1] === "string" ? kv[1] : "";
+      if (name === "@new-file:path") { newPath = v; return; }
+      if (name === "@new-file:body") { newBody = v; return; }
+      if (name === "@remove-file") { removes.push(v); return; }
       var tm = TYPE_RE.exec(name);
       var type = tm ? tm[1] : "str";
       var path = tm ? name.slice(0, -tm[0].length) : name;
@@ -52,7 +90,9 @@
         cur = next;
       }
       var last = segs[segs.length - 1];
-      if (type === "str[]" || type === "num[]") {
+      if (type === "csv[]") {
+        cur[last] = val;
+      } else if (type === "str[]" || type === "num[]") {
         if (!Array.isArray(cur[last]) || !Object.prototype.hasOwnProperty.call(cur, last)) cur[last] = [];
         if (val !== undefined) cur[last].push(val);
       } else if (val !== undefined) {
@@ -61,6 +101,14 @@
         delete cur[last];
       }
     });
+    if (newPath && fileOk(newPath)) {
+      var into = filesOf(root);
+      if (!Object.prototype.hasOwnProperty.call(into, newPath)) into[newPath] = newBody;
+    }
+    if (removes.length) {
+      var files = filesOf(root);
+      removes.forEach(function (f) { if (Object.prototype.hasOwnProperty.call(files, f)) delete files[f]; });
+    }
     return hasBody ? body : root;
   }
 
@@ -70,13 +118,19 @@
       var d = evt.detail;
       if (isGet(d.verb)) { if (d.elt) getElts.add(d.elt); return; }
       if (d.elt) getElts.delete(d.elt);
+      var bad = newFileProblem(param(d.parameters, "@new-file:path"), param(d.parameters, "@new-file:body"), d.parameters);
+      if (bad) {
+        evt.preventDefault();
+        var input = d.elt && d.elt.querySelector ? d.elt.querySelector('[name="@new-file:path"]') : null;
+        if (input && input.setCustomValidity) { input.setCustomValidity(bad); input.reportValidity(); } else window.alert(bad);
+        return false;
+      }
       d.headers["Content-Type"] = "application/json";
     },
     encodeParameters: function (xhr, parameters, elt) {
       if (elt && typeof elt === "object" && getElts.has(elt)) return null;
       var entries = [];
       if (parameters && typeof parameters.forEach === "function") parameters.forEach(function (v, k) { entries.push([k, v]); });
-      if (!entries.length) return null;
       xhr.overrideMimeType("text/json");
       return JSON.stringify(encode(entries));
     },
@@ -92,14 +146,34 @@
   });
 
   // ── 3. Hold a view's poll while the operator is typing in it (weave page behaviour) ──
+  // edits counts input per form; sentEdits ties each submit to the count it sent, so a reply clears only what it carried
+  var edits = new WeakMap(), sentEdits = new WeakMap();
   doc.addEventListener("input", function (e) {
     var form = e.target && e.target.closest ? e.target.closest("form") : null;
-    if (form) form.setAttribute("data-dirty", "1");
+    if (!form) return;
+    if (/^@new-file:/.test(e.target.name || "")) each(form, '[name="@new-file:path"]', function (i) { if (i.setCustomValidity) i.setCustomValidity(""); });
+    edits.set(form, (edits.get(form) || 0) + 1);
+    if (changed(form)) form.setAttribute("data-dirty", "1");
+    else form.removeAttribute("data-dirty"); // emptied back to how it loaded: nothing left to lose, so the poll may run
   });
+
+  // Whether any field differs from the value it loaded with; a form whose fields can't be read counts as changed
+  function changed(form) {
+    var els = form.elements;
+    if (!els || typeof els.length !== "number") return true;
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el.type === "checkbox" || el.type === "radio") { if (el.checked !== el.defaultChecked) return true; }
+      else if (el.options) { for (var j = 0; j < el.options.length; j++) if (el.options[j].selected !== el.options[j].defaultSelected) return true; }
+      else if ("defaultValue" in el && el.value !== el.defaultValue) return true;
+    }
+    return false;
+  }
 
   htmx.on("htmx:beforeRequest", function (evt) {
     var d = evt.detail;
     var elt = d.elt;
+    if (elt && elt.tagName === "FORM" && d.xhr) sentEdits.set(d.xhr, edits.get(elt) || 0);
     if (!elt || !isGet(d.requestConfig && d.requestConfig.verb) || !/^view-/.test(elt.id || "")) return;
     var a = doc.activeElement;
     var typing = a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && elt.contains(a);
@@ -264,7 +338,8 @@
     var d = evt.detail;
     var elt = d.elt;
     if (!d.successful) return;
-    if (elt && elt.tagName === "FORM") elt.removeAttribute("data-dirty");
+    var sentAt = d.xhr && sentEdits.get(d.xhr);
+    if (elt && elt.tagName === "FORM" && (sentAt === undefined || sentAt === (edits.get(elt) || 0))) elt.removeAttribute("data-dirty");
     var err = doc.getElementById("weave-error");
     if (err && !err.hidden && d.xhr && sentSeq.get(d.xhr) > errorSeq) { err.replaceChildren(); err.hidden = true; }
     var pick = elt && picks.get(elt);

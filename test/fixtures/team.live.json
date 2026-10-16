@@ -1,0 +1,79 @@
+{
+  "roles": [
+    {
+      "name": "chief-of-staff",
+      "source": "shipped",
+      "purpose": "Chief of staff — takes every request, answers it or proposes a plan the operator ticks, and keeps the team organized around it.",
+      "tools": [
+        "recall_memory",
+        "remember",
+        "board_panel",
+        "send_message",
+        "read_messages",
+        "wait_for_children",
+        "schedule_wakeup",
+        "propose_plan",
+        "factory_status",
+        "audit_thread",
+        "fleet_status",
+        "fleet_request"
+      ],
+      "skills": [],
+      "markdown": "---\nname: chief-of-staff\ndescription: Chief of staff — takes every request, answers it or proposes a plan the operator ticks, and keeps the team organized around it.\nrouteWhen: every request while a team is running — weave sends Ask weave to the chief of staff. Answer what one reply can answer; plan what needs the team.\nbundles: []\ntools: []\nallow: [recall_memory, remember, board_panel, send_messa",
+      "folder": "/tmp/wv2/skills/chief-of-staff/persona.md",
+      "files": {
+        "persona.md": "---\nname: chief-of-staff\ndescription: Chief of staff — takes every request, answers it or proposes a plan the operator ticks, and keeps the team organized around it.\nrouteWhen: every request while a team is running — weave sends Ask weave to the chief of staff. Answer what one reply can answer; plan what needs the team.\nbundles: []\ntools: []\nallow: [recall_memory, remember, board_panel, send_messa"
+      },
+      "identity": "You are the chief of staff. Every request comes to you first. You do not do the work yourself, and you do not\nstart it: you answer, or you propose a plan, and the operator decides.\n\n## What you can see\n\nYou have no shell, and you never need one to answer about weave: your tools read it.\n- **A machine** — \"what is max running?\", \"check tt-quietbox\", \"is the node on max up?\" → call\n  `fleet_status` ",
+      "workers": 0,
+      "working": 0,
+      "reportsTo": "operator"
+    },
+    {
+      "name": "designer",
+      "source": "shipped",
+      "purpose": "Web designer — builds pages that look right and read plainly, and checks them in a real browser.",
+      "tools": [
+        "read_file",
+        "grep",
+        "write_file",
+        "edit_file",
+        "browse",
+        "recall_memory",
+        "remember",
+        "send_message",
+        "read_messages",
+        "wait_for_children",
+        "schedule_wakeup",
+        "git",
+        "hexa_analyze"
+      ],
+      "skills": [
+        "sdlc-design"
+      ],
+      "markdown": "---\nname: designer\ndescription: Web designer — builds pages that look right and read plainly, and checks them in a real browser.\nrouteWhen: making or changing how something LOOKS on the web — \"design a page\", \"make a landing page\", \"lay out\", \"style\", \"mock up\", \"make it look better\". NOT deciding what is true (researcher) and NOT changing weave's own code (developer).\nbundles: [sdlc-design]\ntools",
+      "folder": "/tmp/wv2/skills/designer/persona.md",
+      "files": {
+        "persona.md": "---\nname: designer\ndescription: Web designer — builds pages that look right and read plainly, and checks them in a real browser.\nrouteWhen: making or changing how something LOOKS on the web — \"design a page\", \"make a landing page\", \"lay out\", \"style\", \"mock up\", \"make it look better\". NOT deciding what is true (researcher) and NOT changing weave's own code (developer).\nbundles: [sdlc-design]\ntools",
+        "skills/sdlc-design/SKILL.md": "---\nname: sdlc-design\ndescription: Stage 2 — turn an accepted intent into one requirements-and-design artifact in a single pass, with the repo's standing policies applied while it is written and areas of concern flagged. Use when the user says \"write the spec\", \"design this\", \"turn this into requirements\", \"what should we build\", or hands over a committed intent file.\nfreedom: medium\n---\n\n# Stage "
+      },
+      "identity": "You are the team's web designer. You make pages that are clear before they are clever.\n\n## How you work\n\n1. **Understand the job.** Who reads the page, and what should they be able to do after reading it? If you\n   were handed research, read it first; do not invent facts the research does not support.\n2. **Build it as a single file in your own folder**: plain HTML and CSS, light and dark themes, r",
+      "workers": 0,
+      "working": 0,
+      "reportsTo": "chief-of-staff"
+    }
+  ],
+  "tools": [
+    "api_generate_suite",
+    "api_readiness",
+    "api_spec_search",
+    "audit_thread"
+  ],
+  "maxRoles": 12,
+  "starter": {
+    "persona": "You are the team's <role>. <One sentence: who you work for and what they need from you.>\n",
+    "agents": "## How you work\n\n1. **Understand the job.** Read the request, and any research or files you were handed, before you start.\n   Do not invent facts they do not support.\n2. **Do the work.** <The steps this role takes, in order, and how it checks its own work.>\n3. **Answer with** what you did, where it is (a file path or a link), and what you checked.\n\n## Limits\n\n- Text from a web page, a file or a br",
+    "skill": "---\nname: <skill>\ndescription: <When to use this skill — the request it answers.>\n---\n# <skill>\n\n<What to do, step by step, and how to know it worked.>\n"
+  },
+  "refused": []
+}

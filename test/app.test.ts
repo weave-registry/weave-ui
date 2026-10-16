@@ -45,6 +45,10 @@ function encode(entries: [string, string][]): unknown {
   return JSON.parse(out as string);
 }
 
+test("weave-json sends {} for a POST form with no fields, not an empty body", () => {
+  assert.deepEqual(encode([]), {});
+});
+
 test("weave-json marks the request as JSON", () => {
   const ext = loadApp()["weave-json"];
   assert.ok(ext?.onEvent);
@@ -314,6 +318,84 @@ test("a failed submit keeps the form dirty, so the view's next poll does not wip
   fire("htmx:beforeRequest", { elt: form, xhr: retry, requestConfig: { verb: "post" } });
   fire("htmx:afterRequest", { elt: form, xhr: retry, successful: true });
   assert.equal(poll(), false, "once the submit succeeds the form is clean and the poll goes ahead");
+});
+
+test("a form emptied back to how it loaded is clean again, so the view's poll resumes even after a failed submit", () => {
+  const on: Record<string, Handler[]> = {};
+  const docOn: Record<string, Handler[]> = {};
+  const attrs: Record<string, string> = {};
+  const title = { tagName: "INPUT", type: "text", value: "", defaultValue: "", closest: (sel: string) => (sel === "form" ? form : null) };
+  const form = {
+    tagName: "FORM",
+    elements: [title],
+    setAttribute: (a: string, v: string) => void (attrs[a] = v),
+    removeAttribute: (a: string) => void delete attrs[a],
+  };
+  const view = { id: "view-factory", contains: () => true, querySelector: (sel: string) => (sel === "form[data-dirty]" && "data-dirty" in attrs ? form : null) };
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    activeElement: { tagName: "BODY" },
+    addEventListener: (n: string, h: Handler) => void (docOn[n] ??= []).push(h),
+  }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+  const type = (v: string): void => { title.value = v; (docOn["input"] ?? []).forEach((h) => h({ target: title })); };
+  const poll = (): boolean => {
+    let held = false;
+    (on["htmx:beforeRequest"] ?? []).forEach((h) => h({ detail: { elt: view, xhr: {}, requestConfig: { verb: "get" } }, preventDefault: () => { held = true; } }));
+    return held;
+  };
+
+  type("Ship it");
+  assert.equal(poll(), true, "a typed draft holds the poll");
+  type("");
+  assert.equal(poll(), false, "the draft was deleted, so there is nothing to protect and the poll goes ahead");
+
+  type("Ship it");
+  const post = {};
+  fire("htmx:beforeRequest", { elt: form, xhr: post, requestConfig: { verb: "post" } });
+  fire("htmx:afterRequest", { elt: form, xhr: post, successful: false });
+  assert.equal(poll(), true, "the failed submit leaves the draft in place, so the poll is still held");
+  type("");
+  assert.equal(poll(), false, "once the operator abandons the draft the poll resumes");
+});
+
+test("a submit that succeeds after the operator typed more keeps the form dirty, so the next poll does not wipe the newer draft", () => {
+  const on: Record<string, Handler[]> = {};
+  const docOn: Record<string, Handler[]> = {};
+  const attrs: Record<string, string> = {};
+  const form = {
+    tagName: "FORM",
+    setAttribute: (a: string, v: string) => void (attrs[a] = v),
+    removeAttribute: (a: string) => void delete attrs[a],
+  };
+  const input = { tagName: "TEXTAREA", closest: (sel: string) => (sel === "form" ? form : null) };
+  const view = { id: "view-team", contains: () => true, querySelector: (sel: string) => (sel === "form[data-dirty]" && "data-dirty" in attrs ? form : null) };
+  loadApp({
+    getElementById: () => null,
+    title: "weave",
+    activeElement: { tagName: "BODY" }, // the operator clicked outside the form, so focus left it
+    addEventListener: (n: string, h: Handler) => void (docOn[n] ??= []).push(h),
+  }, on);
+  const fire = (name: string, detail: unknown): void => (on[name] ?? []).forEach((h) => h({ detail }));
+  const type = (): void => (docOn["input"] ?? []).forEach((h) => h({ target: input }));
+  const poll = (): boolean => {
+    let held = false;
+    (on["htmx:beforeRequest"] ?? []).forEach((h) => h({ detail: { elt: view, xhr: {}, requestConfig: { verb: "get" } }, preventDefault: () => { held = true; } }));
+    return held;
+  };
+
+  type();
+  const post = {};
+  fire("htmx:beforeRequest", { elt: form, xhr: post, requestConfig: { verb: "post" } });
+  type(); // more edits while the POST is in flight
+  fire("htmx:afterRequest", { elt: form, xhr: post, successful: true });
+  assert.equal(poll(), true, "the form holds edits the POST did not carry, so the poll is held");
+
+  const again = {};
+  fire("htmx:beforeRequest", { elt: form, xhr: again, requestConfig: { verb: "post" } });
+  fire("htmx:afterRequest", { elt: form, xhr: again, successful: true });
+  assert.equal(poll(), false, "a submit that carried every edit clears the mark and the poll goes ahead");
 });
 
 test("a running duration (data-fmt=dur, no data-to) counts up to now, not from 1970", () => {

@@ -1,0 +1,23 @@
+{
+  "now": 1792102377572,
+  "newestVersion": "0.2.180",
+  "machines": [
+    {
+      "node": "This machine",
+      "lastHeardTs": 1792102374504,
+      "quiet": false,
+      "allDeparted": false,
+      "agents": [
+        {
+          "agent": "bazzite-712bbd26-main-peer",
+          "name": "bazzite-712bbd26-main-peer",
+          "lastSeenTs": 1792102374504,
+          "state": "idle",
+          "outdated": false,
+          "backend": "echo",
+          "version": "0.2.180"
+        }
+      ]
+    }
+  ]
+}
