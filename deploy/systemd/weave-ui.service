@@ -30,7 +30,7 @@ RestartSec=5
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
-# weave secret exec reads the secret through weave's broker socket; read-only home is enough to connect to it.
+# weave secret exec opens the sealed store read-only; checked under this sandbox (ProtectHome=read-only, ProtectSystem=strict).
 ProtectHome=read-only
 ProtectKernelTunables=yes
 ProtectControlGroups=yes
