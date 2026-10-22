@@ -85,3 +85,12 @@ evidence: `node --import tsx --test test/*.test.ts test/server/*.test.ts`
 - **Login in P2 is address trust only** (loopback + `--trust-cidr`, with ADR-0220's Host and Sec-Fetch-Site rules);
   a request from anywhere else gets a page saying how to admit it. Accounts and passkeys move at P4 (ADR-0245 §5,
   "Until P4 weave's accounts and login stay as they are"). Recorded as an open question for the operator.
+- **PR 5 merged** (#13): the HTTP server (`app.ts`, `main.ts`, `serve.ts`, `bun run serve`). Also fixed: the client's
+  connect timeout and an abortable `changes()` that `hub.stop()` cancels.
+- **PR 6 — the systemd user unit**: `deploy/systemd/weave-ui.service` (secret only via `weave secret exec`, hardened;
+  checked that `weave secret exec` works under `ProtectHome=read-only` + `ProtectSystem=strict`) and
+  `docs/running-the-server.md`.
+- **Left for P2 after these PRs:** pages consuming `/events` (htmx SSE ext in the layout; they poll today, as weave's
+  own pages do); per-platform binaries and the release; a credential path for a weave-ui on another host
+  (`LoadCredentialEncrypted=` / a 0600 file, ADR-0245 §3); a live smoke against a weave with `WEAVE_CONSOLE_SECRET`
+  minted (P3's parity run covers it).
