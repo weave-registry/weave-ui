@@ -15,36 +15,37 @@
 
 :root {
   /* ── surfaces: one dark canvas, layered by depth ──────────────────── */
-  --bg: #0b1020;            /* page — deepest navy, never black */
-  --surface: #131b2f;       /* panels, cards, modals, composer shell */
-  --surface-warm: #182343;  /* panel headers, toasts, hover on task rows */
+  --bg: #0e1014;            /* ground — the page behind everything */
+  --surface: #161a20;       /* panel — cards, modals, composer shell */
+  --surface-warm: #12151a;  /* sidebar and top bar, panel headers */
 
   /* ── text ─────────────────────────────────────────────────────────── */
-  --fg: #f8fafc;            /* headings, values, the thing being read */
-  --fg-2: #cbd5e1;          /* body copy — the page default */
-  --muted: #8ea0b8;         /* labels, metadata, secondary + resting state */
-  --meta: #60a5fa;          /* inline emphasis in metadata runs */
+  --fg: #e7e9ed;            /* headings, values, the thing being read */
+  --fg-2: #c9ced6;          /* body copy — the page default */
+  --muted: #a3aab6;         /* labels, metadata, secondary + resting state */
+  --faint: #7d8592;         /* faint labels, ages, group headings */
+  --meta: #8dbbff;          /* inline emphasis in metadata runs */
 
   /* ── lines ────────────────────────────────────────────────────────── */
-  --border: #293653;        /* structural: panel edges, control borders */
-  --border-soft: #1e2a43;   /* internal hairlines: rows, table cells */
+  --border: #262b33;        /* structural: panel edges, control borders */
+  --border-soft: #1f242c;   /* internal hairlines: rows, table cells */
 
   /* ── accent: exactly one, and it means "interactive or live" ──────── */
-  --accent: #60a5fa;
-  --accent-on: #06111f;     /* text on a filled accent — the only near-black */
+  --accent: #6aa8ff;
+  --accent-on: #0e1014;     /* text on a filled accent — the ground colour */
   --accent-hover: color-mix(in oklab, var(--accent), black 8%);
   --accent-active: color-mix(in oklab, var(--accent), black 14%);
 
   /* ── status: a hue is a state, never a mood ───────────────────────── */
-  --success: #22c55e;       /* up · ok · completed · applied · additions */
-  --warn: #fbbf24;          /* degraded · gated · irreversible · awaiting you */
-  --danger: #fb7185;        /* down · failed · destructive · deletions */
-  --auto: #a78bfa;          /* autonomy deciding for you · yolo on (ADR-0198, amended 2026-10-10) */
+  --success: #5fd08a;       /* up · ok · completed · applied · additions */
+  --warn: #f2a93b;          /* degraded · gated · irreversible · awaiting you */
+  --danger: #ff7a70;        /* down · failed · destructive · deletions */
+  --auto: #c9b1ff;          /* autonomy deciding for you · yolo on (ADR-0198, amended 2026-10-10) */
 
   /* ── type stacks ──────────────────────────────────────────────────── */
-  --font-display: Inter, system-ui, sans-serif;
-  --font-body: Inter, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --font-display: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* ── type scale ───────────────────────────────────────────────────── */
   --text-2xs: 10px;         /* the mono label register: uppercase, wide-tracked */
@@ -75,8 +76,9 @@
 }
 
 /* ── base typography ─────────────────────────────────────────────────
-   Fonts are loaded from Google Fonts in every source surface:
-   Inter 400/500/600/700 + JetBrains Mono 400/500/600.                 */
+   No font files ship: Inter and JetBrains Mono are used when installed,
+   else the stacks fall back to the system faces
+   (docs/plans/2026-10-23-redesign.md).                                */
 body {
   background: var(--bg);
   color: var(--fg-2);
