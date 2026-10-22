@@ -620,10 +620,10 @@ test("filter chips: a click on [data-filter] presses it, hides the rows of other
     return { getAttribute: (n: string) => (n in a ? a[n]! : null), setAttribute: (n: string, v: string) => void (a[n] = v), hasAttribute: (n: string) => n in a, a };
   };
   const make = () => {
-    const chips = ["all", "factory", "fleet"].map((f) => ({ ...attrs({ "data-filter": f, "aria-pressed": f === "all" ? "true" : "false" }), closest: (s: string) => (s === "[data-filter]" ? chip(f) : s === "[data-filter-scope]" ? scope : null) }));
+    const chips = ["all", "factory", "fleet"].map((f) => ({ ...attrs({ "data-filter": f, "aria-pressed": f === "all" ? "true" : "false" }), closest: (s: string): unknown => (s === "[data-filter]" ? chip(f) : s === "[data-filter-scope]" ? scope : null) }));
     const rows = ["factory", "fleet", "factory"].map((c) => ({ ...attrs({ "data-cat": c }), hidden: false }));
     const scope: Record<string, unknown> = { ...attrs({ "data-filter-scope": "needs" }), querySelectorAll: (s: string) => (s === "[data-filter]" ? chips : s === "[data-cat]" ? rows : []) };
-    const chip = (f: string) => chips.find((c) => c.a["data-filter"] === f);
+    const chip = (f: string): unknown => chips.find((c) => c.a["data-filter"] === f);
     return { chips, rows, scope };
   };
   let view = make();
