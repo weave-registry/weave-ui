@@ -114,3 +114,11 @@ test("build: the minifier also drops the space after a declaration's colon (the 
   const out = built();
   assert.doesNotMatch(out, /[{;](--[a-z0-9-]+|[a-z-]+):\s/, "a declaration keeps a space after its colon");
 });
+
+test("polish: the sidebar's ground runs the page's full height, board cards clamp their title and note, the scopes sit apart", () => {
+  const css = uncommented(src);
+  assert.match(css, /\.app\s*\{[^}]*background:\s*linear-gradient\(to right, var\(--side\) 232px/);
+  assert.match(css, /\.view\.work \.wcard-title[^{]*\{[^}]*-webkit-line-clamp:\s*3/);
+  assert.match(css, /\.view\.work \.wcard-note[^{]*\{[^}]*-webkit-line-clamp:\s*2/);
+  assert.match(css, /\.view\.fleet\s*\{[^}]*margin-top:\s*20px/);
+});
