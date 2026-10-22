@@ -11,7 +11,7 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "bun scripts/build.ts",
-    "test": "bun scripts/build.ts && node --import tsx --test test/*.test.ts",
+    "test": "bun scripts/build.ts && node --import tsx --test test/*.test.ts test/server/*.test.ts",
     "check:tokens": "node tokens/tools/check-tokens.mjs --check",
     "fix:tokens": "node tokens/tools/check-tokens.mjs"
   },
