@@ -9,7 +9,8 @@ import type { SafeHtml } from "./html.js";
  * bar (breadcrumb and record search), the out-of-band error region, and one placeholder per view that htmx fills on
  * load. Every page but Home also carries the Home feed: a hidden #view-home that loads /ui/f/home once, after which
  * the home fragment polls itself and fills the sidebar's live slots; weave.css keeps it hidden on these pages
- * (docs/plans/2026-10-23-redesign.md, decision 4).
+ * (docs/plans/2026-10-23-redesign.md, decision 4). Home's out-of-band Machines fragments always have a target: Machines
+ * places #host-telemetry above its cards and #model-drift below them, and every other page keeps both in a hidden sink.
  *
  * In Phase 2 the build writes one static shell per core page with it into dist/assets/pages/<page>.html
  * (docs/plans/2026-10-15-weave-ui-phase-2.md, "Page shells"); weave's Phase 3 page routes render the same layout.
@@ -101,10 +102,17 @@ export function layout(o: LayoutOptions): string {
     ctx.api !== BUILT_FOR
       ? html`<p class="banner" role="status">This console was built for view contract ${BUILT_FOR}; weave serves ${ctx.api}.</p>`
       : "";
+  const machines = page.toLowerCase() === "machines";
+  const body = machines
+    ? html`${o.intro}<div id="host-telemetry" class="telemetry"></div>${o.views.map((v) =>
+        v.name === "machines" ? html`${viewSlot(v)}<div id="model-drift"></div>` : viewSlot(v),
+      )}`
+    : html`${o.intro}${o.views.map(viewSlot)}`;
   const main =
     o.wide ?? WIDE_PAGES.has(page.toLowerCase())
-      ? html`<main class="page wide" id="main">${o.intro}${o.views.map(viewSlot)}</main>`
-      : html`<main class="page" id="main">${o.intro}${o.views.map(viewSlot)}</main>`;
+      ? html`<main class="page wide" id="main">${body}</main>`
+      : html`<main class="page" id="main">${body}</main>`;
+  const sink = machines ? "" : html`<div class="sink" hidden><div id="host-telemetry"></div><div id="model-drift"></div></div>`;
   const feed =
     page.toLowerCase() !== "home"
       ? html`<div id="view-home" hx-get="/ui/f/home" hx-trigger="load" hx-swap="none" hidden></div>`
@@ -125,7 +133,7 @@ export function layout(o: LayoutOptions): string {
 <div class="app"><aside class="side" aria-label="Sidebar"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span>weave</a><div class="net" id="side-net"><span class="dot"></span><span class="net-main"><span class="net-name">weave</span><span class="net-sub">…</span></span></div><nav id="nav" class="nav" aria-label="Console">${navGroups(ctx.nav, page)}</nav><div class="side-foot" id="side-foot"></div></aside><div class="frame"><header class="topbar"><div class="crumb"><span>weave</span> <span class="sep">/</span> <b>${o.title}</b></div><form class="search" action="/audit" method="get" role="search"><input type="search" name="find" placeholder="Search tasks, issues, agents…" aria-label="Search the record"></form></header>
 ${banner}
 <div id="weave-error" class="problem" role="alert" hidden></div>
-${main}${feed}</div></div>
+${main}${sink}${feed}</div></div>
 </body>
 </html>
 `;
