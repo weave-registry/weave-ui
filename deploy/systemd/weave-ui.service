@@ -1,0 +1,40 @@
+# weave-ui.service — systemd USER unit template for weave-ui's own server (weave ADR-0245 §2–§3).
+#
+# Install:
+#   1. Copy this file to ~/.config/systemd/user/weave-ui.service
+#   2. Edit WEAVE_URL below to point at your weave.
+#   3. systemctl --user daemon-reload && systemctl --user enable --now weave-ui
+#
+# The console secret comes from weave's sealed store via `weave secret exec` (ADR-0100), which injects it into the
+# process environment at start. It is never put in this file or in an env file on disk.
+
+[Unit]
+Description=weave-ui — the weave console, served on its own port (ADR-0245)
+Documentation=https://git.local/gary/weave-ui
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# A weave-ui checkout, built with 'bun run build'.
+WorkingDirectory=%h/.local/share/weave-ui
+Environment=PATH=%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
+# Point at your weave; a plain http URL is accepted only on loopback.
+Environment=WEAVE_URL=https://127.0.0.1:8788
+#Environment=WEAVE_UI_PORT=8790
+#Environment=WEAVE_UI_HOST=127.0.0.1
+#Environment=WEAVE_UI_TRUST_CIDR=192.168.1.0/24
+ExecStart=%h/.local/bin/weave secret exec WEAVE_CONSOLE_SECRET -- node --import tsx src/server/serve.ts
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=default.target
