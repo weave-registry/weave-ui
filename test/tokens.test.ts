@@ -86,3 +86,12 @@ test("tokens: the faint text colour is a token, at 4.5:1 on the ground, the pane
   assert.ok(faint, "--faint in tokens/colors_and_type.css");
   for (const bg of ["bg", "surface", "surface-warm"]) assert.ok(ratio(faint, REDESIGN[bg]!) >= 4.5, `--faint on --${bg}`);
 });
+
+test("tokens: check-tokens holds --faint to the contrast floor and brand.json records the font decision (no font files ship)", () => {
+  const theme = JSON.parse(readFileSync(join(ROOT, "tokens", "theme.json"), "utf8")) as { color: { text: Record<string, string> }; contrast: Record<string, Record<string, number>> };
+  assert.equal(theme.color.text["faint"], "#7d8592");
+  for (const where of ["onBg", "onSurface", "onSurfaceWarm"]) assert.ok((theme.contrast["faint"]?.[where] ?? 0) >= 4.5, `faint ${where}`);
+  const brand = JSON.parse(readFileSync(join(ROOT, "tokens", "brand.json"), "utf8")) as { typography: { webfonts: string } };
+  assert.doesNotMatch(brand.typography.webfonts, /Google Fonts/);
+  assert.match(brand.typography.webfonts, /system/);
+});
