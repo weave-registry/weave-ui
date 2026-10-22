@@ -22,11 +22,10 @@ export function team(vm: TeamViewModel, ctx: RenderCtx): string {
   const tools = strs(v["tools"]);
   const starter = rec(v["starter"]);
   const mine = roles.filter((r) => r["source"] !== "shipped").length;
-  const idle = roles.filter((r) => r["source"] !== "shipped" && n0(r["workers"]) === 0).length;
   const summary = `${plural(roles.length, "role")}, ${mine} of them yours (up to ${n0(v["maxRoles"])}).`;
 
   return toHtml(
-    html`<section id="view-team" class="view team" hx-get="/ui/f/team" hx-trigger="every 15s" hx-swap="none" hx-swap-oob="true" data-nav-count="team:${idle + refused.length}"><div class="page-head"><h1>Team</h1><span class="sub" id="summary">${summary}</span></div><div id="refused">${refused.map(refusedCard)}</div><div id="roles"><div class="role-actions">${newRole(tools, starter)}</div>${cardOrder(roles).map((r) => roleCard(r, tools))}</div></section>`,
+    html`<section id="view-team" class="view team" hx-get="/ui/f/team" hx-trigger="every 15s" hx-swap="none" hx-swap-oob="true"><div class="page-head"><h1>Team</h1><span class="sub" id="summary">${summary}</span></div><div id="refused">${refused.map(refusedCard)}</div><div id="roles"><div class="role-actions">${newRole(tools, starter)}</div>${cardOrder(roles).map((r) => roleCard(r, tools))}</div></section>`,
   );
 }
 
