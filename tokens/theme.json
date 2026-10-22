@@ -19,6 +19,7 @@
       "fg": "#e7e9ed",
       "fg-2": "#c9ced6",
       "muted": "#a3aab6",
+      "faint": "#7d8592",
       "meta": "#8dbbff"
     },
     "line": {
@@ -61,6 +62,11 @@
       "onBg": 8.14,
       "onSurface": 7.47,
       "onSurfaceWarm": 7.83
+    },
+    "faint": {
+      "onBg": 5.12,
+      "onSurface": 4.69,
+      "onSurfaceWarm": 4.92
     },
     "meta": {
       "onBg": 9.69,
