@@ -55,3 +55,21 @@ green); CI's `typecheck · tests · purity · lint` and `tokens · build · size
 `hexa_loop` adr: no ADR exists in this repository (`docs/adrs/` is empty; the decision is weave's ADR-0245).
 gate: `npm run typecheck && node --import tsx --test test/server/*.test.ts`
 evidence: `node --import tsx --test test/*.test.ts test/server/*.test.ts`
+
+## Progress and slice changes (2026-10-22)
+- **PR 1 merged** (weave-ui #9): the three modules above, plus `package.json`'s `test` script now globs
+  `test/server/*.test.ts` (it did not, so the server tests never ran in CI); `test/scripts.test.ts` holds every test
+  directory to the glob.
+- **The contract re-vendor moves from PR 5 into PR 2**, the first slice that needs it (`BarView`, `FileView`). Copied
+  byte-for-byte from weave `docs/api/console-views-v1.d.ts` (identical at tag v0.2.184 and forge/main 772ef233; last
+  changed at 2518f6e0). `layout.ts`'s `BUILT_FOR`, the test context and the bundle test's pin move to 1.2.
+  `scripts/weave-loader-proof.ts` still passes `api: "1.0"`: it proves ADR-0234's `node:vm` loader, which ADR-0245
+  retires, so it is left alone.
+- **PR 2 — the weave client** (`src/server/weave-client.ts`, stub weave in `test/server/stub-weave.ts`). Channel
+  binding: `/health` is read with no credential on a fresh connection; `x-weave-cert-hmac` must equal
+  HMAC-SHA256(secret, sha256(observed DER)); every credentialed request is then pinned to that certificate (`ca` = the
+  certificate, `checkServerIdentity` = its fingerprint), so a changed certificate fails the handshake before any byte of
+  the request is sent, and is re-verified once through `/health`. Plain `http:` only to loopback unless
+  `insecureUpstream`. Header names from weave `sse-surface.ts`: `X-Weave-Secret`, `X-Weave-On-Behalf-Of`.
+- **PR 5 is now the systemd user unit** (template + docs, the secret via `weave secret exec`), since the contract moved
+  into PR 2. PR 3 (changes fan-out) and PR 4 (HTTP server and pages) are unchanged.

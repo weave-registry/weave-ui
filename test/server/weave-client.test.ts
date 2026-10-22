@@ -146,6 +146,15 @@ test("over TLS: a changed certificate that /health does NOT vouch for gets no cr
   });
 });
 
+test("over TLS: a certificate shaped like weave's own (CA:false, a SAN that does not name the address) is pinned and works", async () => {
+  const cert = makeCert({ weaveLike: true });
+  await withStub({ secret: SECRET, tls: cert }, async (s) => {
+    s.setView("home", { w: 1 });
+    const env = await createWeaveClient({ weaveUrl: s.url, secret: SECRET }).view("home");
+    assert.deepEqual(env.view, { w: 1 });
+  });
+});
+
 test("bar() reads /api/v1/bar and returns the view", async () => {
   await withStub({ secret: SECRET }, async (s) => {
     const bar = { on: false, set: false, source: "default", grants: { factory: false, merge: false, fleet: false }, halt: { halted: false, drain: false }, needsYou: 2, decidedForYou: 1 };

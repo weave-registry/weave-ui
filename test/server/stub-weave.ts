@@ -23,14 +23,17 @@ export interface TestCert {
   readonly fingerprint: Buffer;
 }
 
-/** A fresh self-signed certificate for CN=localhost (IP SAN 127.0.0.1). */
-export function makeCert(): TestCert {
+/** A fresh self-signed certificate for CN=localhost (IP SAN 127.0.0.1). `weaveLike` makes it the shape weave's
+ *  `self-signed-tls.ts` issues: basicConstraints CA:false and a SAN that does not name the address dialled. */
+export function makeCert(opts: { weaveLike?: boolean } = {}): TestCert {
   const dir = mkdtempSync(join(tmpdir(), "wui-cert-"));
   try {
     execFileSync("openssl", [
       "req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1", "-nodes",
       "-keyout", join(dir, "k.pem"), "-out", join(dir, "c.pem"), "-days", "2",
-      "-subj", "/CN=localhost", "-addext", "subjectAltName=DNS:localhost,IP:127.0.0.1",
+      ...(opts.weaveLike
+        ? ["-subj", "/CN=weave-host", "-addext", "basicConstraints=critical,CA:FALSE", "-addext", "subjectAltName=DNS:weave-host"]
+        : ["-subj", "/CN=localhost", "-addext", "subjectAltName=DNS:localhost,IP:127.0.0.1"]),
     ], { stdio: "ignore" });
     const cert = readFileSync(join(dir, "c.pem"), "utf8");
     const key = readFileSync(join(dir, "k.pem"), "utf8");
