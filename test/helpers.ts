@@ -12,7 +12,7 @@ export const DIST = join(ROOT, "dist");
 
 /** The render context weave passes (src/domain/console-api.ts CORE_NAV at c4e6e3a7). */
 export const CTX = {
-  api: "1.0",
+  api: "1.2",
   nav: [
     { key: "home", label: "Home", path: "/" },
     { key: "work", label: "Work", path: "/work" },
