@@ -122,3 +122,16 @@ test("each shell loads its views by htmx on load, swapping by id (out of band), 
     assert.ok(shape.length > 10);
   }
 });
+
+test("Home's out-of-band fragments always have a target: Machines shows #host-telemetry above its cards and #model-drift below them; every other page keeps both in a hidden sink", () => {
+  for (const p of Object.keys(VIEWS)) {
+    const h = shell(p);
+    for (const id of ["host-telemetry", "model-drift"]) assert.equal((h.match(new RegExp(`id="${id}"`, "g")) ?? []).length, 1, `${p}: one #${id}`);
+    if (p === "machines") {
+      assert.match(h, /<main class="page[^"]*" id="main"><div id="host-telemetry" class="telemetry"><\/div><div id="view-machines"[^>]*>.*?<\/div><div id="model-drift"><\/div><div id="view-fleet"/s);
+      assert.doesNotMatch(h, /class="sink"/);
+    } else {
+      assert.match(h, /<\/main><div class="sink" hidden><div id="host-telemetry"><\/div><div id="model-drift"><\/div><\/div>/, `${p}: sink`);
+    }
+  }
+});
