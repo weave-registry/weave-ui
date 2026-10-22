@@ -19,7 +19,7 @@ export interface SseSink {
 
 /** WeaveClient satisfies this; rejections carry a numeric `status` (0 when weave gave no HTTP answer). */
 export interface ChangesSource {
-  changes(lastEventId?: string): Promise<NodeJS.ReadableStream & { destroy(err?: Error): unknown }>;
+  changes(lastEventId?: string, signal?: AbortSignal): Promise<NodeJS.ReadableStream & { destroy(err?: Error): unknown }>;
 }
 
 export interface ChangesHubOptions {
@@ -83,6 +83,7 @@ export function createChangesHub(opts: ChangesHubOptions): ChangesHub {
   let backoff = minBackoff;
   let reconnectTimer: NodeJS.Timeout | undefined;
   let heartbeat: NodeJS.Timeout | undefined;
+  let attempt: AbortController | undefined;
 
   const drop = (sink: SseSink): void => {
     sinks.delete(sink);
@@ -174,9 +175,11 @@ export function createChangesHub(opts: ChangesHubOptions): ChangesHub {
     reconnectTimer = undefined;
     if (stopped) return;
     const resumeFrom = lastEventId;
+    const controller = new AbortController();
+    attempt = controller;
     let p: Promise<Upstream>;
     try {
-      p = opts.source.changes(...(resumeFrom !== undefined ? [resumeFrom] : []));
+      p = opts.source.changes(resumeFrom, controller.signal);
     } catch (e) {
       p = Promise.reject(e);
     }
@@ -229,6 +232,8 @@ export function createChangesHub(opts: ChangesHubOptions): ChangesHub {
       reconnectTimer = undefined;
       if (heartbeat !== undefined) clearInterval(heartbeat);
       heartbeat = undefined;
+      attempt?.abort();
+      attempt = undefined;
       const s = upstream;
       upstream = undefined;
       if (s !== undefined) {
