@@ -21,7 +21,7 @@ WorkingDirectory=%h/.local/share/weave-ui
 Environment=PATH=%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
 # Point at your weave. Same host: http://127.0.0.1:<port> (weave serves TLS only off loopback). Another host: https://<host>:<port> — weave-ui checks its x-weave-cert-hmac before sending the secret.
 Environment=WEAVE_URL=http://127.0.0.1:8788
-#Environment=WEAVE_UI_PORT=8790
+#Environment=WEAVE_UI_PORT=8789
 #Environment=WEAVE_UI_HOST=127.0.0.1
 #Environment=WEAVE_UI_TRUST_CIDR=192.168.1.0/24
 ExecStart=%h/.local/bin/weave secret exec WEAVE_CONSOLE_SECRET -- node --import tsx src/server/serve.ts
