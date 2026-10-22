@@ -611,3 +611,36 @@ test("a view poll that swaps a form mid-submit leaves the fresh form clean once 
   assert.equal("aria-busy" in g.attrs, false);
   assert.equal(poll(v3), false, "the view's poll is not held");
 });
+
+test("filter chips: a click on [data-filter] presses it, hides the rows of other categories, and the choice survives a swap", () => {
+  const on: Record<string, Handler[]> = {};
+  const docHandlers: Record<string, ((e: unknown) => void)[]> = {};
+  const attrs = (init: Record<string, string>) => {
+    const a: Record<string, string> = { ...init };
+    return { getAttribute: (n: string) => (n in a ? a[n]! : null), setAttribute: (n: string, v: string) => void (a[n] = v), hasAttribute: (n: string) => n in a, a };
+  };
+  const make = () => {
+    const chips = ["all", "factory", "fleet"].map((f) => ({ ...attrs({ "data-filter": f, "aria-pressed": f === "all" ? "true" : "false" }), closest: (s: string) => (s === "[data-filter]" ? chip(f) : s === "[data-filter-scope]" ? scope : null) }));
+    const rows = ["factory", "fleet", "factory"].map((c) => ({ ...attrs({ "data-cat": c }), hidden: false }));
+    const scope: Record<string, unknown> = { ...attrs({ "data-filter-scope": "needs" }), querySelectorAll: (s: string) => (s === "[data-filter]" ? chips : s === "[data-cat]" ? rows : []) };
+    const chip = (f: string) => chips.find((c) => c.a["data-filter"] === f);
+    return { chips, rows, scope };
+  };
+  let view = make();
+  const dom = {
+    addEventListener: (n: string, h: (e: unknown) => void) => void (docHandlers[n] ??= []).push(h),
+    querySelectorAll: (s: string) => (s === "[data-filter-scope]" ? [view.scope] : []),
+  };
+  loadApp(dom, on);
+  for (const h of docHandlers["click"] ?? []) h({ target: view.chips[1] });
+  assert.deepEqual(view.chips.map((c) => c.a["aria-pressed"]), ["false", "true", "false"]);
+  assert.deepEqual(view.rows.map((r) => r.hidden), [false, true, false]);
+  // A poll swaps in a fresh list: the chosen category is applied to it after the swap settles.
+  view = make();
+  for (const h of on["htmx:afterSettle"] ?? []) h({ detail: {} });
+  assert.deepEqual(view.chips.map((c) => c.a["aria-pressed"]), ["false", "true", "false"]);
+  assert.deepEqual(view.rows.map((r) => r.hidden), [false, true, false]);
+  // "all" shows every row again.
+  for (const h of docHandlers["click"] ?? []) h({ target: view.chips[0] });
+  assert.deepEqual(view.rows.map((r) => r.hidden), [false, false, false]);
+});
