@@ -73,3 +73,12 @@ evidence: `node --import tsx --test test/*.test.ts test/server/*.test.ts`
   `insecureUpstream`. Header names from weave `sse-surface.ts`: `X-Weave-Secret`, `X-Weave-On-Behalf-Of`.
 - **PR 5 is now the systemd user unit** (template + docs, the secret via `weave secret exec`), since the contract moved
   into PR 2. PR 3 (changes fan-out) and PR 4 (HTTP server and pages) are unchanged.
+- **PR 5 merged** (#13): the HTTP server (`app.ts`, `main.ts`, `serve.ts`, `bun run serve`). Also fixed: the client's
+  connect timeout and an abortable `changes()` that `hub.stop()` cancels.
+- **PR 6 — the systemd user unit**: `deploy/systemd/weave-ui.service` (secret only via `weave secret exec`, hardened;
+  checked that `weave secret exec` works under `ProtectHome=read-only` + `ProtectSystem=strict`) and
+  `docs/running-the-server.md`.
+- **Left for P2 after these PRs:** pages consuming `/events` (htmx SSE ext in the layout; they poll today, as weave's
+  own pages do); per-platform binaries and the release; a credential path for a weave-ui on another host
+  (`LoadCredentialEncrypted=` / a 0600 file, ADR-0245 §3); a live smoke against a weave with `WEAVE_CONSOLE_SECRET`
+  minted (P3's parity run covers it).
