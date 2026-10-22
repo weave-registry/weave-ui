@@ -79,3 +79,12 @@ test("every colour literal lives in :root — rules use the tokens", () => {
   const hex = [...css.matchAll(/([a-z-]+)\s*:\s*([^;{}]*#[0-9a-fA-F]{3,8}\b[^;{}]*);/g)].map((m) => `${m[1]}: ${m[2]}`);
   assert.deepEqual(hex, []);
 });
+
+test("Home's controls: the yolo switch, the spend head, and compact buttons inside a list row", () => {
+  const css = uncommented(src);
+  assert.match(css, /\.view\.home \.switch\s*\{[^}]*width:\s*44px/, "the switch is a 44px toggle");
+  assert.match(css, /\.view\.home \.switch::after\s*\{/, "the switch has a knob");
+  assert.match(css, /\.view\.home \.fleet-controls\[data-on="true"\] \.switch\s*\{[^}]*var\(--needs-fill\)/, "on is amber");
+  assert.match(css, /\.view\.home \.spend-head\s*\{[^}]*justify-content:\s*space-between/);
+  assert.match(css, /\.lrow-acts \.btn\s*\{[^}]*min-height:\s*28px/);
+});
