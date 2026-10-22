@@ -10,9 +10,10 @@ const fx = (n: string): unknown => JSON.parse(readFileSync(join(ROOT, "test", "f
 const team = (vm: unknown): string => (templates as Record<string, (v: unknown, c: unknown) => string>).team!(vm, CTX);
 const full = team(fx("team.full"));
 
-test("root: #view-team, polled, out of band, idle-roles + refused count on the nav", () => {
+test("root: #view-team, polled, out of band; the sidebar's Team value comes from Home, not from here", () => {
   const r = /^<section [^>]*>/.exec(full)?.[0] ?? "";
-  for (const a of [`id="view-team"`, `hx-get="/ui/f/team"`, `hx-trigger="every 15s"`, `hx-swap="none"`, `hx-swap-oob="true"`, `data-nav-count="team:2"`]) assert.ok(r.includes(a), `${a} in ${r}`);
+  for (const a of [`id="view-team"`, `hx-get="/ui/f/team"`, `hx-trigger="every 15s"`, `hx-swap="none"`, `hx-swap-oob="true"`])  assert.ok(r.includes(a), `${a} in ${r}`);
+  assert.doesNotMatch(r, /data-nav-count/);
   assert.match(full, /<h1>Team<\/h1>/);
   assert.ok(full.includes("4 roles, 2 of them yours (up to 12)."));
 });
