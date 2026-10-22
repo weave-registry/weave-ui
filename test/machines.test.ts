@@ -13,28 +13,28 @@ const mlive = T.machines!(fx("machines.live"), CTX);
 const f = T.fleet!(fx("fleet.full"), CTX);
 const flive = T.fleet!(fx("fleet.live"), CTX);
 
-test("machines root: #view-machines, polled, out of band, quiet count on the nav", () => {
+test("machines root: #view-machines, polled, out of band; the head says connected, agents and versions", () => {
   const r = /^<section [^>]*>/.exec(m)?.[0] ?? "";
-  for (const a of [`id="view-machines"`, `hx-get="/ui/f/machines"`, `hx-trigger="every 10s"`, `hx-swap="none"`, `hx-swap-oob="true"`, `data-nav-count="machines:2"`]) assert.ok(r.includes(a), `${a} in ${r}`);
-  assert.match(m, /<h1>Machines<\/h1>/);
-  assert.ok(m.includes("3 machines, 2 not heard from."));
-  assert.ok(mlive.includes("1 machine, all connected."));
+  for (const a of [`id="view-machines"`, `hx-get="/ui/f/machines"`, `hx-trigger="every 10s"`, `hx-swap="none"`, `hx-swap-oob="true"`]) assert.ok(r.includes(a), `${a} in ${r}`);
+  assert.doesNotMatch(r, /data-nav-count/);
+  assert.match(m, /<div class="page-head"><h1>Machines<\/h1><span class="sub"><b data-tone="bad">1 of 3<\/b> connected · 4 agents · on 0\.2\.180, 0\.2\.170<\/span><\/div>/);
+  assert.match(mlive, /<b data-tone="ok">1 of 1<\/b> connected · 1 agent · all on 0\.2\.180/);
 });
 
-test("machine cards: connected, quiet with remedy, all departed", () => {
-  assert.match(m, /Connected · last heard <time/);
-  assert.match(m, /class="card needs"/);
-  assert.ok(m.includes("weave peers check max"));
-  assert.match(m, /Not heard from since <time[^>]*>[^<]*<\/time> · 1 departed agent/);
+test("machine cards: one panel per host — dot, name, when heard, remedy; all departed folds to one line", () => {
+  assert.match(m, /<div class="hosts" id="machines"><article class="panel host-card" data-quiet="false"><div class="panel-head"><span class="dot" data-tone="ok"><\/span><h2>This machine<\/h2><span class="host-heard">heard <time/);
+  assert.match(m, /<article class="panel host-card" data-quiet="true"><div class="panel-head"><span class="dot" data-tone="needs"><\/span><h2>max<\/h2><span class="host-heard">not heard since <time/);
+  assert.match(m, /<p class="host-remedy"><code>weave peers check max<\/code><\/p>/);
+  assert.match(m, /<h2>gone<\/h2><span class="host-heard">not heard since <time[^>]*>[^<]*<\/time><\/span><\/div><p class="empty">1 departed agent<\/p><\/article>/);
 });
 
-test("agent rows: working on a task, paused with Resume, Pause with confirm, outdated badge, departed", () => {
-  assert.match(m, /Working on <a href="\/task\?id=t-1">Dark mode<\/a>/);
+test("agent rows: state dot, what it does, backend and version, outdated badge, Pause with confirm / Resume, departed folded", () => {
+  assert.match(m, /<div class="lrow"><span class="dot" data-tone="work"><\/span><div class="lrow-main"><div class="lrow-title">dev<span class="muted"> · developer<\/span><\/div><div class="lrow-why">Working on <a href="\/task\?id=t-1">Dark mode<\/a><\/div><\/div><span class="lrow-meta">claude · weave 0\.2\.170<\/span><span class="badge" data-tone="needs">older than 0\.2\.180<\/span><div class="lrow-acts">/);
   assert.ok(m.includes("Paused by gary — maintenance"));
   assert.match(m, /hx-post="\/ui\/a\/agent" hx-swap="none"><input type="hidden" name="resume" value="max-p"><button[^>]*>Resume<\/button>/);
   assert.match(m, /data-confirm="Pause dev\? It finishes what it is doing now, then takes no new work until you resume it\."><input type="hidden" name="pause" value="max-dev"><input type="hidden" name="reason" value="paused from the console">/);
-  assert.match(m, /<span class="badge" data-tone="needs">older than 0\.2\.180<\/span>/);
-  assert.match(m, /<summary>\+1 departed<\/summary>/);
+  assert.match(m, /<span class="dot" data-tone="bad"><\/span><div class="lrow-main"><div class="lrow-title">s<\/div><div class="lrow-why">Not heard from since <time/);
+  assert.match(m, /<details class="lrow-more" data-keep="departed:max"><summary>\+1 departed<\/summary>/);
 });
 
 test("fleet root: #view-fleet, polled, out of band; scope cards with state badges", () => {

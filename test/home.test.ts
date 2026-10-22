@@ -168,3 +168,14 @@ test("sidebar fragments, out of band: the network chip, each nav item's live val
   assert.match(oob(live, "side-foot"), /<span class="dot"><\/span><span class="side-yolo" data-on="false">Yolo off<\/span>/);
   assert.match(oob(halted, "side-foot"), /<div class="side-halt"><span class="side-halted">■ Fleet halted<\/span><\/div>$/);
 });
+
+test("Machines fragments, out of band: per-host telemetry tiles (load, memory, slots) and the model-setting drift table", () => {
+  assert.equal(
+    oob(full, "host-telemetry"),
+    '<div class="tele panel"><div class="tele-head"><span class="dot" data-tone="ok"></span><b>local</b><span class="tele-spec">32 cores · GPU</span></div><div class="tele-stats"><div class="stat"><div class="stat-label">Load</div><div class="stat-value num" data-tone="ok">2.09</div><div class="stat-sub">of 32 cores</div></div><div class="stat"><div class="stat-label">Memory</div><div class="stat-value num" data-tone="">43%</div><div class="stat-sub">in use</div></div><div class="stat"><div class="stat-label">Slots</div><div class="stat-value num" data-tone="">—</div><div class="stat-sub">busy</div></div></div></div>',
+  );
+  assert.match(oob(full, "model-drift"), /^<section class="panel"><div class="panel-head"><h2>Model settings that differ<\/h2><span class="pill" data-tone="needs">1 setting<\/span><\/div><div class="table-wrap"><table class="table"><thead><tr><th>Setting<\/th><th>a<\/th><th>b<\/th><\/tr><\/thead><tbody><tr><td class="mono">model\.default<\/td><td>opus <span class="muted">log<\/span><\/td><td>sonnet <span class="muted">env<\/span><\/td><\/tr><\/tbody><\/table><\/div><\/section>$/);
+  assert.equal(oob(live, "model-drift"), "");
+  const order = [...full.matchAll(/<[a-z]+ id="([a-z-]+)" hx-swap-oob="innerHTML">/g)].map((m) => m[1]);
+  assert.deepEqual(order.slice(-3), ["side-foot", "host-telemetry", "model-drift"]);
+});
