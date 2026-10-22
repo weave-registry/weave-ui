@@ -29,39 +29,48 @@ function block(css: string, re: RegExp): Record<string, string> {
   return out;
 }
 
-// Text on the surface it is painted on — the pairs weave.css documents.
+// Text on the surface it is painted on — the pairs weave.css documents. One theme, dark (docs/plans/2026-10-23-redesign.md,
+// decision 1): the palette is defined once, in :root, and every pair meets the floor — no exemptions.
 const PAIRS: [string, string][] = [
-  ["--fg", "--bg"], ["--fg", "--surface"], ["--fg", "--sunken"],
-  ["--muted", "--bg"], ["--muted", "--surface"], ["--muted", "--needs-bg"],
-  ["--ok", "--surface"], ["--work", "--surface"], ["--bad", "--surface"],
-  ["--needs", "--needs-bg"], ["--bad-text", "--bad-bg"], ["--auto", "--auto-bg"], ["--auto", "--surface"],
-  ["--on-primary", "--primary"], ["--on-bad", "--bad"],
+  ["--fg", "--bg"], ["--fg", "--surface"], ["--fg", "--sunken"], ["--fg", "--side"],
+  ["--muted", "--bg"], ["--muted", "--surface"], ["--muted", "--side"], ["--muted", "--sunken"], ["--muted", "--needs-bg"],
+  ["--faint", "--bg"], ["--faint", "--surface"], ["--faint", "--side"],
+  ["--ok", "--surface"], ["--work", "--surface"], ["--bad", "--surface"], ["--needs", "--surface"],
+  ["--needs", "--needs-bg"], ["--bad", "--bad-bg"], ["--bad-text", "--bad-bg"], ["--fg", "--bad-bg"],
+  ["--auto", "--auto-bg"], ["--auto", "--surface"],
+  ["--on-primary", "--primary"], ["--on-bad", "--bad-fill"],
 ];
-// Copied as weave ships it: white on dark-theme --bad (#f85149) is 3.35:1. Kept visible here, and in the design review.
-const KNOWN_BELOW: Record<string, string> = { "dark --on-bad/--bad": "weave.css as copied at c4e6e3a7" };
 
-test("assets-src/weave.css: every documented text pair is at least 4.5:1, light and dark", () => {
+const rootBlock = (css: string): Record<string, string> => block(css, /:root \{([\s\S]*?)\n\}/);
+
+test("assets-src/weave.css: every documented text pair is at least 4.5:1", () => {
   const css = readFileSync(join(ROOT, "assets-src", "weave.css"), "utf8");
-  const light = block(css, /:root, \[data-theme="light"\] \{([\s\S]*?)\n\}/);
-  const dark = { ...light, ...block(css, /\[data-theme="dark"\] \{([\s\S]*?)\n\}/) };
+  const t = rootBlock(css);
   const fails: string[] = [];
-  for (const [theme, t] of [["light", light], ["dark", dark]] as const) {
-    for (const [fg, bg] of PAIRS) {
-      assert.ok(t[fg] && t[bg], `${theme}: ${fg} or ${bg} missing`);
-      const r = ratio(t[fg]!, t[bg]!);
-      const key = `${theme} ${fg}/${bg}`;
-      if (r < 4.5 && !(key in KNOWN_BELOW)) fails.push(`${key} = ${r.toFixed(2)}:1`);
-    }
+  for (const [fg, bg] of PAIRS) {
+    assert.ok(t[fg] && t[bg], `${fg} or ${bg} missing from :root`);
+    const r = ratio(t[fg]!, t[bg]!);
+    if (r < 4.5) fails.push(`${fg}/${bg} = ${r.toFixed(2)}:1`);
   }
   assert.deepEqual(fails, []);
 });
 
-
-test("the dark theme under prefers-color-scheme repeats the [data-theme=dark] values", () => {
+test("assets-src/weave.css is dark only: one palette in :root, no light theme, no prefers-color-scheme copy", () => {
   const css = readFileSync(join(ROOT, "assets-src", "weave.css"), "utf8");
-  const dark = block(css, /\[data-theme="dark"\] \{([\s\S]*?)\n\}/);
-  const media = block(css, /@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-theme="light"\]\) \{([\s\S]*?)\n  \}/);
-  for (const [k, v] of Object.entries(dark)) assert.equal(media[k]?.toLowerCase(), v.toLowerCase(), k);
+  assert.doesNotMatch(css, /data-theme="light"/);
+  assert.doesNotMatch(css, /prefers-color-scheme/);
+  assert.match(css, /:root \{[^}]*color-scheme: dark;/);
+});
+
+test("assets-src/weave.css's palette is the design tokens' palette (tokens/colors_and_type.css)", () => {
+  const tokens = block(readFileSync(join(ROOT, "tokens", "colors_and_type.css"), "utf8"), /:root \{([\s\S]*?)\n\}/);
+  const css = rootBlock(readFileSync(join(ROOT, "assets-src", "weave.css"), "utf8"));
+  const same: [string, string][] = [
+    ["--bg", "--bg"], ["--surface", "--surface"], ["--side", "--surface-warm"], ["--fg", "--fg"], ["--muted", "--muted"],
+    ["--faint", "--faint"], ["--line", "--border"], ["--line-soft", "--border-soft"], ["--work", "--meta"],
+    ["--work-fill", "--accent"], ["--ok-fill", "--success"], ["--needs-fill", "--warn"], ["--bad-fill", "--danger"], ["--auto", "--auto"],
+  ];
+  for (const [w, t] of same) assert.equal(css[w]?.toLowerCase(), tokens[t]?.toLowerCase(), `weave.css ${w} vs tokens ${t}`);
 });
 
 // The redesign's palette (docs/plans/2026-10-23-redesign.md, decision 1): the design tokens carry it, and the derived
