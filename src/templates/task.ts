@@ -22,7 +22,7 @@ export function task(vm: TaskStory, ctx: RenderCtx): string {
   const [tone, sentence] = status(v, state);
 
   return toHtml(
-    html`<section id="view-task" class="view task" hx-get="/ui/f/task?id=${taskId}" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true"><div class="page-head"><h1>${title}</h1></div><div class="status" data-tone="${tone}">${sentence}</div>${actions(taskId, title, state)}${grantsSection(v["grants"])}${resultSection(v["result"], state)}${filesSection(v["files"])}${askedSection(v["asked"])}${detailsSection(v)}</section>`,
+    html`<section id="view-task" class="view task" hx-get="/ui/f/task?id=${taskId}" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true"><div class="page-head"><h1>${title}</h1></div><div class="status" data-tone="${tone}">${sentence}</div>${actions(taskId, title, state)}${grantsSection(v["grants"])}${resultSection(v["result"], state)}${filesSection(v["files"], taskId)}${askedSection(v["asked"])}${detailsSection(v)}</section>`,
   );
 }
 
@@ -87,12 +87,14 @@ function resultSection(result: unknown, state: string): SafeHtml {
   return html`<h2 class="section">${state === "failed" ? "Why it failed" : "Result"}</h2><div class="card md">${markdown(r)}</div>`;
 }
 
-function filesSection(files: unknown): SafeHtml {
+function filesSection(files: unknown, taskId: string): SafeHtml {
   const paths = strs(files);
   if (!paths.length) return html``;
   const rows = paths.map(
     (p) =>
-      html`<div><a href="/file?path=${p}" target="_blank" rel="noopener" title="${p}">${p.split("/").pop() ?? p}</a><span class="muted small">  ${p}</span></div>`,
+      taskId
+        ? html`<div><a href="/file?path=${p}&amp;task=${taskId}" target="_blank" rel="noopener" title="${p}">${p.split("/").pop() ?? p}</a><span class="muted small">  ${p}</span></div>`
+        : html`<div><a href="/file?path=${p}" target="_blank" rel="noopener" title="${p}">${p.split("/").pop() ?? p}</a><span class="muted small">  ${p}</span></div>`,
   );
   return html`<h2 class="section">Files it wrote</h2><div class="card">${rows}</div>`;
 }
