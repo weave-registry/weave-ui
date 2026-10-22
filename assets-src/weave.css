@@ -58,7 +58,7 @@ code, kbd, samp { font-family: var(--mono); font-size: .92em; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ─── the shell ─── */
-.app { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+.app { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; background: linear-gradient(to right, var(--side) 232px, var(--line) 232px, var(--line) 233px, var(--bg) 233px); }
 .side { background: var(--side); border-right: 1px solid var(--line); padding: 18px 14px; display: flex; flex-direction: column; gap: 20px;
         position: sticky; top: 0; height: 100vh; overflow: auto; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; font-size: 17px; font-weight: 700; color: var(--fg); text-decoration: none; }
@@ -417,9 +417,10 @@ input[type="number"] { width: 8em; }
   .view.work .state[data-state="waiting"] { color: var(--needs); background: var(--needs-bg); }
   .view.work .state[data-state="running"] { color: var(--work); background: color-mix(in oklab, var(--work-fill) 16%, var(--surface)); }
   .view.work .state[data-state="queued"] { color: var(--muted); background: var(--sunken); }
-.view.work .wcard-title { font-size: 13px; font-weight: 600; line-height: 1.35; }
-  .view.work .wcard-title a { color: var(--fg); }
-.view.work .wcard-note { font-size: 12px; color: var(--muted); }
+.view.work .wcard-title { font-size: 13px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+  .view.work .wcard-title a { color: var(--fg); text-decoration: none; }
+  .view.work .wcard-title a:hover { text-decoration: underline; }
+.view.work .wcard-note { font-size: 12px; color: var(--muted); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .view.work .wcard-foot { display: flex; gap: 6px; font-size: 12px; color: var(--faint); }
 .view.work .wcard-age { margin-left: auto; }
 .view.work .work-lower { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
@@ -465,6 +466,7 @@ input[type="number"] { width: 8em; }
 .view.machines-view .page-head .sub b[data-tone="ok"] { color: var(--ok); }
 .view.machines-view .page-head .sub b[data-tone="bad"] { color: var(--bad); }
 @media (max-width: 760px) { .view.machines-view .hosts { grid-template-columns: 1fr; } }
+.view.fleet { margin-top: 20px; }
 .view.fleet .row { display: flex; gap: var(--s3); align-items: center; padding: 10px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
   .view.fleet .row .grow { flex: 1 1 220px; min-width: 0; }
   .view.fleet .row .sub { color: var(--muted); font-size: var(--t-sm); overflow-wrap: anywhere; }
@@ -554,7 +556,7 @@ select.yolo-pick { font-size: 12px; padding: 2px 8px; min-height: 28px; }
 
 /* ─── phone: the sidebar stacks above the content; every nav item stays ─── */
 @media (max-width: 760px) {
-  .app { display: block; }
+  .app { display: block; background: var(--bg); }
   .side { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 12px; gap: 12px; }
   .nav { flex-direction: row; flex-wrap: wrap; }
   .nav-group { display: none; }
