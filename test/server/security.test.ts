@@ -45,19 +45,19 @@ const good = () => csrfToken(KEY, SID);
 
 test("safe methods need no token", () => {
   for (const method of ["GET", "HEAD", "OPTIONS"]) {
-    assert.deepEqual(checkCsrf({ method, headers: { host: "ui.lan:8790" }, key: KEY, sessionId: SID }), { ok: true });
+    assert.deepEqual(checkCsrf({ method, headers: { host: "ui.lan:8789" }, key: KEY, sessionId: SID }), { ok: true });
   }
 });
 
 test("a state-changing request needs the token in x-csrf-token", () => {
   for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
-    const ok = checkCsrf({ method, headers: { host: "ui.lan:8790", "x-csrf-token": good() }, key: KEY, sessionId: SID });
+    const ok = checkCsrf({ method, headers: { host: "ui.lan:8789", "x-csrf-token": good() }, key: KEY, sessionId: SID });
     assert.deepEqual(ok, { ok: true }, method);
-    const missing = checkCsrf({ method, headers: { host: "ui.lan:8790" }, key: KEY, sessionId: SID });
+    const missing = checkCsrf({ method, headers: { host: "ui.lan:8789" }, key: KEY, sessionId: SID });
     assert.equal(missing.ok, false);
-    const wrong = checkCsrf({ method, headers: { host: "ui.lan:8790", "x-csrf-token": good().slice(1) + "x" }, key: KEY, sessionId: SID });
+    const wrong = checkCsrf({ method, headers: { host: "ui.lan:8789", "x-csrf-token": good().slice(1) + "x" }, key: KEY, sessionId: SID });
     assert.equal(wrong.ok, false);
-    const otherSession = checkCsrf({ method, headers: { host: "ui.lan:8790", "x-csrf-token": csrfToken(KEY, "other") }, key: KEY, sessionId: SID });
+    const otherSession = checkCsrf({ method, headers: { host: "ui.lan:8789", "x-csrf-token": csrfToken(KEY, "other") }, key: KEY, sessionId: SID });
     assert.equal(otherSession.ok, false);
   }
 });
@@ -67,17 +67,17 @@ test("method case does not dodge the check", () => {
 });
 
 test("an Origin that is not this host is refused even with a valid token; a matching or absent one passes", () => {
-  const base = { host: "ui.lan:8790", "x-csrf-token": good() };
+  const base = { host: "ui.lan:8789", "x-csrf-token": good() };
   assert.equal(checkCsrf({ method: "POST", headers: { ...base, origin: "http://evil.example" }, key: KEY, sessionId: SID }).ok, false);
   assert.equal(checkCsrf({ method: "POST", headers: { ...base, origin: "http://ui.lan:8791" }, key: KEY, sessionId: SID }).ok, false);
   assert.equal(checkCsrf({ method: "POST", headers: { ...base, origin: "null" }, key: KEY, sessionId: SID }).ok, false);
-  assert.equal(checkCsrf({ method: "POST", headers: { ...base, origin: "http://ui.lan:8790" }, key: KEY, sessionId: SID }).ok, true);
-  assert.equal(checkCsrf({ method: "POST", headers: { ...base, origin: "https://ui.lan:8790" }, key: KEY, sessionId: SID }).ok, true);
+  assert.equal(checkCsrf({ method: "POST", headers: { ...base, origin: "http://ui.lan:8789" }, key: KEY, sessionId: SID }).ok, true);
+  assert.equal(checkCsrf({ method: "POST", headers: { ...base, origin: "https://ui.lan:8789" }, key: KEY, sessionId: SID }).ok, true);
   assert.equal(checkCsrf({ method: "POST", headers: base, key: KEY, sessionId: SID }).ok, true);
 });
 
 test("a cross-site fetch (sec-fetch-site) is refused", () => {
-  const base = { host: "ui.lan:8790", "x-csrf-token": good() };
+  const base = { host: "ui.lan:8789", "x-csrf-token": good() };
   assert.equal(checkCsrf({ method: "POST", headers: { ...base, "sec-fetch-site": "cross-site" }, key: KEY, sessionId: SID }).ok, false);
   assert.equal(checkCsrf({ method: "POST", headers: { ...base, "sec-fetch-site": "same-origin" }, key: KEY, sessionId: SID }).ok, true);
 });
