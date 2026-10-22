@@ -96,3 +96,16 @@ test("the favicon is the redesign's mark: the amber wave on the ground", () => {
   assert.match(svg, /#0e1014/i);
   assert.doesNotMatch(svg, /--/, "no double hyphen: an <img> SVG is strict XML");
 });
+
+test("Work and Machines (PR 2): the board, cards and state chips, slot strips, host cards, telemetry tiles", () => {
+  const css = uncommented(src);
+  for (const sel of [".view.work .stats", ".view.work .board-cols", ".view.work .col", ".view.work .col-head", ".view.work .wcard", ".view.work .wcard-top", ".view.work .wcard-title", ".view.work .wcard-note", ".view.work .wcard-foot", ".view.work .work-lower", ".view.work .slots", ".view.work .slot", ".view.work .slot-doing", ".view.machines-view .hosts", ".view.machines-view .host-card", ".view.machines-view .host-heard"]) {
+    assert.ok(css.includes(sel), `no rule for ${sel}`);
+  }
+  for (const s of ["held", "waiting", "running", "queued"]) {
+    assert.match(css, new RegExp(`\\.view\\.work \\.wcard\\[data-state="${s}"\\]`), `card ${s}`);
+    assert.match(css, new RegExp(`\\.view\\.work \\.state\\[data-state="${s}"\\]`), `chip ${s}`);
+  }
+  assert.match(css, /\.view\.work \.slot\[data-busy="true"\]\s*\{[^}]*var\(--work-fill\)/);
+  for (const sel of [".telemetry", ".tele", ".tele-head", ".tele-stats", ".stat", ".stat-label", ".stat-value", ".stat-sub", ".grow"]) assert.ok(has(sel), `no rule for ${sel}`);
+});
