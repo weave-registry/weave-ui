@@ -122,3 +122,10 @@ test("polish: the sidebar's ground runs the page's full height, board cards clam
   assert.match(css, /\.view\.work \.wcard-note[^{]*\{[^}]*-webkit-line-clamp:\s*2/);
   assert.match(css, /\.view\.fleet\s*\{[^}]*margin-top:\s*20px/);
 });
+
+test("PR 3: the numbers row (.stats) is shared by every page head, with its tones", () => {
+  const css = uncommented(src);
+  assert.ok(has(".stats"), "a global .stats rule");
+  for (const t of ["ok", "needs", "bad"]) assert.match(css, new RegExp(`(^|[},\\s])\\.stats b\\.${t}\\s*[,{]`, "m"), `.stats b.${t}`);
+  assert.doesNotMatch(css, /\.view\.work \.stats/, "Work's copy is the shared one now");
+});
