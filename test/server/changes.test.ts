@@ -65,7 +65,7 @@ const openBrowser = (url: string): Promise<{ text: () => string; headers: Incomi
     req.on("error", (e) => (buf === "" ? reject(e) : undefined));
   });
 
-const fakeSink = (): SseSink & { chunks: string[]; destroyed: boolean; ended: boolean; head?: { status: number; headers: Record<string, string> }; length: number; fireClose: () => void } => {
+const fakeSink = (): SseSink & { chunks: string[]; destroyed: boolean; ended: boolean; head: { status: number; headers: Record<string, string> } | undefined; length: number; fireClose: () => void } => {
   const closers: (() => void)[] = [];
   const sink = {
     chunks: [] as string[],
