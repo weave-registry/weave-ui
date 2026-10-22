@@ -22,7 +22,7 @@ export interface ServerConfig {
   readonly trustCidrs: readonly Cidr[];
 }
 
-const DEFAULT_PORT = 8790;
+const DEFAULT_PORT = 8789;
 const DEFAULT_HOST = "127.0.0.1";
 const TRUST_FLAG = "--trust-cidr";
 
