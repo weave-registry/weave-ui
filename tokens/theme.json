@@ -11,31 +11,31 @@
   "note": "Derived file. Edit the CSS, then run: node tools/check-tokens.mjs",
   "color": {
     "surface": {
-      "bg": "#0b1020",
-      "surface": "#131b2f",
-      "surface-warm": "#182343"
+      "bg": "#0e1014",
+      "surface": "#161a20",
+      "surface-warm": "#12151a"
     },
     "text": {
-      "fg": "#f8fafc",
-      "fg-2": "#cbd5e1",
-      "muted": "#8ea0b8",
-      "meta": "#60a5fa"
+      "fg": "#e7e9ed",
+      "fg-2": "#c9ced6",
+      "muted": "#a3aab6",
+      "meta": "#8dbbff"
     },
     "line": {
-      "border": "#293653",
-      "border-soft": "#1e2a43"
+      "border": "#262b33",
+      "border-soft": "#1f242c"
     },
     "accent": {
-      "accent": "#60a5fa",
-      "accent-on": "#06111f",
+      "accent": "#6aa8ff",
+      "accent-on": "#0e1014",
       "accent-hover": "color-mix(in oklab, var(--accent), black 8%)",
       "accent-active": "color-mix(in oklab, var(--accent), black 14%)"
     },
     "status": {
-      "success": "#22c55e",
-      "warn": "#fbbf24",
-      "danger": "#fb7185",
-      "auto": "#a78bfa"
+      "success": "#5fd08a",
+      "warn": "#f2a93b",
+      "danger": "#ff7a70",
+      "auto": "#c9b1ff"
     },
     "derived": {
       "claimed": "color-mix(in oklab, var(--accent) 52%, var(--danger))",
@@ -48,58 +48,58 @@
   },
   "contrast": {
     "fg": {
-      "onBg": 18.1,
-      "onSurface": 16.38,
-      "onSurfaceWarm": 14.75
+      "onBg": 15.66,
+      "onSurface": 14.36,
+      "onSurfaceWarm": 15.05
     },
     "fg-2": {
-      "onBg": 12.75,
-      "onSurface": 11.54,
-      "onSurfaceWarm": 10.4
+      "onBg": 12.04,
+      "onSurface": 11.04,
+      "onSurfaceWarm": 11.57
     },
     "muted": {
-      "onBg": 7.1,
-      "onSurface": 6.42,
-      "onSurfaceWarm": 5.79
+      "onBg": 8.14,
+      "onSurface": 7.47,
+      "onSurfaceWarm": 7.83
     },
     "meta": {
-      "onBg": 7.45,
-      "onSurface": 6.74,
-      "onSurfaceWarm": 6.07
+      "onBg": 9.69,
+      "onSurface": 8.88,
+      "onSurfaceWarm": 9.31
     },
     "success": {
-      "onBg": 8.31,
-      "onSurface": 7.52,
-      "onSurfaceWarm": 6.78
+      "onBg": 9.86,
+      "onSurface": 9.04,
+      "onSurfaceWarm": 9.47
     },
     "warn": {
-      "onBg": 11.34,
-      "onSurface": 10.26,
-      "onSurfaceWarm": 9.25
+      "onBg": 9.53,
+      "onSurface": 8.74,
+      "onSurfaceWarm": 9.16
     },
     "danger": {
-      "onBg": 7.03,
-      "onSurface": 6.37,
-      "onSurfaceWarm": 5.74
+      "onBg": 7.5,
+      "onSurface": 6.88,
+      "onSurfaceWarm": 7.2
     },
     "auto": {
-      "onBg": 6.96,
-      "onSurface": 6.3,
-      "onSurfaceWarm": 5.67
+      "onBg": 10.17,
+      "onSurface": 9.33,
+      "onSurfaceWarm": 9.77
     },
     "accent": {
-      "onBg": 7.45,
-      "onSurface": 6.74,
-      "onSurfaceWarm": 6.07
+      "onBg": 7.85,
+      "onSurface": 7.2,
+      "onSurfaceWarm": 7.54
     },
     "accent-on": {
-      "onAccent": 7.46
+      "onAccent": 7.85
     }
   },
   "font": {
-    "font-display": "Inter, system-ui, sans-serif",
-    "font-body": "Inter, system-ui, sans-serif",
-    "font-mono": "\"JetBrains Mono\", ui-monospace, Menlo, monospace"
+    "font-display": "Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+    "font-body": "Inter, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif",
+    "font-mono": "\"JetBrains Mono\", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
   },
   "fontSize": {
     "text-2xs": "10px",
