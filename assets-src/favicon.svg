@@ -1,16 +1,8 @@
-<!-- 32px favicon. Same geometry as build/icon.svg with the radial field and
-     glow dropped, since both disappear at tab scale and only muddy the ring.
-     Stroke thickened to 1.6 so the rings hold at 16px.
-
-     NOTE: no double hyphen may appear in this comment. SVG loaded via img is
-     parsed as strict XML, where a double hyphen inside a comment is a fatal
-     error and the image silently fails to load. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"
      role="img" aria-label="weave">
-  <rect width="32" height="32" rx="7" fill="#0b1020" />
-  <g transform="translate(4 4) scale(1)" fill="none" stroke="#60a5fa" stroke-width="1.6">
-    <circle cx="12" cy="12" r="3.2" />
-    <circle cx="12" cy="12" r="9" opacity="0.55" />
-    <path d="M12 3v3.8M12 17.2V21M3 12h3.8M17.2 12H21" />
+  <rect width="32" height="32" rx="7" fill="#0e1014" />
+  <g transform="translate(4 4)" fill="none" stroke="#f2a93b" stroke-width="2.4"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 7c3 0 3 10 6 10s3-10 6-10 3 10 6 10" />
   </g>
 </svg>
