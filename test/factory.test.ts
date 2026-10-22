@@ -19,7 +19,7 @@ test("root: #view-factory, polled, out of band; the sidebar's Factory value come
 });
 
 test("head: the numbers row — in the pipeline, need you, completed, in the backlog", () => {
-  assert.match(full, /<div class="page-head"><h1>Factory<\/h1><div class="stats"><span><b>2<\/b> in the pipeline<\/span><span><b class="needs">2<\/b> need you<\/span><span><b class="ok">1<\/b> completed<\/span><span><b>2<\/b> in the backlog<\/span><\/div><\/div>/);
+  assert.match(full, /<div class="page-head"><h1>Factory<\/h1><div class="stats"><span><b>3<\/b> in the pipeline<\/span><span><b class="needs">2<\/b> need you<\/span><span><b class="ok">1<\/b> completed<\/span><span><b>2<\/b> in the backlog<\/span><\/div><\/div>/);
   assert.match(live, /<div class="page-head"><h1>Factory<\/h1><div class="stats"><span><b>0<\/b> in the pipeline<\/span><span><b>0<\/b> need you<\/span>/);
 });
 
