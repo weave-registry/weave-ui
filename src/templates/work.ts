@@ -1,11 +1,12 @@
 import type { WorkView, RenderCtx } from "../../contract/console-views-v1.js";
 import { html, toHtml, type SafeHtml } from "../html.js";
-import { plural, time, str, num } from "../ui/format.js";
+import { time, str, num } from "../ui/format.js";
 import { actionForm, actionLink } from "../ui/actions.js";
 
 /**
- * The `work` template: weave's Work page (`/work`) as one out-of-band htmx fragment, at parity with weave's
- * work-page.ts (docs/parity/home-work-control.md, ## Work): who is working, what is left, and where you can help.
+ * The `work` template: weave's Work page (`/work`) as one out-of-band htmx fragment, redesigned
+ * (docs/plans/2026-10-23-redesign-spec.md, ## Work): a head of stats, the pipeline as a stage-column board of issue
+ * cards, then — below — where you can help, who is working (a slot strip per machine), and other work.
  *
  * Markup is built only with the one `html` tag (ADR-0234 §4). The view model is untrusted JSON: every field is
  * read through a guard, so a missing or wrong-typed field renders less and never throws.
@@ -16,10 +17,9 @@ export function work(vm: WorkView, ctx: RenderCtx): string {
   const v = rec(vm);
   const now = num(v["now"]);
   const s = rec(v["summary"]);
-  const help = n0(s["help"]);
 
   return toHtml(
-    html`<section id="view-work" class="view work" hx-get="/ui/f/work" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true" data-nav-count="work:${help}">${pageHead(s)}${whoSection(s, v["machines"], now)}${whatSection(s, v, now)}${helpSection(help, v["help"])}</section>`,
+    html`<section id="view-work" class="view work" hx-get="/ui/f/work" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true">${pageHead(s)}${board(v["issues"], now)}<div class="work-lower">${helpSection(n0(s["help"]), v["help"])}${whoSection(s, v["machines"], now)}${otherSection(v["other"], v["otherMore"], now)}</div></section>`,
   );
 }
 
@@ -48,54 +48,13 @@ function pick(table: Readonly<Record<string, string>>, k: unknown, fallback: str
   return typeof k === "string" && Object.prototype.hasOwnProperty.call(table, k) ? (table[k] ?? fallback) : fallback;
 }
 
-function slots(inUse: unknown, total: unknown): string {
-  return `${n0(inUse)} of ${plural(n0(total), "slot")} in use`;
-}
-
 // ---- head ----
 
 function pageHead(s: Rec): SafeHtml {
-  const sentence = str(s["sentence"]);
-  return html`<div class="page-head"><h1>Work</h1><span class="sub" id="summary">${sentence !== "" ? sentence : "Who is working, what is left, and where you can help."}</span></div>`;
+  return html`<div class="page-head"><h1>Work</h1><div class="stats"><span><b>${n0(s["issues"])}</b> in progress</span><span><b>${n0(s["queued"])}</b> queued</span><span><b class="ok">${n0(s["merged"])}</b> merged today</span><span><b>${n0(s["inUse"])} / ${n0(s["slots"])}</b> slots busy</span></div></div>`;
 }
 
-// ---- 1. who is working ----
-
-const AGENT_TONE: Readonly<Record<string, string>> = { working: "work", idle: "ok", paused: "needs", silent: "bad" };
-const IDLE_WORD: Readonly<Record<string, string>> = { paused: "Paused", silent: "Silent" };
-
-function whoSection(s: Rec, machines: unknown, now: number | undefined): SafeHtml {
-  const rows = arr(machines).map(rec);
-  const head = html`<h2 class="section" id="who-h">Who is working<span class="count"> (${slots(s["inUse"], s["slots"])})</span></h2>`;
-  if (rows.length === 0) {
-    return html`${head}<div class="machines" id="who"><p class="note">No machine has checked in yet. Start weave on one with: weave serve</p></div>`;
-  }
-  return html`${head}<div class="machines" id="who">${rows.map((m) => machineCard(m, now))}</div>`;
-}
-
-function machineCard(m: Rec, now: number | undefined): SafeHtml {
-  const quiet = m["quiet"] === true;
-  const idleWhy = str(m["idleWhy"]);
-  const heard = quiet ? html`<div class="status" data-tone="bad">Not heard from since ${time(m["lastHeardTs"], opt(now))}</div>` : "";
-  const why = idleWhy !== "" ? html`<div class="card-why">Idle: ${idleWhy}</div>` : "";
-  return html`<div class="${quiet ? "card needs" : "card"}"><div class="card-title">${str(m["node"])}<span class="slots">${slots(m["inUse"], m["slots"])}</span></div>${heard}${why}${arr(m["agents"]).map((a) => agentRow(rec(a), now))}</div>`;
-}
-
-function agentRow(a: Rec, now: number | undefined): SafeHtml {
-  const role = str(a["role"]);
-  const doing = arr(a["doing"]).map(rec);
-  const idleWhy = str(a["idleWhy"]);
-  const what =
-    doing.length > 0
-      ? html`<ul>${doing.map((d) => {
-          const model = str(d["model"]);
-          return html`<li><a href="/task?id=${str(d["taskId"])}">${str(d["words"])}</a> (${time(d["sinceTs"], { ...opt(now), fmt: "dur" })}${model !== "" ? `, ${model}` : ""})</li>`;
-        })}</ul>`
-      : html`<div class="why">${pick(IDLE_WORD, a["state"], "Idle")}${idleWhy !== "" ? ` — ${idleWhy}` : ""}</div>`;
-  return html`<div class="agent"><div class="status" data-tone="${pick(AGENT_TONE, a["state"], "")}"><span class="name">${str(a["name"])}</span>${role !== "" ? html`<span class="role"> · ${role}</span>` : ""}<span class="slots">${slots(a["inUse"], a["slots"])}</span></div>${what}</div>`;
-}
-
-// ---- 2. what is left ----
+// ---- the board ----
 
 const STEP: Readonly<Record<string, string>> = {
   triage: "Triage",
@@ -106,57 +65,39 @@ const STEP: Readonly<Record<string, string>> = {
   review: "Review",
   merge: "Merge",
 };
-const ISSUE_TONE: Readonly<Record<string, string>> = { running: "work", queued: "", waiting: "needs", held: "bad" };
-const STEP_STATES = ["done", "skipped", "current", "todo"] as const;
+const STEPS = ["triage", "design", "plan", "build", "verify", "review", "merge"] as const;
+const ISSUE_STATE: Readonly<Record<string, string>> = { running: "Running", queued: "Queued", waiting: "Waiting", held: "Held" };
 
-function stepLabel(step: unknown): string {
-  return pick(STEP, step, str(step));
-}
-
-function whatSection(s: Rec, v: Rec, now: number | undefined): SafeHtml {
-  const issues = arr(v["issues"]).map(rec);
-  const head = html`<h2 class="section" id="what-h">What is left</h2>`;
-  const counts = html`<p class="counts" id="counts">${plural(n0(s["issues"]), "issue")} in progress · ${plural(n0(s["queued"]), "step")} queued · ${n0(s["merged"])} merged today</p>`;
-  const body =
-    issues.length > 0
-      ? html`<div class="card" id="what">${issues.map((i) => issueRow(i, now))}</div>`
-      : html`<div class="card" id="what"><p class="note">No issue is in the pipeline.</p></div>`;
-  return html`${head}${counts}${body}<div id="other">${otherList(v["other"], v["otherMore"], now)}</div>`;
-}
-
-function issueRow(i: Rec, now: number | undefined): SafeHtml {
-  const tone = pick(ISSUE_TONE, i["state"], "");
-  const issue = num(i["issue"]);
-  const pr = rec(i["pr"]);
-  const url = str(i["url"]);
-  const prLink =
-    typeof i["pr"] === "object" && i["pr"] !== null ? actionLink(pr["url"], `Pull request #${num(pr["number"]) ?? str(pr["number"])}`, "btn link") : "";
-  const line = arr(i["steps"]).map((c) => {
-    const cell = rec(c);
-    const state = STEP_STATES.find((x) => x === cell["state"]) ?? "todo";
-    return html`<li data-state="${state}" data-tone="${state === "current" ? tone : ""}" title="${state}">${stepLabel(cell["step"])}</li>`;
+function board(issues: unknown, now: number | undefined): SafeHtml {
+  const rows = arr(issues).map(rec);
+  const stepOf = (i: Rec): string => (typeof i["step"] === "string" && Object.prototype.hasOwnProperty.call(STEP, i["step"]) ? i["step"] : "triage");
+  const cols = STEPS.map((step) => {
+    const mine = rows.filter((i) => stepOf(i) === step);
+    return html`<div class="col" data-step="${step}"><div class="col-head"><span class="col-name">${STEP[step] ?? step}</span><span class="col-count num">${mine.length}</span></div>${mine.map((i) => issueCard(i, now))}</div>`;
   });
-  return html`<div class="issue"><div class="head"><div class="grow"><strong>${str(i["title"])}</strong><span class="muted"> #${issue !== undefined ? String(issue) : ""}</span></div>${url !== "" ? actionLink(url, "Issue", "btn link") : ""}${prLink}</div><ol class="line">${line}</ol><div class="state" data-tone="${tone}">${stepLabel(i["step"])}: ${str(i["words"])} · ${time(i["sinceTs"], opt(now))}</div></div>`;
+  return html`<section class="panel board" aria-label="Pipeline"><div class="board-cols">${cols}</div>${rows.length === 0 ? html`<p class="empty">No issue is in the pipeline.</p>` : ""}</section>`;
 }
 
-function otherList(other: unknown, more: unknown, now: number | undefined): SafeHtml {
-  const rows = arr(other).map(rec);
-  if (rows.length === 0) return html``;
-  const n = n0(more);
-  const items = rows.map(
-    (t) =>
-      html`<div class="issue"><a href="/task?id=${str(t["taskId"])}">${str(t["title"])}</a><div class="state" data-tone="${t["state"] === "running" ? "work" : ""}">${str(t["words"])} · ${time(t["sinceTs"], opt(now))}</div></div>`,
-  );
-  return html`<div class="card other"><div class="card-title">Other work</div>${items}${n > 0 ? html`<p class="muted small">and ${n} more — see Activity.</p>` : ""}</div>`;
+function issueCard(i: Rec, now: number | undefined): SafeHtml {
+  const state = Object.prototype.hasOwnProperty.call(ISSUE_STATE, str(i["state"])) ? str(i["state"]) : "queued";
+  const issue = num(i["issue"]);
+  const url = str(i["url"]);
+  const title = str(i["title"]);
+  const pr = rec(i["pr"]);
+  const prPart =
+    typeof i["pr"] === "object" && i["pr"] !== null && !Array.isArray(i["pr"])
+      ? html`<a href="${str(pr["url"])}">PR #${num(pr["number"]) ?? str(pr["number"])}</a>`
+      : html`<span>no PR</span>`;
+  return html`<div class="wcard" data-state="${state}"><div class="wcard-top"><span class="wcard-id num">#${issue !== undefined ? String(issue) : ""}</span><span class="state" data-state="${state}">${pick(ISSUE_STATE, state, "Queued")}</span></div><div class="wcard-title">${url !== "" ? html`<a href="${url}">${title}</a>` : title}</div><div class="wcard-note">${str(i["words"])}</div><div class="wcard-foot">${prPart}<span class="wcard-age">${time(i["sinceTs"], opt(now))}</span></div></div>`;
 }
 
-// ---- 3. where you can help ----
+// ---- where you can help ----
 
 function helpSection(count: number, help: unknown): SafeHtml {
-  const cards = arr(help).map(rec);
-  const head = html`<h2 class="section" id="help-h">Where you can help${count > 0 ? html`<span class="count"> (${count})</span>` : ""}</h2>`;
-  if (cards.length === 0) return html`${head}<div class="help" id="help"><p class="note">Nothing needs you.</p></div>`;
-  return html`${head}<div class="help" id="help">${cards.map(helpCard)}</div>`;
+  const rows = arr(help).map(rec);
+  const head = html`<div class="panel-head"><h2 id="help-h">Where you can help</h2><span class="pill" data-tone="${count > 0 ? "needs" : "ok"}">${count}</span></div>`;
+  const body = rows.length > 0 ? html`<div class="lrows">${rows.map(helpRow)}</div>` : html`<p class="empty">Nothing needs you.</p>`;
+  return html`<section class="panel" id="help" aria-labelledby="help-h">${head}${body}</section>`;
 }
 
 function helpAction(x: unknown, primary: boolean): SafeHtml | undefined {
@@ -173,7 +114,7 @@ function helpAction(x: unknown, primary: boolean): SafeHtml | undefined {
   return undefined;
 }
 
-function helpCard(h: Rec): SafeHtml {
+function helpRow(h: Rec): SafeHtml {
   const acts: SafeHtml[] = [];
   const main = helpAction(h["action"], true);
   if (main !== undefined) acts.push(main);
@@ -181,7 +122,66 @@ function helpCard(h: Rec): SafeHtml {
     const b = helpAction(m, false);
     if (b !== undefined) acts.push(b);
   }
+  const title = str(h["title"]);
   const detail = str(h["detail"]);
   const how = str(h["how"]);
-  return html`<div class="card needs" data-key="${str(h["key"])}"><div class="card-title">${str(h["title"])}</div><div class="card-why">Why you: ${str(h["why"])}</div>${detail !== "" ? html`<pre>${detail}</pre>` : ""}${acts.length > 0 ? html`<div class="actions">${acts.map((b, i) => (i === 0 ? b : html` ${b}`))}</div>` : ""}${how !== "" ? html`<details class="fix"><summary>How</summary><pre>${how}</pre></details>` : ""}</div>`;
+  return html`<div class="lrow" data-key="${str(h["key"])}"><div class="lrow-main"><div class="lrow-title" title="${title}">${title}</div><div class="lrow-why">${str(h["why"])}</div></div><div class="lrow-acts">${acts.map((b, i) => (i === 0 ? b : html` ${b}`))}</div>${detail !== "" ? html`<details class="lrow-more"><summary>Details</summary><pre>${detail}</pre></details>` : ""}${how !== "" ? html`<details class="lrow-more"><summary>How</summary><pre>${how}</pre></details>` : ""}</div>`;
+}
+
+// ---- who is working ----
+
+const IDLE_WORD: Readonly<Record<string, string>> = { paused: "Paused", silent: "Silent" };
+
+function whoSection(s: Rec, machines: unknown, now: number | undefined): SafeHtml {
+  const rows = arr(machines).map(rec);
+  const head = html`<div class="panel-head"><h2 id="who-h">Who is working</h2><span class="panel-link">${n0(s["inUse"])} of ${n0(s["slots"])} slots busy</span></div>`;
+  const body =
+    rows.length > 0 ? rows.map((m) => slotHost(m, now)) : html`<p class="empty">No machine has checked in yet. Start weave on one with: weave serve</p>`;
+  return html`<section class="panel" id="who" aria-labelledby="who-h">${head}<div class="panel-body">${body}</div></section>`;
+}
+
+function slotHost(m: Rec, now: number | undefined): SafeHtml {
+  const quiet = m["quiet"] === true;
+  const agents = arr(m["agents"]).map(rec);
+  const idleWhy = str(m["idleWhy"]);
+  const status = quiet
+    ? html`<span class="muted">Not heard from since ${time(m["lastHeardTs"], opt(now))}</span>`
+    : html`<span class="muted">${n0(m["inUse"])} / ${n0(m["slots"])}</span>`;
+  const cells = agents.map((a) => {
+    const doing = arr(a["doing"]).map(rec);
+    const inUse = n0(a["inUse"]);
+    const total = Math.max(0, Math.min(1000, Math.floor(n0(a["slots"]))));
+    return Array.from({ length: total }, (_, k) => {
+      if (k >= inUse) return html`<span class="slot"></span>`;
+      const d = doing[k];
+      return html`<span class="slot" data-busy="true" title="${d !== undefined ? str(d["words"]) : str(a["name"])}"></span>`;
+    });
+  });
+  const lines = agents.map((a) => {
+    const name = str(a["name"]);
+    const doing = arr(a["doing"]).map(rec).map((d) => {
+      const model = str(d["model"]);
+      return html`<div class="slot-doing"><a href="/task?id=${str(d["taskId"])}">${str(d["words"])}</a> <span class="muted">${name} · ${model !== "" ? `${model} · ` : ""}${time(d["sinceTs"], { ...opt(now), fmt: "dur" })}</span></div>`;
+    });
+    const why = str(a["idleWhy"]);
+    const idle =
+      a["state"] === "paused" || a["state"] === "silent"
+        ? html`<div class="slot-doing muted">${name}: ${pick(IDLE_WORD, a["state"], "")}${why !== "" ? ` — ${why}` : ""}</div>`
+        : "";
+    return html`${doing}${idle}`;
+  });
+  return html`<div class="slot-host" data-quiet="${quiet ? "true" : "false"}"><div class="slot-head"><span class="dot" data-tone="${quiet ? "bad" : "ok"}"></span><b>${str(m["node"])}</b>${status}</div><div class="slots">${cells.flat()}</div>${lines}${idleWhy !== "" ? html`<div class="slot-doing muted">Idle: ${idleWhy}</div>` : ""}</div>`;
+}
+
+// ---- other work ----
+
+function otherSection(other: unknown, more: unknown, now: number | undefined): SafeHtml {
+  const rows = arr(other).map(rec);
+  if (rows.length === 0) return html``;
+  const n = n0(more);
+  const items = rows.map(
+    (t) =>
+      html`<div class="lrow"><span class="dot" data-tone="${t["state"] === "running" ? "work" : ""}"></span><div class="lrow-main"><div class="lrow-title"><a href="/task?id=${str(t["taskId"])}">${str(t["title"])}</a></div><div class="lrow-why">${str(t["words"])}</div></div><span class="lrow-meta">${time(t["sinceTs"], opt(now))}</span></div>`,
+  );
+  return html`<section class="panel" id="other" aria-labelledby="other-h"><div class="panel-head"><h2 id="other-h">Other work</h2></div><div class="lrows">${items}</div>${n > 0 ? html`<p class="empty"><a href="/audit?since=24h">and ${n} more</a></p>` : ""}</section>`;
 }
