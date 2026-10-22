@@ -201,3 +201,28 @@ Each nav icon rule names its key directly and writes its URL once, unprefixed (c
 support `mask-image`; a prefixed copy would double the bytes): `.nav a[data-key="home"]::before { mask-image:
 url("data:…"); }`. The shared `.nav a::before` rule sets `content: ""`, 18×18, `flex: none`, `background:
 currentColor`, `mask-size: contain`, `mask-repeat: no-repeat`, `mask-position: center`.
+
+## Work (`src/templates/work.ts`, PR 2)
+
+- Head: `h1` and a `.stats` row of `<span><b>N</b> label</span>` (in progress, queued, merged today in `--ok`, slots busy).
+- `.board` (a panel, horizontal scroll): `.board-cols` is a 7-column grid (`minmax(180px, 1fr)`, min-width 1260px);
+  `.col[data-step]` (border-right `--line-soft`, padding 14px 12px, min-height 320px) with `.col-head` (`.col-name`
+  12px 700 uppercase `--muted`, `.col-count` mono `--faint`). `.wcard[data-state]`: `--surface`, radius 10px, padding
+  12px, flex column gap 8px, border 1px — held `--bad-line`, waiting `--needs-line`, running `--line-strong`, queued
+  `--line`. `.wcard-top` (`.wcard-id` mono `--muted`, `.state[data-state]` 11px 700 radius 4px chip: held `--bad` on
+  `--bad-bg`, waiting `--needs` on `--needs-bg`, running blue-tinted, queued `--muted` on `--sunken`), `.wcard-title`
+  13px 600, `.wcard-note` 12px `--muted`, `.wcard-foot` 12px `--faint` with `.wcard-age` pushed right.
+- Below: `.work-lower` (flex wrap, gap 20px): Where you can help (`#help`, list rows), Who is working (`#who`: per
+  machine a `.slot-host` with `.slot-head` and a `.slots` strip of `.slot` cells — 22px tall, radius 4px, `--line`;
+  `[data-busy="true"]` `--work-fill` — then `.slot-doing` lines linking each task), Other work (`#other`).
+
+## Machines (`src/templates/machines.ts` and Home's fragments, PR 2)
+
+- Head: `h1` and a `.sub` line (`<b data-tone>` connected count, agents, versions).
+- `#host-telemetry.telemetry` (above the cards, filled from Home's model): a grid of `.tele` panels — `.tele-head`
+  (dot, name, `.tele-spec`), `.tele-stats` three `.stat` cells (`.stat-label` 11px uppercase `--muted`, `.stat-value`
+  22px 700 with tones, `.stat-sub` 12px `--faint`): Load, Memory, Slots.
+- `.hosts`: grid `repeat(auto-fit, minmax(380px, 1fr))`, gap 16px, of `.host-card` panels: head with dot, `h2`, and
+  `.host-heard` pushed right; `.host-remedy`; agent list rows with Pause / Resume.
+- `#model-drift` (below the cards, from Home's model): a panel with a `.table` — setting in mono, one column per
+  gateway, the source muted.
