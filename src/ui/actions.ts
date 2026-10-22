@@ -111,11 +111,19 @@ function buttonClassFor(o: ActionFormOptions): string {
   return tone === "quiet" ? "btn" : `btn ${tone}`;
 }
 
-/** A gateway body `{ <verb>: inner }` as a form posting to /ui/a/<verb>; anything else is shown, never posted. */
+/**
+ * A gateway body `{ <verb>: inner }` as a form posting to /ui/a/<verb>; anything else is shown, never posted.
+ * The fleet verb is never a form (ADR-0245 §3: the console credential may not halt or resume the fleet):
+ * halt and resume render as their CLI command, any other fleet body as the disabled span.
+ */
 export function actionForm(body: Readonly<Record<string, unknown>>, o: ActionFormOptions): SafeHtml {
   const keys = isPlainObject(body) ? Object.keys(body) : [];
   const verb = keys.length === 1 ? keys[0] : undefined;
-  const fields = verb !== undefined && KNOWN_VERBS.includes(verb) ? innerFields(body[verb]) : undefined;
+  if (verb === "fleet") {
+    if (body.fleet === "halt") return html`<span class="cli">Halt from the command line: <code>weave halt</code></span>`;
+    if (body.fleet === "resume") return html`<span class="cli">Resume from the command line: <code>weave resume</code></span>`;
+  }
+  const fields = verb !== undefined && verb !== "fleet" && KNOWN_VERBS.includes(verb) ? innerFields(body[verb]) : undefined;
   if (verb === undefined || fields === undefined) {
     return html`<span class="btn" aria-disabled="true" title="This action is not one this console can send.">${o.label}</span>`;
   }

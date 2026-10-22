@@ -73,6 +73,18 @@ evidence: `node --import tsx --test test/*.test.ts test/server/*.test.ts`
   `insecureUpstream`. Header names from weave `sse-surface.ts`: `X-Weave-Secret`, `X-Weave-On-Behalf-Of`.
 - **PR 5 is now the systemd user unit** (template + docs, the secret via `weave secret exec`), since the contract moved
   into PR 2. PR 3 (changes fan-out) and PR 4 (HTTP server and pages) are unchanged.
+- **PR 2 merged** (#10), **PR 3 merged** (#11): `src/server/changes.ts` — one upstream `/api/v1/changes`
+  subscription, fanned out; a refused resume broadcasts `event: all`.
+- **PR 4 is split in two** (it was the server *and* every browser-side change): **PR 4 — the pages, ready for an own
+  server**: the fleet verb renders as `weave halt` / `weave resume` text in `actionForm` (one choke point, so every page
+  and attention card follows; ADR-0245 §3); file links carry `&task=` (home turns, task page); `app.js` sends
+  `X-CSRF-Token` from weave-ui's `wui_csrf` cookie on every write (double-submit, so the static shells need no
+  per-session markup) and rewrites links to `/ui/assets/pages/*` only on a static shell. **PR 5 — the HTTP server**
+  (`src/server/app.ts` + `main.ts`): pages, `/ui/f`, `/ui/a`, `/ui/assets`, `/events`, `/file`, `/health`, sessions and
+  address trust. **PR 6 — the systemd user unit.**
+- **Login in P2 is address trust only** (loopback + `--trust-cidr`, with ADR-0220's Host and Sec-Fetch-Site rules);
+  a request from anywhere else gets a page saying how to admit it. Accounts and passkeys move at P4 (ADR-0245 §5,
+  "Until P4 weave's accounts and login stay as they are"). Recorded as an open question for the operator.
 - **PR 5 merged** (#13): the HTTP server (`app.ts`, `main.ts`, `serve.ts`, `bun run serve`). Also fixed: the client's
   connect timeout and an abortable `changes()` that `hub.stop()` cancels.
 - **PR 6 — the systemd user unit**: `deploy/systemd/weave-ui.service` (secret only via `weave secret exec`, hardened;

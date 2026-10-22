@@ -25,7 +25,7 @@ test("an object body: one hidden input per field, typed by name", () => {
 
 test("a scalar body posts as @", () => {
   assert.match(toHtml(actionForm({ cancel: "task-1" }, { label: "Stop", tone: "danger", confirm: "Stop it?" })), /^<form class="act" hx-post="\/ui\/a\/cancel" hx-swap="none" data-confirm="Stop it\?"><input type="hidden" name="@" value="task-1"><button class="btn danger" type="submit">Stop<\/button>/);
-  assert.match(toHtml(actionForm({ fleet: "halt" }, { label: "Halt", tone: "quiet" })), /name="@" value="halt".*<button class="btn" type="submit">Halt/);
+  assert.match(toHtml(actionForm({ cancel: "task-1" }, { label: "Cancel", tone: "quiet" })), /name="@" value="task-1".*<button class="btn" type="submit">Cancel/);
 });
 
 test("an unknown verb, or a body with other than one key, is shown, not posted", () => {
@@ -64,11 +64,11 @@ test("attention actions: tone, confirm, and closing an issue always asks first",
 test("a deeply nested body renders its shallow fields and skips the rest, never overflowing the stack", () => {
   let deep: Record<string, unknown> = { k: "bottom" };
   for (let i = 0; i < 20_000; i++) deep = { a: deep };
-  const h = toHtml(actionForm({ fleet: { id: "f-1", deep } }, { label: "Go" }));
+  const h = toHtml(actionForm({ agent: { id: "f-1", deep } }, { label: "Go" }));
   assert.match(h, /<input type="hidden" name="id" value="f-1">/);
   assert.doesNotMatch(h, /bottom/);
-  assert.match(toHtml(attentionActions([{ label: "Go", body: { fleet: deep } }])), /<form class="act" hx-post="\/ui\/a\/fleet"/);
-  assert.match(toHtml(actionForm({ fleet: { a: { b: { c: "kept" } } } }, { label: "Go" })), /name="a\[b\]\[c\]" value="kept"/);
+  assert.match(toHtml(attentionActions([{ label: "Go", body: { agent: deep } }])), /<form class="act" hx-post="\/ui\/a\/agent"/);
+  assert.match(toHtml(actionForm({ agent: { a: { b: { c: "kept" } } } }, { label: "Go" })), /name="a\[b\]\[c\]" value="kept"/);
 });
 
 test("a body whose keys app.js would re-type or re-nest is shown, never posted", () => {
@@ -91,4 +91,15 @@ test("a body whose keys app.js would re-type or re-nest is shown, never posted",
   const ok = toHtml(actionForm({ agent: { "ns:id": "a", opts: { "x:num": "12" } } }, { label: "Go" }));
   assert.match(ok, /name="ns:id" value="a"/);
   assert.match(ok, /name="opts\[x:num\]" value="12"/);
+});
+
+test("the fleet verb is never a form: halt and resume are their CLI commands, shown as text (ADR-0245 §3)", () => {
+  assert.equal(toHtml(actionForm({ fleet: "halt" }, { label: "■ Halt", tone: "danger", confirm: "Halt?" })), '<span class="cli">Halt from the command line: <code>weave halt</code></span>');
+  assert.equal(toHtml(actionForm({ fleet: "resume" }, { label: "Resume", confirm: "Resume?" })), '<span class="cli">Resume from the command line: <code>weave resume</code></span>');
+  assert.match(toHtml(attentionActions([{ label: "Resume", body: { fleet: "resume" } }])), /<code>weave resume<\/code>/);
+  for (const inner of [{ id: "f-1" }, "drain", true]) {
+    const h = toHtml(actionForm({ fleet: inner }, { label: "Go" }));
+    assert.doesNotMatch(h, /<form|hx-post/, JSON.stringify(inner));
+    assert.match(h, /aria-disabled="true"/, "any other fleet body is shown, never posted");
+  }
 });

@@ -35,7 +35,7 @@ test("actions: Stop while running, the full record, grants", () => {
 test("result as markdown, files, what was asked folded after 8 lines, details", () => {
   assert.match(working, /<h2 class="section">Result<\/h2><div class="card md"><h4>Partial<\/h4>/);
   assert.match(failed, /<h2 class="section">Why it failed<\/h2><div class="card md"><p>Exit 1: <strong>boom<\/strong><\/p>/);
-  assert.match(working, /<a href="\/file\?path=%2Fwork%2Fout%2Freport\.md" target="_blank" rel="noopener" title="\/work\/out\/report\.md">report\.md<\/a>/);
+  assert.match(working, /<a href="\/file\?path=%2Fwork%2Fout%2Freport\.md&amp;task=task-w1" target="_blank" rel="noopener" title="\/work\/out\/report\.md">report\.md<\/a>/);
   assert.match(working, /<details><summary>Show the whole request<\/summary><p class="text">line 9\nline 10\nline 11\nline 12<\/p><\/details>/);
   assert.match(working, /<dt>Worker<\/dt><dd>max-dev<\/dd>/);
   assert.match(working, /<dt>Cost<\/dt><dd>&lt;\$0\.01<\/dd>/);

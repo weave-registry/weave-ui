@@ -28,7 +28,9 @@ test("harness panel: verdict, word, sentence, reasons with their fixes", () => {
   assert.match(full, /<div class="harness" data-verdict="degraded" role="status" aria-label="Harness status">/);
   assert.match(full, /DEGRADED/);
   assert.ok(full.includes("Working, but a host is down."));
-  assert.match(full, /hx-post="\/ui\/a\/fleet"[^>]*data-confirm="Resume the fleet\?"><input type="hidden" name="@" value="resume">/);
+  // ADR-0245 §3: the console credential may not halt or resume — the harness shows the CLI command instead.
+  assert.match(full, /<span class="cli">Resume from the command line: <code>weave resume<\/code><\/span>/);
+  assert.doesNotMatch(full, /\/ui\/a\/fleet/);
   assert.match(full, /hx-post="\/ui\/a\/yolo"[^>]*data-confirm="Turn yolo on\?"/);
   assert.match(full, /<select name="for"[^>]*>.*<option value="8h" selected>8 hours<\/option>/s);
   assert.match(full, /name="on:bool" value="true"/);
@@ -43,8 +45,9 @@ test("harness facts in weave's words, the spend meter as <meter>", () => {
   assert.match(full, /<a href="\/control">Control plane, models and costs →<\/a>/);
 });
 
-test("the fleet's halt and yolo controls ride on Home (weave's topbar, from the harness)", () => {
-  assert.match(live, /hx-post="\/ui\/a\/fleet"[^>]*data-confirm="Halt the fleet\? Every worker stops what it is doing and takes nothing new until you resume\. Yolo mode ends\."><input type="hidden" name="@" value="halt">/);
+test("the fleet's halt (as its CLI command, ADR-0245 §3) and yolo controls ride on Home (weave's topbar, from the harness)", () => {
+  assert.match(live, /<span class="fleet-halt"><span class="cli">Halt from the command line: <code>weave halt<\/code><\/span><\/span>/);
+  assert.doesNotMatch(live, /\/ui\/a\/fleet/);
   assert.match(full, /hx-post="\/ui\/a\/yolo"[^>]*><input type="hidden" name="off:bool" value="true">/);
 });
 
@@ -79,8 +82,8 @@ test("needs you: a plan is ticked — steps checked, roles not — and accepted 
   assert.match(full, /<input type="hidden" name="decline" value="p-1"><button class="btn" type="submit">Decline<\/button>/);
 });
 
-test("needs you: halt offers Resume and a new budget", () => {
-  assert.match(full, /<input type="hidden" name="@" value="resume"><button class="btn primary" type="submit">Resume<\/button>/);
+test("needs you: halt offers Resume (as its CLI command, ADR-0245 §3) and a new budget", () => {
+  assert.match(full, /<div class="actions"><span class="cli">Resume from the command line: <code>weave resume<\/code><\/span> <form class="act" hx-post="\/ui\/a\/budget"/);
   assert.match(full, /hx-post="\/ui\/a\/budget"[^>]*><input type="number" name="usd:num" min="0" step="5" placeholder="\$ per day" aria-label="New budget in dollars per day" required><button class="btn" type="submit">Raise budget<\/button>/);
 });
 
@@ -110,7 +113,7 @@ test("ask weave: turns, markdown answers, panels, files, progress; the composer 
   assert.match(full, /<aside class="chat" id="chat-panel"/);
   assert.match(full, /<h4>Done<\/h4>/);
   assert.match(full, /<strong>one<\/strong>/);
-  assert.match(full, /<a href="\/file\?path=%2Fwork%2Freports%2Fdash\.md" target="_blank" rel="noopener" title="\/work\/reports\/dash\.md">dash\.md<\/a>/);
+  assert.match(full, /<a href="\/file\?path=%2Fwork%2Freports%2Fdash\.md&amp;task=chat-2" target="_blank" rel="noopener" title="\/work\/reports\/dash\.md">dash\.md<\/a>/);
   assert.match(full, /<div class="metrics">/);
   assert.match(full, /Working on it/);
   assert.match(full, /<li>reading the log<\/li>/);

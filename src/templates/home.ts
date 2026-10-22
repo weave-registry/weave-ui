@@ -544,8 +544,11 @@ function chatTurn(t: Rec, now: number | undefined): SafeHtml {
     body = html`<div class="said muted">${"That didn't work."}</div>`;
   }
   const panels = arr(t["panels"]).map(panel);
-  const files = strs(t["files"]).map(
-    (p) => html`<a href="/file?path=${p}" target="_blank" rel="noopener" title="${p}">${basename(p)}</a>`,
+  const taskId = str(t["taskId"]);
+  const files = strs(t["files"]).map((p) =>
+    taskId !== ""
+      ? html`<a href="/file?path=${p}&amp;task=${taskId}" target="_blank" rel="noopener" title="${p}">${basename(p)}</a>`
+      : html`<a href="/file?path=${p}" target="_blank" rel="noopener" title="${p}">${basename(p)}</a>`,
   );
   const wrote = files.length > 0 ? html`<p class="files">Wrote: ${joined(files, ", ")}</p>` : "";
   return html`${you}<div class="turn weave"><div class="who">weave</div>${body}${panels}${wrote}</div>`;
