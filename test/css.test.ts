@@ -109,3 +109,8 @@ test("Work and Machines (PR 2): the board, cards and state chips, slot strips, h
   assert.match(css, /\.view\.work \.slot\[data-busy="true"\]\s*\{[^}]*var\(--work-fill\)/);
   for (const sel of [".telemetry", ".tele", ".tele-head", ".tele-stats", ".stat", ".stat-label", ".stat-value", ".stat-sub", ".grow"]) assert.ok(has(sel), `no rule for ${sel}`);
 });
+
+test("build: the minifier also drops the space after a declaration's colon (the size budget is tight)", () => {
+  const out = built();
+  assert.doesNotMatch(out, /[{;](--[a-z0-9-]+|[a-z-]+):\s/, "a declaration keeps a space after its colon");
+});
