@@ -14,9 +14,9 @@ const T = templates as Record<string, (v: unknown, c: unknown) => string>;
 const fx = (n: string): unknown => JSON.parse(readFileSync(join(ROOT, "test", "fixtures", `${n}.json`), "utf8"));
 const css = readFileSync(join(ROOT, "assets-src", "weave.css"), "utf8");
 
-test("Control can stop the fleet: Halt on the running card, the yolo switch on the autonomy card", () => {
+test("Control says how to stop the fleet: Halt (its CLI command, ADR-0245 §3) on the running card, the yolo switch on the autonomy card", () => {
   const live = T.control!(fx("control.live"), CTX);
-  assert.match(live, /hx-post="\/ui\/a\/fleet"[^>]*data-confirm="Halt the fleet\?[^"]*"><input type="hidden" name="@" value="halt"><button class="btn danger" type="submit">■ Halt<\/button>/);
+  assert.match(live, /<div class="card-title">Running<\/div><div class="status" data-tone="ok">Not halted — peers claim normally\.<\/div><div class="actions"><span class="cli">Halt from the command line: <code>weave halt<\/code><\/span><\/div>/);
   assert.match(live, /hx-post="\/ui\/a\/yolo"[^>]*><input type="hidden" name="on:bool" value="true">/);
   const full = T.control!(fx("control.full"), CTX);
   assert.match(full, /<input type="hidden" name="off:bool" value="true">/);
