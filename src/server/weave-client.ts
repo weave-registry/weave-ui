@@ -48,7 +48,7 @@ export interface WeaveClient {
   api(): Promise<{ version: string; refresh: Readonly<Record<string, readonly string[]>> }>;
   action(verb: string, body: unknown, opts?: { onBehalfOf?: string }): Promise<unknown>;
   /** Open GET /api/v1/changes as a live SSE stream (ADR-0245 §4); resolves with the still-readable response on 2xx. */
-  changes(lastEventId?: string): Promise<IncomingMessage>;
+  changes(lastEventId?: string, signal?: AbortSignal): Promise<IncomingMessage>;
 }
 
 const VERB = /^[A-Za-z][A-Za-z0-9]*$/;
@@ -112,7 +112,9 @@ export function createWeaveClient(opts: WeaveClientOptions): WeaveClient {
     return new UpstreamError(`weave at ${origin} is unreachable: ${why.split(secret).join("<redacted>")}`, "upstream-unreachable");
   };
 
-  const send = (method: string, path: string, headers: OutgoingHttpHeaders, body: string | undefined, pinned: Pin | undefined, stream = false): Promise<Raw> =>
+  const aborted = (): UpstreamError => new UpstreamError(`request to weave at ${origin} was aborted`, "aborted");
+
+  const send = (method: string, path: string, headers: OutgoingHttpHeaders, body: string | undefined, pinned: Pin | undefined, stream = false, signal?: AbortSignal): Promise<Raw> =>
     new Promise<Raw>((resolve, reject) => {
       const target = new URL(path, base);
       let tcpUp = false;
@@ -146,6 +148,27 @@ export function createWeaveClient(opts: WeaveClientOptions): WeaveClient {
       } else {
         req = httpRequest(common);
       }
+      // req.setTimeout only arms once the socket connects; this bounds the connect itself.
+      const connectTimer = setTimeout(() => {
+        const e = new Error("ETIMEDOUT") as Error & { code: string };
+        e.code = "ETIMEDOUT";
+        req.destroy(e);
+      }, timeoutMs);
+      const onAbort = (): void => {
+        if (live) {
+          live.destroy();
+          return;
+        }
+        clearTimeout(connectTimer);
+        reject(aborted());
+        req.destroy(new Error("aborted"));
+      };
+      const unlisten = (): void => signal?.removeEventListener("abort", onAbort);
+      signal?.addEventListener("abort", onAbort, { once: true });
+      req.on("close", () => {
+        clearTimeout(connectTimer);
+        if (!live) unlisten();
+      });
       req.on("socket", (sock) => {
         sock.once("connect", () => (tcpUp = true));
         sock.once("secureConnect", () => (tlsUp = true));
@@ -157,10 +180,13 @@ export function createWeaveClient(opts: WeaveClientOptions): WeaveClient {
         else req.destroy(e);
       });
       req.on("error", (e) => {
+        clearTimeout(connectTimer);
+        unlisten();
         if (tls && pinned && (pinMismatch || (tcpUp && !tlsUp))) reject(new PinFailure(e));
         else reject(unreachable(e));
       });
       req.on("response", (res) => {
+        clearTimeout(connectTimer);
         let peerDer: Buffer | undefined;
         if (tls) {
           const raw = (res.socket as TLSSocket).getPeerCertificate?.()?.raw;
@@ -169,6 +195,7 @@ export function createWeaveClient(opts: WeaveClientOptions): WeaveClient {
         const status = res.statusCode ?? 0;
         if (stream && status >= 200 && status < 300) {
           live = res;
+          res.once("close", unlisten);
           req.setTimeout(streamIdleMs);
           resolve({ status, headers: res.headers, body: "", res, ...(peerDer !== undefined ? { peerDer } : {}) });
           return;
@@ -176,6 +203,7 @@ export function createWeaveClient(opts: WeaveClientOptions): WeaveClient {
         const chunks: Buffer[] = [];
         res.on("data", (c: Buffer) => chunks.push(c));
         res.on("error", (e) => reject(unreachable(e)));
+        unlisten();
         res.on("end", () =>
           resolve({
             status,
@@ -211,18 +239,21 @@ export function createWeaveClient(opts: WeaveClientOptions): WeaveClient {
     return verifying;
   };
 
-  const credentialed = async (method: string, path: string, extra: OutgoingHttpHeaders, body?: string, stream = false): Promise<Raw> => {
+  const credentialed = async (method: string, path: string, extra: OutgoingHttpHeaders, body?: string, stream = false, signal?: AbortSignal): Promise<Raw> => {
     const headers: OutgoingHttpHeaders = { accept: "application/json", ...extra, "x-weave-secret": secret };
-    if (!tls) return send(method, path, headers, body, undefined, stream);
+    if (!tls) return send(method, path, headers, body, undefined, stream, signal);
     if (!pin) await verify();
+    if (signal?.aborted) throw aborted();
     try {
-      return await send(method, path, headers, body, pin, stream);
+      return await send(method, path, headers, body, pin, stream, signal);
     } catch (e) {
       if (!(e instanceof PinFailure)) throw e;
+      if (signal?.aborted) throw aborted();
       pin = undefined;
       await verify();
+      if (signal?.aborted) throw aborted();
       try {
-        return await send(method, path, headers, body, pin, stream);
+        return await send(method, path, headers, body, pin, stream, signal);
       } catch (e2) {
         if (e2 instanceof PinFailure) {
           pin = undefined;
@@ -288,12 +319,13 @@ export function createWeaveClient(opts: WeaveClientOptions): WeaveClient {
       };
       return parse(await credentialed("POST", `/api/v1/actions/${verb}`, headers, JSON.stringify(body)));
     },
-    changes: async (lastEventId) => {
+    changes: async (lastEventId, signal) => {
+      if (signal?.aborted) throw aborted();
       const headers: OutgoingHttpHeaders = {
         accept: "text/event-stream",
         ...(lastEventId !== undefined ? { "last-event-id": lastEventId } : {}),
       };
-      const r = await credentialed("GET", "/api/v1/changes", headers, undefined, true);
+      const r = await credentialed("GET", "/api/v1/changes", headers, undefined, true, signal);
       if (r.res) return r.res;
       parse(r);
       throw new UpstreamError(`weave at ${origin} answered ${r.status} without a stream`, "upstream-error", r.status);

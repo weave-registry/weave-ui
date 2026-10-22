@@ -73,3 +73,14 @@ test("client.changes() rejects a refused stream as an UpstreamError with its sta
     await s.close();
   }
 });
+
+test("client.changes() takes an AbortSignal: aborting a pending subscription rejects it promptly and tears the request down", async () => {
+  const c = createWeaveClient({ weaveUrl: "http://10.255.255.1:9", secret: SECRET, insecureUpstream: true, timeoutMs: 60_000 });
+  const ac = new AbortController();
+  const started = Date.now();
+  const p = c.changes(undefined, ac.signal);
+  setTimeout(() => ac.abort(), 50);
+  await assert.rejects(p, (e: unknown) => e instanceof UpstreamError);
+  assert.ok(Date.now() - started < 3000, `took ${Date.now() - started} ms`);
+  await assert.rejects(c.changes(undefined, AbortSignal.abort()), (e: unknown) => e instanceof UpstreamError, "an already-aborted signal makes no request");
+});

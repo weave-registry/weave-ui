@@ -138,3 +138,72 @@ export function isTrusted(addr: string, nets: readonly Cidr[]): boolean {
     (net) => net.family === peer.family && (peer.value & mask(net.family, net.prefix)) === net.base,
   );
 }
+
+/** Loopback is always trusted (ADR-0220 §4): 127.0.0.0/8 and ::1; v4-mapped ::ffff:127.x is folded by `isTrusted`. */
+const LOOPBACK: readonly Cidr[] = [parseCidr("127.0.0.0/8"), parseCidr("::1/128")];
+
+/** Name suffixes reserved for private use, which no public DNS can hand to an attacker. */
+const PRIVATE_SUFFIXES = [
+  ".local",
+  ".lan",
+  ".home",
+  ".home.arpa",
+  ".internal",
+  ".localdomain",
+  ".localhost",
+  ".ts.net",
+] as const;
+
+/**
+ * May a request carrying this Host header ride its socket address's trust? ADR-0220 §4 (carried as weave-ui's own by
+ * ADR-0245 §5): DNS rebinding lets a public page reach a loopback or LAN address under a name the attacker controls,
+ * so only names a stranger cannot point here qualify — IP literals, `localhost`, single-label names, and private-use
+ * suffixes. Absent or empty is never trustable.
+ */
+export function hostTrustable(host: string | undefined): boolean {
+  if (typeof host !== "string") return false;
+  let h = host.trim().toLowerCase();
+  if (h === "") return false;
+
+  if (h.startsWith("[")) {
+    const m = /^\[([^\]]+)\](?::[0-9]*)?$/.exec(h);
+    return m !== null && m[1] !== undefined && parseV6(m[1]) !== null;
+  }
+
+  h = h.replace(/:[0-9]*$/, "");
+  if (h.endsWith(".")) h = h.slice(0, -1);
+  if (h === "" || h.includes(":")) return false;
+
+  if (parseV4(h) !== null) return true;
+  if (h === "localhost") return true;
+  if (/^[a-z0-9_-]+$/.test(h)) return true;
+  return PRIVATE_SUFFIXES.some((suffix) => h.endsWith(suffix) && h.length > suffix.length);
+}
+
+/**
+ * ADR-0220 §5 (ADR-0245 §5): a request another site initiated must not ride address trust. Absent (older browsers,
+ * non-browser clients), `same-origin` and `none` (typed URL, bookmark) pass; `same-site` and `cross-site` do not.
+ */
+export function fetchSiteTrustable(v: string | undefined): boolean {
+  return v === undefined || v === "same-origin" || v === "none";
+}
+
+/**
+ * Is this request admitted without a session? ADR-0245 §5, applying ADR-0220 §4/§5: the SOCKET address must be
+ * loopback or inside one of `cidrs`, the Host must be `hostTrustable`, and Sec-Fetch-Site must be
+ * `fetchSiteTrustable`. An absent or unparseable address is never trusted, and no forwarding header (X-Forwarded-For
+ * and the like) is ever consulted — the caller passes only the socket's own address.
+ */
+export function requestTrusted(
+  r: {
+    readonly remoteAddress?: string | undefined;
+    readonly host?: string | undefined;
+    readonly secFetchSite?: string | undefined;
+  },
+  cidrs: readonly Cidr[],
+): boolean {
+  const addr = r.remoteAddress;
+  if (typeof addr !== "string" || addr === "") return false;
+  if (!isTrusted(addr, LOOPBACK) && !isTrusted(addr, cidrs)) return false;
+  return hostTrustable(r.host) && fetchSiteTrustable(r.secFetchSite);
+}
