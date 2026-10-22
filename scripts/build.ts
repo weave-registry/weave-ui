@@ -126,6 +126,20 @@ function toScript(esm: string, header: string): string {
   return `${header}\n${body}\n`;
 }
 
+/**
+ * weave.css minified (docs/plans/2026-10-23-redesign.md, decision 5): comments removed, whitespace runs collapsed,
+ * the spaces around `{`, `}` and `;` dropped, and the space after a selector's `,` dropped. Values are never touched
+ * (so `1px solid var(--line)` and `rgba(27, 31, 36, .06)` keep their spaces), and every `;` and `:` is kept.
+ */
+export function minifyCss(css: string): string {
+  return css
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\s+/g, " ")
+    .replace(/\s*([{};])\s*/g, "$1")
+    .replace(/[^{};]+\{/g, (selector) => selector.replace(/,\s+/g, ","))
+    .trim();
+}
+
 async function build(): Promise<void> {
   const out = outDir(process.argv.slice(2));
   const pkg = readJson<{ version?: unknown }>(join(ROOT, "package.json"));
@@ -171,7 +185,11 @@ async function build(): Promise<void> {
     if (digest !== v.sha256) throw new BuildError(`vendor/htmx/${v.file}: sha256 ${digest} does not match VENDOR.json's ${v.sha256}`);
     copyFileSync(src, join(out, "assets", v.file));
   }
-  for (const f of ["weave.css", "app.js", "favicon.svg"]) copyFileSync(join(ROOT, "assets-src", f), join(out, "assets", f));
+  const css = minifyCss(readFileSync(join(ROOT, "assets-src", "weave.css"), "utf8"));
+  if (css === "") throw new BuildError("assets-src/weave.css minified to nothing");
+  if (css.includes("/*")) throw new BuildError("assets-src/weave.css: a comment survived minifying (an unclosed /* ?)");
+  writeFileSync(join(out, "assets", "weave.css"), css);
+  for (const f of ["app.js", "favicon.svg"]) copyFileSync(join(ROOT, "assets-src", f), join(out, "assets", f));
 
   // 5. Page shells.
   const ctx: RenderCtx = { api: requiresViews, nav: CORE_NAV };

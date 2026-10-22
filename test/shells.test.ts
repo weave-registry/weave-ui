@@ -6,7 +6,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { htmlShape } from "../vendor/weave/html-shape.js";
+import { HOSTILE_PAYLOADS, htmlShape, sameShape } from "../vendor/weave/html-shape.js";
+import { layout } from "../src/layout.js";
 import { CTX, DIST } from "./helpers.js";
 
 const VIEWS: Record<string, string[]> = {
@@ -43,18 +44,66 @@ test("each shell loads htmx then app.js (deferred, same origin), weave.css and t
   }
 });
 
-test("each shell: the core nav in weave's order, the current page marked, the error region, the JSON encoder on body", () => {
+// The redesign's sidebar (docs/plans/2026-10-23-redesign-spec.md, "The shell"): the nav in two groups.
+const GROUPS: [string, string[]][] = [["Operate", ["home", "work", "factory", "audit"]], ["Fleet", ["machines", "team", "control"]]];
+const TITLES: Record<string, string> = { home: "Home", work: "Work", control: "Control", factory: "Factory", machines: "Machines", team: "Team", task: "Task", audit: "Full record" };
+
+test("each shell: the sidebar — mark, network chip, the nav in two groups (each core page once, its live slot, the current page marked), the sidebar foot", () => {
   for (const p of Object.keys(VIEWS)) {
     const h = shell(p);
-    const links = [...h.matchAll(/<a href="([^"]+)" data-key="([^"]+)"( aria-current="page")?>([^<]+)<\/a>/g)];
-    assert.deepEqual(links.map((m) => m[2]), CTX.nav.map((n) => n.key), `${p}: nav order`);
-    assert.deepEqual(links.map((m) => m[1]), CTX.nav.map((n) => n.path), `${p}: nav paths`);
-    assert.deepEqual(links.filter((m) => m[3]).map((m) => m[2]), p === "task" ? [] : [p], `${p}: aria-current`);
+    assert.match(h, /<div class="app"><aside class="side" aria-label="Sidebar"><a class="brand" href="\/"><span class="mark" aria-hidden="true"><\/span>weave<\/a><div class="net" id="side-net">/, `${p}: sidebar head`);
+    const nav = /<nav id="nav" class="nav" aria-label="Console">([\s\S]*?)<\/nav>/.exec(h)?.[1];
+    assert.ok(nav, `${p}: no nav`);
+    const groups = nav.split(/<span class="nav-group">([^<]+)<\/span>/).slice(1);
+    const seen: [string, string[]][] = [];
+    for (let i = 0; i < groups.length; i += 2) {
+      const links = [...groups[i + 1]!.matchAll(/<a href="([^"]+)" data-key="([^"]+)"( aria-current="page")?><span class="nav-label">([^<]+)<\/span><span class="nav-meta" id="nav-meta-([^"]+)"><\/span><\/a>/g)];
+      for (const m of links) {
+        const entry = CTX.nav.find((n) => n.key === m[2]);
+        assert.ok(entry, `${p}: unknown nav key ${m[2]}`);
+        assert.equal(m[1], entry.path, `${p}: ${m[2]} path`);
+        assert.equal(m[4], entry.label, `${p}: ${m[2]} label`);
+        assert.equal(m[5], m[2], `${p}: ${m[2]} live slot id`);
+        assert.equal(Boolean(m[3]), m[2] === p, `${p}: aria-current on ${m[2]}`);
+      }
+      seen.push([groups[i]!, links.map((m) => m[2]!)]);
+    }
+    assert.deepEqual(seen, GROUPS, `${p}: nav groups`);
+    assert.match(h, /<\/nav><div class="side-foot" id="side-foot"><\/div><\/aside>/, `${p}: sidebar foot`);
     assert.match(h, /<div id="weave-error"[^>]*role="alert"/, `${p}: error region`);
     assert.match(h, /<body[^>]* hx-ext="weave-json"/, `${p}: encoder`);
     assert.match(h, /<body[^>]* data-shell="[a-z]+"/, `${p}: data-shell`);
     assert.match(h, /<html lang="en">/);
     assert.match(h, /<title>[^<]+ · weave<\/title>/);
+  }
+});
+
+test("each shell: the top bar — a breadcrumb naming the page, and a search box that searches the record (GET /audit?find=)", () => {
+  for (const p of Object.keys(VIEWS)) {
+    const h = shell(p);
+    assert.match(h, new RegExp(`<div class="frame"><header class="topbar"><div class="crumb"><span>weave</span> <span class="sep">/</span> <b>${TITLES[p]}</b></div>`), `${p}: crumb`);
+    assert.match(h, /<form class="search" action="\/audit" method="get" role="search"><input type="search" name="find" placeholder="[^"]+" aria-label="Search the record"><\/form><\/header>/, `${p}: search`);
+  }
+});
+
+test("every shell but Home carries the hidden Home feed (#view-home loads /ui/f/home once, then polls itself); Home has its own", () => {
+  for (const p of Object.keys(VIEWS)) {
+    const h = shell(p);
+    assert.equal((h.match(/id="view-home"/g) ?? []).length, 1, `${p}: one #view-home`);
+    if (p === "home") assert.doesNotMatch(h, /id="view-home"[^>]* hidden/);
+    else assert.match(h, /<div id="view-home" hx-get="\/ui\/f\/home" hx-trigger="load" hx-swap="none" hidden><\/div>/, `${p}: feed`);
+  }
+});
+
+test("layout(): a hostile nav label, key or path keeps the shell's shape (escaped by the html tag)", () => {
+  const base = { page: "work", title: "Work", views: [{ name: "work" }], htmxFile: "htmx-2.0.11.min.js" } as const;
+  const ref = layout({ ...base, ctx: { api: "1.2", nav: CTX.nav.map((n) => ({ ...n })) } });
+  for (const p of HOSTILE_PAYLOADS) {
+    for (const field of ["label", "key", "path"] as const) {
+      const nav = CTX.nav.map((n, i) => (i === 3 ? { ...n, [field]: field === "path" ? `/x${p}` : p } : { ...n }));
+      const out = layout({ ...base, ctx: { api: "1.2", nav } });
+      assert.ok(sameShape(ref, out), `${field} = ${JSON.stringify(p.slice(0, 30))}`);
+    }
   }
 });
 

@@ -3,8 +3,13 @@ import { html, toHtml } from "./html.js";
 import type { SafeHtml } from "./html.js";
 
 /**
- * The console's page layout (ADR-0234 §1 "Pages"): the document wrapped around a page's first fragments — head,
- * top bar with the core nav, the out-of-band error region, and one placeholder per view that htmx fills on load.
+ * The console's page layout (ADR-0234 §1 "Pages"): the document wrapped around a page's first fragments — head, the
+ * redesign's sidebar shell (docs/plans/2026-10-23-redesign-spec.md, "The shell": the brand mark, the network chip, the
+ * core nav in two groups — Operate and Fleet — each entry with its live `nav-meta` slot, and the sidebar foot), the top
+ * bar (breadcrumb and record search), the out-of-band error region, and one placeholder per view that htmx fills on
+ * load. Every page but Home also carries the Home feed: a hidden #view-home that loads /ui/f/home once, after which
+ * the home fragment polls itself and fills the sidebar's live slots; weave.css keeps it hidden on these pages
+ * (docs/plans/2026-10-23-redesign.md, decision 4).
  *
  * In Phase 2 the build writes one static shell per core page with it into dist/assets/pages/<page>.html
  * (docs/plans/2026-10-15-weave-ui-phase-2.md, "Page shells"); weave's Phase 3 page routes render the same layout.
@@ -53,10 +58,26 @@ export interface LayoutOptions {
 /** The pages weave renders full width; the rest use the narrower `.page` column. */
 const WIDE_PAGES: ReadonlySet<string> = new Set(["home", "work", "control", "audit"]);
 
+/** The sidebar's nav groups, in order; a nav key in neither group is appended to the first (Operate). */
+const NAV_GROUPS: readonly (readonly [string, readonly string[]])[] = [
+  ["Operate", ["home", "work", "factory", "audit"]],
+  ["Fleet", ["machines", "team", "control"]],
+];
+
 function navLink(n: NavEntry, page: string): SafeHtml {
   return n.key === page
-    ? html`<a href="${n.path}" data-key="${n.key}" aria-current="page">${n.label}</a>`
-    : html`<a href="${n.path}" data-key="${n.key}">${n.label}</a>`;
+    ? html`<a href="${n.path}" data-key="${n.key}" aria-current="page"><span class="nav-label">${n.label}</span><span class="nav-meta" id="nav-meta-${n.key}"></span></a>`
+    : html`<a href="${n.path}" data-key="${n.key}"><span class="nav-label">${n.label}</span><span class="nav-meta" id="nav-meta-${n.key}"></span></a>`;
+}
+
+function navGroups(nav: readonly NavEntry[], page: string): SafeHtml[] {
+  const grouped = new Set(NAV_GROUPS.flatMap(([, keys]) => keys));
+  const rest = nav.filter((n) => !grouped.has(n.key));
+  return NAV_GROUPS.map(([label, keys], i) => {
+    const entries = keys.flatMap((k) => nav.filter((n) => n.key === k));
+    const all = i === 0 ? [...entries, ...rest] : entries;
+    return html`<span class="nav-group">${label}</span>${all.map((n) => navLink(n, page))}`;
+  });
 }
 
 function viewSlot(v: LayoutView): SafeHtml {
@@ -84,6 +105,10 @@ export function layout(o: LayoutOptions): string {
     o.wide ?? WIDE_PAGES.has(page.toLowerCase())
       ? html`<main class="page wide" id="main">${o.intro}${o.views.map(viewSlot)}</main>`
       : html`<main class="page" id="main">${o.intro}${o.views.map(viewSlot)}</main>`;
+  const feed =
+    page.toLowerCase() !== "home"
+      ? html`<div id="view-home" hx-get="/ui/f/home" hx-trigger="load" hx-swap="none" hidden></div>`
+      : "";
   const doc = html`<!doctype html>
 <html lang="en">
 <head>
@@ -97,10 +122,10 @@ export function layout(o: LayoutOptions): string {
 <script src="${"/ui/assets/app.js"}" defer></script>
 </head>
 <body hx-ext="weave-json" data-shell="${page.toLowerCase()}">
-<header class="topbar"><div class="topbar-in"><a class="brand" href="/"><img src="/ui/assets/favicon.svg" alt="" width="20" height="20"> weave</a><nav id="nav" class="nav" aria-label="Console">${ctx.nav.map((n) => navLink(n, page))}</nav></div></header>
+<div class="app"><aside class="side" aria-label="Sidebar"><a class="brand" href="/"><span class="mark" aria-hidden="true"></span>weave</a><div class="net" id="side-net"><span class="dot"></span><span class="net-main"><span class="net-name">weave</span><span class="net-sub">…</span></span></div><nav id="nav" class="nav" aria-label="Console">${navGroups(ctx.nav, page)}</nav><div class="side-foot" id="side-foot"></div></aside><div class="frame"><header class="topbar"><div class="crumb"><span>weave</span> <span class="sep">/</span> <b>${o.title}</b></div><form class="search" action="/audit" method="get" role="search"><input type="search" name="find" placeholder="Search tasks, issues, agents…" aria-label="Search the record"></form></header>
 ${banner}
 <div id="weave-error" class="problem" role="alert" hidden></div>
-${main}
+${main}${feed}</div></div>
 </body>
 </html>
 `;

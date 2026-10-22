@@ -52,7 +52,7 @@ const ratio = (a, b) => {
    painted ON. --surface-warm backs panel headers, toasts and hover rows, so it
    is a real text background; omitting it hid the tightest pair in the system.
    The status hues are text too — .ok / .warn-t / .bad / .hot in colors_and_type. */
-const TEXT = ['--fg', '--fg-2', '--muted', '--meta', '--success', '--warn', '--danger', '--auto', '--accent'];
+const TEXT = ['--fg', '--fg-2', '--muted', '--faint', '--meta', '--success', '--warn', '--danger', '--auto', '--accent'];
 const BACKDROP = [['onBg', '--bg'], ['onSurface', '--surface'], ['onSurfaceWarm', '--surface-warm']];
 
 const contrast = Object.fromEntries(TEXT.map((t) => [
@@ -74,7 +74,7 @@ const theme = {
   note: 'Derived file. Edit the CSS, then run: node tools/check-tokens.mjs',
   color: {
     surface: pick('--bg', '--surface', '--surface-warm'),
-    text: pick('--fg', '--fg-2', '--muted', '--meta'),
+    text: pick('--fg', '--fg-2', '--muted', '--faint', '--meta'),
     line: pick('--border', '--border-soft'),
     accent: pick('--accent', '--accent-on', '--accent-hover', '--accent-active'),
     status: pick('--success', '--warn', '--danger', '--auto'),
@@ -131,7 +131,7 @@ const brand = {
     display: T['--font-display'],
     body: T['--font-body'],
     mono: T['--font-mono'],
-    webfonts: 'Inter 400/500/600/700 + JetBrains Mono 400/500/600 (Google Fonts; no font files ship)',
+    webfonts: 'None ship: Inter and JetBrains Mono are used when installed, else the system stack (system-ui / ui-monospace) — docs/plans/2026-10-23-redesign.md',
     rule: 'Inter for what a human wrote, mono for what a machine produced.',
   },
   assets: {

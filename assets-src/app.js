@@ -697,4 +697,24 @@
     var form = e.target;
     if (form && form.getAttribute && form.getAttribute("aria-busy") === "true") { e.preventDefault(); e.stopPropagation(); }
   }, true);
+  // ── 13. Filter chips (docs/plans/2026-10-23-redesign.md decision 6) ──
+  var chosen = {};
+  function applyFilter(scope) {
+    var name = scope.getAttribute("data-filter-scope");
+    var want = chosen[name] || "all";
+    var found = false;
+    each(scope, "[data-filter]", function (b) { if (b.getAttribute("data-filter") === want) found = true; });
+    if (!found) want = "all";
+    each(scope, "[data-filter]", function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-filter") === want ? "true" : "false"); });
+    each(scope, "[data-cat]", function (r) { r.hidden = want !== "all" && r.getAttribute("data-cat") !== want; });
+  }
+  doc.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest ? e.target.closest("[data-filter]") : null;
+    if (!b) return;
+    var scope = b.closest ? b.closest("[data-filter-scope]") : null;
+    if (!scope) return;
+    chosen[scope.getAttribute("data-filter-scope")] = b.getAttribute("data-filter");
+    applyFilter(scope);
+  });
+  htmx.on("htmx:afterSettle", function () { each(doc, "[data-filter-scope]", applyFilter); });
 })();
