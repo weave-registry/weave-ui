@@ -128,7 +128,9 @@ function toScript(esm: string, header: string): string {
 
 /**
  * weave.css minified (docs/plans/2026-10-23-redesign.md, decision 5): comments removed, whitespace runs collapsed,
- * the spaces around `{`, `}` and `;` dropped, and the space after a selector's `,` dropped. Values are never touched
+ * the spaces around `{`, `}` and `;` dropped, the space after a selector's `,` dropped, and the space after a
+ * declaration's `:` dropped (a declaration being a property name, `--x-y` or `a-b`, directly after `{` or `;`;
+ * selectors are never touched, as `a:hover` has no space after its colon). Values keep their inner spaces
  * (so `1px solid var(--line)` and `rgba(27, 31, 36, .06)` keep their spaces), and every `;` and `:` is kept.
  */
 export function minifyCss(css: string): string {
@@ -137,6 +139,7 @@ export function minifyCss(css: string): string {
     .replace(/\s+/g, " ")
     .replace(/\s*([{};])\s*/g, "$1")
     .replace(/[^{};]+\{/g, (selector) => selector.replace(/,\s+/g, ","))
+    .replace(/([{;])(--[a-z0-9-]+|[a-z-]+):\s+/g, "$1$2:")
     .trim();
 }
 
