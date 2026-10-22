@@ -119,8 +119,12 @@ function taskLink(r: Rec): SafeHtml {
 function pageHead(c: Rec, m: Rec, k: Rec): SafeHtml {
   const budget = rec(c["budget"]);
   const halted = rec(c["halt"])["halted"] === true;
-  const sentence = `${halted ? "Halted" : "Running"} · budget ${money(budget["usd"])} ${budget["source"] === "log" ? "(log)" : "(startup)"} · ${money(k["spentUsd"])} spent in ${txt(k["windowHours"])}h · ${plural(n0(rec(m["tasks"])["total"]), "task")} in ${txt(m["windowHours"])}h.`;
-  return html`<div class="page-head"><h1>Control</h1><span class="sub" id="summary">${sentence}</span></div>`;
+  const state = halted ? html`<span><b class="bad">Halted</b></span>` : html`<span><b class="ok">Running</b></span>`;
+  const spent = money(k["spentUsd"]);
+  const spentB = k["over"] === true ? html`<b class="bad">${spent}</b>` : n0(k["fraction"]) >= 0.9 ? html`<b class="needs">${spent}</b>` : html`<b>${spent}</b>`;
+  const total = n0(rec(m["tasks"])["total"]);
+  const source = budget["source"] === "log" ? html`<b>the log</b>` : html`<b>startup</b>`;
+  return html`<div class="page-head"><h1>Control</h1><div class="stats" id="summary">${state}<span>${spentB} of ${money(budget["usd"])} in ${txt(k["windowHours"])}h</span><span><b>${total}</b> ${total === 1 ? "task" : "tasks"} in ${txt(m["windowHours"])}h</span><span>budget from ${source}</span></div></div>`;
 }
 
 // ---- 1. control plane ----

@@ -110,7 +110,7 @@ code, kbd, samp { font-family: var(--mono); font-size: .92em; }
 .page.wide { max-width: 1384px; }
 body:not([data-shell="home"]) #view-home { display: none !important; }
 .sink { display: none; }
-.page-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--s1) var(--s3); margin-bottom: var(--s5); }
+.page-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-bottom: var(--s5); }
 .page-head h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; margin: 0; }
 .page-head .sub { color: var(--muted); flex: 1 1 240px; }
 .page-head .aside { font-size: var(--t-sm); color: var(--muted); }
@@ -222,6 +222,11 @@ meter[data-tone="bad"], meter[data-tone="over"] { --mf: var(--bad-fill); }
 .stat-value[data-tone="needs"] { color: var(--needs); }
 .stat-value[data-tone="bad"] { color: var(--bad); }
 .stat-sub { font-size: 12px; color: var(--faint); }
+.stats { display: flex; flex-wrap: wrap; gap: 18px; font-size: 13px; color: var(--muted); }
+.stats b { color: var(--fg); font-weight: 600; }
+.stats b.ok { color: var(--ok); }
+.stats b.needs { color: var(--needs); }
+.stats b.bad { color: var(--bad); }
 #model-drift:not(:empty) { margin-top: 20px; }
 #model-drift .table td.mono { font-family: var(--mono); }
 
@@ -394,10 +399,6 @@ input[type="number"] { width: 8em; }
   .view.home .chat { position: static; height: auto; max-height: 80vh; }
 }
 /* ─── work ─── */
-.view.work .page-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
-.view.work .stats { display: flex; flex-wrap: wrap; gap: 18px; font-size: 13px; color: var(--muted); }
-  .view.work .stats b { color: var(--fg); }
-  .view.work .stats b.ok { color: var(--ok); }
 .view.work .board { overflow-x: auto; background: var(--side); }
 .view.work .board-cols { display: grid; grid-template-columns: repeat(7, minmax(180px, 1fr)); min-width: 1260px; }
 .view.work .col { display: flex; flex-direction: column; gap: 10px; padding: 14px 12px; border-right: 1px solid var(--line-soft); min-height: 320px; }

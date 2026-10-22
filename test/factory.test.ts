@@ -12,14 +12,20 @@ const full = factory(fx("factory.full"));
 const yolo = factory(fx("factory.yolo"));
 const live = factory(fx("factory.live"));
 
-test("root: #view-factory, polled, out of band, the Factory nav count", () => {
+test("root: #view-factory, polled, out of band; the sidebar's Factory value comes from Home, not from here", () => {
   const r = /^<section [^>]*>/.exec(full)?.[0] ?? "";
-  for (const a of [`id="view-factory"`, `hx-get="/ui/f/factory"`, `hx-trigger="every 10s"`, `hx-swap="none"`, `hx-swap-oob="true"`, `data-nav-count="factory:2"`]) assert.ok(r.includes(a), `${a} in ${r}`);
+  for (const a of [`id="view-factory"`, `hx-get="/ui/f/factory"`, `hx-trigger="every 10s"`, `hx-swap="none"`, `hx-swap-oob="true"`]) assert.ok(r.includes(a), `${a} in ${r}`);
+  assert.doesNotMatch(r, /data-nav-count/);
+});
+
+test("head: the numbers row — in the pipeline, need you, completed, in the backlog", () => {
+  assert.match(full, /<div class="page-head"><h1>Factory<\/h1><div class="stats"><span><b>3<\/b> in the pipeline<\/span><span><b class="needs">2<\/b> need you<\/span><span><b class="ok">1<\/b> completed<\/span><span><b>2<\/b> in the backlog<\/span><\/div><\/div>/);
+  assert.match(live, /<div class="page-head"><h1>Factory<\/h1><div class="stats"><span><b>0<\/b> in the pipeline<\/span><span><b>0<\/b> need you<\/span>/);
 });
 
 test("head and yolo card: off with why, the duration picker; on with time left and Turn off", () => {
   assert.match(full, /<h1>Factory<\/h1>/);
-  assert.ok(full.includes("Issues on their way from report to pull request."));
+  assert.match(full, /<details class="more"><summary>What yolo does<\/summary>/);
   assert.match(full, /Yolo mode/);
   assert.match(full, /Off — it expired <time/);
   assert.match(full, /<select name="for" class="yolo-pick" aria-label="For how long">/);

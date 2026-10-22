@@ -16,10 +16,9 @@ test("root: #view-control, polled, out of band", () => {
   for (const a of [`id="view-control"`, `hx-get="/ui/f/control"`, `hx-trigger="every 15s"`, `hx-swap="none"`, `hx-swap-oob="true"`]) assert.ok(r.includes(a), `${a} in ${r}`);
 });
 
-test("head: Control and its summary line", () => {
-  assert.match(full, /<h1>Control<\/h1>/);
-  assert.match(full, /Halted · budget \$25\.00 \(log\) · \$26\.50 spent in 24h · 9 tasks in 24h\./);
-  assert.match(live, /Running · budget \$25\.00 \(startup\)/);
+test("head: Control and its numbers row — running or halted, spend against the budget, tasks, the budget's source", () => {
+  assert.match(full, /<div class="page-head"><h1>Control<\/h1><div class="stats" id="summary"><span><b class="bad">Halted<\/b><\/span><span><b class="bad">\$26\.50<\/b> of \$25\.00 in 24h<\/span><span><b>9<\/b> tasks in 24h<\/span><span>budget from <b>the log<\/b><\/span><\/div><\/div>/);
+  assert.match(live, /<div class="stats" id="summary"><span><b class="ok">Running<\/b><\/span><span><b>\$[0-9.]+<\/b> of \$25\.00 in 24h<\/span>.*budget from <b>startup<\/b>/);
 });
 
 test("control plane: budget with its source, halt with who and Resume, autonomy and guard, config", () => {

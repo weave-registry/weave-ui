@@ -25,8 +25,13 @@ export function factory(vm: FactoryBoardView, ctx: RenderCtx): string {
   const k = live.filter((x) => x.n > 0).length;
 
   return toHtml(
-    html`<section id="view-factory" class="view factory" hx-get="/ui/f/factory" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true" data-nav-count="factory:${k}"><div class="page-head"><h1>Factory</h1><span class="sub">Issues on their way from report to pull request.</span></div>${yoloCard(v["yolo"])}${supervisorCard(v["supervisor"])}${newForm()}${backlogSection(v["backlog"])}${issuesSection(live.map((x) => x.r), completed, k, autonomous)}</section>`,
+    html`<section id="view-factory" class="view factory" hx-get="/ui/f/factory" hx-trigger="every 10s" hx-swap="none" hx-swap-oob="true">${pageHead(live.length, k, completed.length, v["backlog"])}${yoloCard(v["yolo"])}${supervisorCard(v["supervisor"])}${newForm()}${backlogSection(v["backlog"])}${issuesSection(live.map((x) => x.r), completed, k, autonomous)}</section>`,
   );
+}
+
+function pageHead(live: number, k: number, c: number, backlog: unknown): SafeHtml {
+  const backlogSpan = isObj(backlog) ? html`<span><b>${arr(rec(backlog)["issues"]).length}</b> in the backlog</span>` : "";
+  return html`<div class="page-head"><h1>Factory</h1><div class="stats"><span><b>${live}</b> in the pipeline</span><span>${k > 0 ? html`<b class="needs">${k}</b>` : html`<b>${k}</b>`} need you</span><span>${c > 0 ? html`<b class="ok">${c}</b>` : html`<b>${c}</b>`} completed</span>${backlogSpan}</div></div>`;
 }
 
 // ---- guards ----
@@ -136,7 +141,7 @@ function yoloCard(y: unknown): SafeHtml | "" {
     line = html`Off${why}${env}`;
     control = actionForm({ yolo: { on: true } }, { label: "Turn yolo on", extra: yoloPick() });
   }
-  return html`<section class="card" id="yolo"><div class="card-title">Yolo mode</div><div class="status" data-tone="${yo["on"] === true ? "work" : "idle"}">${line}</div><div class="card-why">While it is on, the factory advances and re-runs stages, small, evidenced factory pull requests merge themselves (within the cap), and fleet requests (install, start, stop, roles) run without your Approve. It turns itself off when the time is up, or at any halt. Except a stage${"'"}s own gate commands and what the chief of staff approves inside its hard floor, parked grants and the guard still wait for you.</div><div class="actions">${control}</div></section>`;
+  return html`<section class="card" id="yolo"><div class="card-title">Yolo mode</div><div class="status" data-tone="${yo["on"] === true ? "work" : "idle"}">${line}</div><div class="actions">${control}</div><details class="more"><summary>What yolo does</summary><div class="card-why">While it is on, the factory advances and re-runs stages, small, evidenced factory pull requests merge themselves (within the cap), and fleet requests (install, start, stop, roles) run without your Approve. It turns itself off when the time is up, or at any halt. Except a stage${"'"}s own gate commands and what the chief of staff approves inside its hard floor, parked grants and the guard still wait for you.</div></details></section>`;
 }
 
 // ---- 2. supervisor card ----
