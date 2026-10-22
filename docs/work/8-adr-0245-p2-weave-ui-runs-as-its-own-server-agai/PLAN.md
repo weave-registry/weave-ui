@@ -1,0 +1,57 @@
+# Plan: weave-ui runs as its own server against weave's /api/v1 (#8, weave ADR-0245 P2)
+
+No PLAN.md existed when the build stage began (the plan stage left no artifact), so the build stage wrote this one from the
+issue text and the code. #8 is several PRs ("small PRs based on main; stop at green CI"). **This build is PR 1 of P2:
+the server's configuration and the browser-side protections**, each pure and testable without a running weave.
+The rest is listed so the next stages and PRs know where this stops.
+
+## Files that change (PR 1)
+- `test/server/trust.test.ts`, `test/server/config.test.ts`, `test/server/security.test.ts` — new, written first (red).
+- `src/server/trust.ts` — new: `parseCidr`, `isTrusted` (the `--trust-cidr` rule; IPv4, IPv6, v4-mapped).
+- `src/server/config.ts` — new: `loadConfig(env, argv)` → `{ weaveUrl, secret, host, port, trustCidrs }`; `ConfigError`.
+  WEAVE_URL (http/https, any host, no userinfo/query/fragment), WEAVE_CONSOLE_SECRET (env only — the module imports no
+  file API), WEAVE_UI_PORT (default 8790), WEAVE_UI_HOST (default 127.0.0.1), `--trust-cidr` / WEAVE_UI_TRUST_CIDR.
+- `src/server/security.ts` — new: `securityHeaders()` (CSP + nosniff, no-referrer, DENY, no-store), `csrfToken`,
+  `checkCsrf` (token header + Origin / Sec-Fetch-Site).
+
+Nothing under `src/templates/`, `src/ui/`, `contract/` or `dist/` changes in PR 1, so the bundle weave loads today
+is byte-identical.
+
+## Order of work (build steps: file — instruction — evidence)
+1. `src/server/trust.ts` — implement parseCidr/isTrusted — `node --import tsx --test test/server/trust.test.ts`
+2. `src/server/config.ts` — implement loadConfig/ConfigError (uses trust.ts) — `node --import tsx --test test/server/config.test.ts`
+3. `src/server/security.ts` — implement securityHeaders/csrfToken/checkCsrf — `node --import tsx --test test/server/security.test.ts`
+4. Gate, once: `npm run typecheck && node --import tsx --test test/*.test.ts test/server/*.test.ts` (and `bun run test` in CI).
+
+## Later PRs of P2 (not in this build)
+- **PR 2 — the weave client** (`src/server/weave-client.ts`): credential as a header only; over TLS, check
+  `x-weave-cert-hmac` on `/health` before the first credentialed request (ADR-0064); `/api/v1/bar`; `x-refresh` read
+  from the OpenAPI document; `GET /api/v1/file?path=&task=` returning text or base64.
+- **PR 3 — the changes fan-out**: one subscription to `/api/v1/changes` (view names, Last-Event-ID resume), fanned out to
+  browsers over SSE.
+- **PR 4 — the HTTP server and pages**: `src/server/main.ts` (Bun/Node, own port), routes rendering the existing
+  templates, login + passkeys, `/file` route (the `/file?path=` links in `home.ts:548` and `task.ts:95` gain `&task=`
+  where a task is in scope), `weave halt` / `weave resume` shown as text, the systemd user unit
+  (`weave secret exec -- …` supplies WEAVE_CONSOLE_SECRET).
+- **PR 5 — contract v1.2**: re-vendor `contract/console-views-v1.d.ts` from weave main; update `contract/SOURCE.json`
+  and `vendor/SHA256SUMS`. Needs weave's main checkout — the build sandbox has none and no network path to it.
+
+## Risks
+- **Header name and HMAC recipe are weave's to define.** The credential header and the `x-weave-cert-hmac` computation
+  are not in this repository; PR 2 must take them from weave's `docs/api` / ADR-0064, not from a guess. PR 1 avoids them.
+- **Trust-by-address is dangerous behind a proxy.** `isTrusted` takes the socket peer address; PR 4 must never feed it
+  `x-forwarded-for`. Default is no trusted networks.
+- **CSRF on htmx.** htmx requests need the token; PR 4 adds it via a `<meta>` read by `app.js` on `htmx:configRequest`
+  (no `hx-headers`/inline script — the CSP and the shape test forbid it).
+- **Bundle purity.** `src/server/**` must stay out of the templates entry (`src/templates/index.ts`); the purity scan
+  refuses `process`, `fetch`, etc. in `dist/templates.js`. Not searched: whether `scripts/lint.ts` globs `src/**`.
+- **`bun` is not on the sandbox PATH**, so per-step evidence uses `node --import tsx --test`, not `bun run test`.
+
+## Proof
+Per-step tests above; `tsc -p tsconfig.json --noEmit`; the whole `test/*.test.ts` suite (existing tests unchanged and
+green); CI's `typecheck · tests · purity · lint` and `tokens · build · size budget` on the PR.
+
+## Loop
+`hexa_loop` adr: no ADR exists in this repository (`docs/adrs/` is empty; the decision is weave's ADR-0245).
+gate: `npm run typecheck && node --import tsx --test test/server/*.test.ts`
+evidence: `node --import tsx --test test/*.test.ts test/server/*.test.ts`
