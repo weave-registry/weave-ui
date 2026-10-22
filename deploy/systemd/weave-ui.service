@@ -19,8 +19,8 @@ Type=simple
 # A weave-ui checkout, built with 'bun run build'.
 WorkingDirectory=%h/.local/share/weave-ui
 Environment=PATH=%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
-# Point at your weave; a plain http URL is accepted only on loopback.
-Environment=WEAVE_URL=https://127.0.0.1:8788
+# Point at your weave. Same host: http://127.0.0.1:<port> (weave serves TLS only off loopback). Another host: https://<host>:<port> — weave-ui checks its x-weave-cert-hmac before sending the secret.
+Environment=WEAVE_URL=http://127.0.0.1:8788
 #Environment=WEAVE_UI_PORT=8790
 #Environment=WEAVE_UI_HOST=127.0.0.1
 #Environment=WEAVE_UI_TRUST_CIDR=192.168.1.0/24
@@ -30,6 +30,7 @@ RestartSec=5
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
+# weave secret exec reads the secret through weave's broker socket; read-only home is enough to connect to it.
 ProtectHome=read-only
 ProtectKernelTunables=yes
 ProtectControlGroups=yes
