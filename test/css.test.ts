@@ -88,3 +88,11 @@ test("Home's controls: the yolo switch, the spend head, and compact buttons insi
   assert.match(css, /\.view\.home \.spend-head\s*\{[^}]*justify-content:\s*space-between/);
   assert.match(css, /\.lrow-acts \.btn\s*\{[^}]*min-height:\s*28px/);
 });
+
+test("the favicon is the redesign's mark: the amber wave on the ground", () => {
+  const svg = readFileSync(join(ROOT, "assets-src", "favicon.svg"), "utf8");
+  assert.match(svg, /M3 7c3 0 3 10 6 10s3-10 6-10 3 10 6 10/);
+  assert.match(svg, /#f2a93b/i);
+  assert.match(svg, /#0e1014/i);
+  assert.doesNotMatch(svg, /--/, "no double hyphen: an <img> SVG is strict XML");
+});
