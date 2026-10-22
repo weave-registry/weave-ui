@@ -10,7 +10,7 @@ import { panel } from "../ui/panel.js";
  * docs/plans/2026-10-23-redesign-spec.md, ## Components and ## Home), as one out-of-band htmx fragment: the health
  * banner, the KPI strip, Needs you as dense rows with filter chips, the side column (machines, autonomy, control
  * plane), the lower row (working now, done recently, decided for you, Ask weave), then the sidebar's out-of-band
- * fragments (#side-net, #nav-meta-<key>, #side-foot; decision 4), which follow the section with nothing between.
+ * fragments (#side-net, #nav-meta-<key>, #side-foot, then Machines' #host-telemetry and #model-drift; decision 4), which follow the section with nothing between.
  *
  * Halt and resume are never posted (ADR-0245 §3): actionForm renders {fleet:"halt"|"resume"} as its CLI command.
  *
@@ -639,7 +639,54 @@ function sidebarFragments(status: Rec, facts: Rec, work: Rec, needsCount: number
       : "";
   const halt = verdict === "halted" ? html`<span class="side-halted">■ Fleet halted</span>` : actionForm({ fleet: "halt" }, { label: "Halt", tone: "danger" });
 
-  return html`${net}<span id="nav-meta-home" hx-swap-oob="innerHTML">${navHome}</span><span id="nav-meta-work" hx-swap-oob="innerHTML">${navWork}</span><span id="nav-meta-factory" hx-swap-oob="innerHTML">${navFactory}</span><span id="nav-meta-machines" hx-swap-oob="innerHTML">${navMachines}</span><span id="nav-meta-team" hx-swap-oob="innerHTML">${navTeam}</span><span id="nav-meta-control" hx-swap-oob="innerHTML">${navControl}</span><div id="side-foot" hx-swap-oob="innerHTML">${yoloRow}${spendRow}<div class="side-halt">${halt}</div></div>`;
+  return html`${net}<span id="nav-meta-home" hx-swap-oob="innerHTML">${navHome}</span><span id="nav-meta-work" hx-swap-oob="innerHTML">${navWork}</span><span id="nav-meta-factory" hx-swap-oob="innerHTML">${navFactory}</span><span id="nav-meta-machines" hx-swap-oob="innerHTML">${navMachines}</span><span id="nav-meta-team" hx-swap-oob="innerHTML">${navTeam}</span><span id="nav-meta-control" hx-swap-oob="innerHTML">${navControl}</span><div id="side-foot" hx-swap-oob="innerHTML">${yoloRow}${spendRow}<div class="side-halt">${halt}</div></div>${telemetryFragment(facts, work)}${driftFragment(facts)}`;
+}
+
+function stat(label: string, value: string, tone: string, sub: string): SafeHtml {
+  return html`<div class="stat"><div class="stat-label">${label}</div><div class="stat-value num" data-tone="${tone}">${value}</div><div class="stat-sub">${sub}</div></div>`;
+}
+
+/** Machines' per-host telemetry tiles (#host-telemetry): load, memory, slots. */
+function telemetryFragment(facts: Rec, work: Rec): SafeHtml {
+  const slotsOn = new Map<string, Rec>();
+  for (const m of arr(work["machines"]).map(rec)) slotsOn.set(str(m["node"]), m);
+  const tiles = arr(facts["machines"])
+    .map(rec)
+    .map((m) => {
+      const node = str(m["node"]);
+      const cpus = n0(m["cpus"]);
+      const load = n0(m["load1"]);
+      const ratio = cpus > 0 ? load / cpus : 0;
+      const memAvail = num(m["memAvailablePct"]);
+      const mem = memAvail !== undefined ? 100 - memAvail : undefined;
+      const gpu = typeof m["gpu"] === "object" && m["gpu"] !== null;
+      const w = slotsOn.get(node);
+      const slots = w !== undefined ? `${n0(w["inUse"])} / ${n0(w["slots"])}` : "—";
+      return html`<div class="tele panel"><div class="tele-head"><span class="dot" data-tone="ok"></span><b>${node}</b><span class="tele-spec">${plural(cpus, "core")}${gpu ? " · GPU" : ""}</span></div><div class="tele-stats">${stat("Load", String(load), ratio >= 0.85 ? "bad" : ratio >= 0.6 ? "needs" : "ok", `of ${plural(cpus, "core")}`)}${stat("Memory", mem !== undefined ? `${mem}%` : "—", mem !== undefined && mem >= 90 ? "bad" : "", "in use")}${stat("Slots", slots, "", "busy")}</div></div>`;
+    });
+  return html`<div id="host-telemetry" hx-swap-oob="innerHTML">${tiles}</div>`;
+}
+
+/** Machines' model-setting drift table (#model-drift): one column per gateway, empty when nothing differs. */
+function driftFragment(facts: Rec): SafeHtml {
+  const models = arr(facts["modelSources"]).map(rec);
+  if (models.length === 0) return html`<div id="model-drift" hx-swap-oob="innerHTML"></div>`;
+  const gateways: string[] = [];
+  for (const m of models) {
+    for (const val of arr(m["values"]).map(rec)) {
+      const g = str(val["gateway"]);
+      if (!gateways.includes(g)) gateways.push(g);
+    }
+  }
+  const rows = models.map((m) => {
+    const values = arr(m["values"]).map(rec);
+    const cells = gateways.map((g) => {
+      const val = values.find((x) => str(x["gateway"]) === g);
+      return val !== undefined ? html`<td>${str(val["value"])} <span class="muted">${str(val["source"])}</span></td>` : html`<td class="muted">—</td>`;
+    });
+    return html`<tr><td class="mono">${str(m["setting"])}</td>${cells}</tr>`;
+  });
+  return html`<div id="model-drift" hx-swap-oob="innerHTML"><section class="panel"><div class="panel-head"><h2>Model settings that differ</h2><span class="pill" data-tone="needs">${plural(models.length, "setting")}</span></div><div class="table-wrap"><table class="table"><thead><tr><th>Setting</th>${gateways.map((g) => html`<th>${g}</th>`)}</tr></thead><tbody>${rows}</tbody></table></div></section></div>`;
 }
 
 // ---- ask weave turns ----
