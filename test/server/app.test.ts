@@ -86,7 +86,7 @@ async function call(
   const req = Readable.from(r.body !== undefined ? [Buffer.from(r.body)] : []) as unknown as IncomingMessage & Record<string, unknown>;
   req.method = r.method ?? "GET";
   req.url = r.url;
-  req.headers = { host: "127.0.0.1:8790", ...(r.headers ?? {}) };
+  req.headers = { host: "127.0.0.1:8789", ...(r.headers ?? {}) };
   Object.defineProperty(req, "socket", { value: { remoteAddress: r.remote ?? "127.0.0.1" } });
   return new Promise<Reply>((resolve) => {
     const headers: Record<string, string | string[]> = {};
@@ -172,7 +172,7 @@ async function session(app: Parameters<typeof call>[0]): Promise<{ cookie: strin
 const writeHeaders = (s: { cookie: string; token: string }, extra: Record<string, string> = {}): Record<string, string> => ({
   "hx-request": "true",
   "content-type": "application/json",
-  origin: "http://127.0.0.1:8790",
+  origin: "http://127.0.0.1:8789",
   "sec-fetch-site": "same-origin",
   cookie: s.cookie,
   "x-csrf-token": s.token,
@@ -193,7 +193,7 @@ test("/health answers anyone, names the upstream without the secret, and says wh
 test("an address that is neither loopback nor a --trust-cidr network gets a 403 page saying how to admit it, and nothing goes upstream", async () => {
   const { app, calls } = make();
   for (const url of ["/", "/ui/f/home", "/events", "/file?path=/a"]) {
-    const r = await call(app, { url, remote: "203.0.113.9", headers: { host: "bazzite.lan:8790" } });
+    const r = await call(app, { url, remote: "203.0.113.9", headers: { host: "bazzite.lan:8789" } });
     assert.equal(r.status, 403, url);
     assert.match(r.body, /--trust-cidr/);
     assert.match(String(r.headers["content-type"]), /^text\/html/);
@@ -203,9 +203,9 @@ test("an address that is neither loopback nor a --trust-cidr network gets a 403 
 
 test("a --trust-cidr network is admitted; a rebinding Host or a cross-site fetch is not, even from loopback", async () => {
   const { app } = make({}, ["192.168.1.0/24"]);
-  assert.equal((await call(app, { url: "/", remote: "192.168.1.5", headers: { host: "bazzite.lan:8790" } })).status, 200);
+  assert.equal((await call(app, { url: "/", remote: "192.168.1.5", headers: { host: "bazzite.lan:8789" } })).status, 200);
   assert.equal((await call(app, { url: "/", remote: "::ffff:127.0.0.1" })).status, 200);
-  assert.equal((await call(app, { url: "/", headers: { host: "evil.example.com:8790" } })).status, 403);
+  assert.equal((await call(app, { url: "/", headers: { host: "evil.example.com:8789" } })).status, 403);
   assert.equal((await call(app, { url: "/", headers: { "sec-fetch-site": "cross-site" } })).status, 403);
 });
 

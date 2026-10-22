@@ -11,7 +11,7 @@ test("a minimal environment gives a config with defaults: loopback, an own port,
   assert.equal(c.weaveUrl, "https://weave.lan:8443");
   assert.equal(c.secret, "s3cret-value");
   assert.equal(c.host, "127.0.0.1");
-  assert.equal(c.port, 8790);
+  assert.equal(c.port, 8789);
   assert.deepEqual(c.trustCidrs, []);
 });
 

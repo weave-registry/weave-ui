@@ -10,7 +10,7 @@ The rest is listed so the next stages and PRs know where this stops.
 - `src/server/trust.ts` — new: `parseCidr`, `isTrusted` (the `--trust-cidr` rule; IPv4, IPv6, v4-mapped).
 - `src/server/config.ts` — new: `loadConfig(env, argv)` → `{ weaveUrl, secret, host, port, trustCidrs }`; `ConfigError`.
   WEAVE_URL (http/https, any host, no userinfo/query/fragment), WEAVE_CONSOLE_SECRET (env only — the module imports no
-  file API), WEAVE_UI_PORT (default 8790), WEAVE_UI_HOST (default 127.0.0.1), `--trust-cidr` / WEAVE_UI_TRUST_CIDR.
+  file API), WEAVE_UI_PORT (default 8790; 8789 since the 2026-10-22 decision below), WEAVE_UI_HOST (default 127.0.0.1), `--trust-cidr` / WEAVE_UI_TRUST_CIDR.
 - `src/server/security.ts` — new: `securityHeaders()` (CSP + nosniff, no-referrer, DENY, no-store), `csrfToken`,
   `checkCsrf` (token header + Origin / Sec-Fetch-Site).
 
@@ -84,7 +84,7 @@ evidence: `node --import tsx --test test/*.test.ts test/server/*.test.ts`
   address trust. **PR 6 — the systemd user unit.**
 - **Login in P2 is address trust only** (loopback + `--trust-cidr`, with ADR-0220's Host and Sec-Fetch-Site rules);
   a request from anywhere else gets a page saying how to admit it. Accounts and passkeys move at P4 (ADR-0245 §5,
-  "Until P4 weave's accounts and login stay as they are"). Recorded as an open question for the operator.
+  "Until P4 weave's accounts and login stay as they are"). Decided by the operator 2026-10-22 (below).
 - **PR 5 merged** (#13): the HTTP server (`app.ts`, `main.ts`, `serve.ts`, `bun run serve`). Also fixed: the client's
   connect timeout and an abortable `changes()` that `hub.stop()` cancels.
 - **PR 6 — the systemd user unit**: `deploy/systemd/weave-ui.service` (secret only via `weave secret exec`, hardened;
@@ -94,3 +94,11 @@ evidence: `node --import tsx --test test/*.test.ts test/server/*.test.ts`
   own pages do); per-platform binaries and the release; a credential path for a weave-ui on another host
   (`LoadCredentialEncrypted=` / a 0600 file, ADR-0245 §3); a live smoke against a weave with `WEAVE_CONSOLE_SECRET`
   minted (P3's parity run covers it).
+
+## Operator decisions (2026-10-22)
+- **(a) P2 login is address trust only**: loopback plus `--trust-cidr` / `WEAVE_UI_TRUST_CIDR`, under ADR-0220's Host
+  and Sec-Fetch-Site rules. No accounts, passwords or passkeys in weave-ui during P2; they move at P4 per ADR-0245 §5.
+- **(b) The default port is 8789**, matching ADR-0245 (it was 8790). `src/server/config.ts`'s `DEFAULT_PORT`, the
+  config test's assertion (a spec change, approved), the unit template and `docs/running-the-server.md` all moved
+  together; the other server tests' `:8790` host strings followed for consistency. Fleet fixtures keep `:8790`: those
+  are weave peer URLs, not weave-ui's.

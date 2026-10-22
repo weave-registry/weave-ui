@@ -49,7 +49,7 @@ value moved there by hand (ADR-0245 §3) and a way to inject it, which this temp
 |---|---|---|
 | `WEAVE_URL` | — (required) | weave's console port. `http:` only to loopback; off loopback use `https:` — weave-ui checks `/health`'s `x-weave-cert-hmac` over the certificate it sees before it sends the secret (ADR-0064 channel binding) |
 | `WEAVE_CONSOLE_SECRET` | — (required) | the console credential, from the environment only |
-| `WEAVE_UI_PORT` | `8790` | where weave-ui listens |
+| `WEAVE_UI_PORT` | `8789` | where weave-ui listens |
 | `WEAVE_UI_HOST` | `127.0.0.1` | the address it binds |
 | `--trust-cidr <cidr>` / `WEAVE_UI_TRUST_CIDR` | none | networks admitted besides loopback (ADR-0220's rule: socket address, a `Host` no stranger can point here, no cross-site fetch) |
 | `--insecure-upstream` | off | allow plain `http:` to a weave off loopback; the banner and `/health` say so |

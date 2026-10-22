@@ -24,7 +24,7 @@ interface Anchor {
   setAttribute(n: string, v: string): void;
 }
 
-const ORIGIN = "http://127.0.0.1:8790";
+const ORIGIN = "http://127.0.0.1:8789";
 
 function anchor(path: string): Anchor {
   const a: Anchor = {
