@@ -262,3 +262,20 @@ test("stop() ends every browser stream and makes no further upstream request", a
     await s.close();
   }
 });
+
+test("stop() aborts a subscription still being opened, through the signal the hub passes to the source", async () => {
+  const signals: (AbortSignal | undefined)[] = [];
+  const hub = createChangesHub({
+    source: {
+      changes: (_id?: string, signal?: AbortSignal) => {
+        signals.push(signal);
+        return new Promise((_resolve, reject) => signal?.addEventListener("abort", () => reject(Object.assign(new Error("aborted"), { status: 0 }))));
+      },
+    },
+  });
+  hub.start();
+  await waitFor(() => signals.length === 1, "the subscription attempt");
+  assert.ok(signals[0], "the hub passes a signal");
+  await hub.stop();
+  assert.equal(signals[0]?.aborted, true);
+});

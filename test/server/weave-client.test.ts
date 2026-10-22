@@ -242,3 +242,10 @@ test("an unreachable weave is code 'upstream-unreachable', and the message names
   const e = await rejectsWith(c.view("home"), "upstream-unreachable");
   assert.match(e.message, /127\.0\.0\.1:1/);
 });
+
+test("a weave that never answers the connection (a black-holed address) fails within timeoutMs, not the OS's connect timeout", async () => {
+  const c = createWeaveClient({ weaveUrl: "http://10.255.255.1:9", secret: SECRET, insecureUpstream: true, timeoutMs: 300 });
+  const started = Date.now();
+  await rejectsWith(c.view("home"), "upstream-unreachable");
+  assert.ok(Date.now() - started < 3000, `took ${Date.now() - started} ms`);
+});
