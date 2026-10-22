@@ -124,6 +124,18 @@
     return hasBody ? body : root;
   }
 
+  // The value of the cookie named exactly `name`, or "" (absent, empty, or not valid percent-encoding).
+  function cookie(name) {
+    var parts = String(doc.cookie || "").split(";");
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i].trim();
+      var eq = part.indexOf("=");
+      if (eq === -1 || part.slice(0, eq) !== name) continue;
+      try { return decodeURIComponent(part.slice(eq + 1)); } catch (e) { return ""; }
+    }
+    return "";
+  }
+
   htmx.defineExtension("weave-json", {
     onEvent: function (name, evt) {
       if (name !== "htmx:configRequest") return;
@@ -145,6 +157,9 @@
         return false;
       }
       d.headers["Content-Type"] = "application/json";
+      // ADR-0245 §5: weave-ui's own server checks a double-submit CSRF token on every non-GET; GETs never carry it
+      var csrf = cookie("wui_csrf");
+      if (csrf) d.headers["X-CSRF-Token"] = csrf;
     },
     encodeParameters: function (xhr, parameters, elt) {
       if (elt && typeof elt === "object" && getElts.has(elt)) return null;
@@ -550,8 +565,12 @@
   var SHELLS = { "/": "home", "/work": "work", "/control": "control", "/factory": "factory", "/machines": "machines",
     "/peers": "machines", "/team": "team", "/task": "task", "/audit": "audit" };
   var shell = doc.body && doc.body.getAttribute("data-shell") != null;
+  // ADR-0245 §5: only a static shell (served as /ui/assets/pages/<key>.html) needs its links pointed at the other
+  // shells; served by weave-ui's own server at /, /work, /task …, the page's links are already its own URLs.
+  var staticShell = location.pathname.indexOf("/ui/assets/pages/") === 0;
 
   function rewriteLinks(root) {
+    if (!staticShell) return;
     each(root, "a[href]", function (a) {
       if (a.origin !== location.origin) return;
       var key = SHELLS[a.pathname];
@@ -571,7 +590,7 @@
         el.removeAttribute("hx-trigger");
       }
     });
-    // (b) the shells link to each other
+    // (b) the static shells link to each other (rewriteLinks does nothing on weave-ui's own server)
     rewriteLinks(doc);
   }
 
