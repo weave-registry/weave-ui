@@ -1,9 +1,9 @@
 {
   "file": "console-views-v1.d.ts",
-  "contract": "1.0",
-  "weaveTag": "v0.2.180",
-  "weaveCommit": "2e067ba0",
-  "from": "https://git.local/gary/weave/src/tag/v0.2.180/docs/api/console-views-v1.d.ts",
-  "sha256": "ebbbe31c7acaea4e6aa09f47c98ed24b36814217da22f10ceaf5fc533786d62c",
-  "note": "First generated at c4e6e3a7 (ADR-0234 Phase 1); byte-identical at the v0.2.180 tag."
+  "contract": "1.2",
+  "weaveTag": "v0.2.184",
+  "weaveCommit": "2518f6e0",
+  "from": "https://git.local/gary/weave/src/tag/v0.2.184/docs/api/console-views-v1.d.ts",
+  "sha256": "32f7da3eba47d6203eb32f440d4137ef40c603f1ecee0ccaf1d0823f39ac8902",
+  "note": "Re-vendored for ADR-0245 P2 (contract 1.2: bar and file views, /api/v1/changes). Last changed in weave at 2518f6e0; byte-identical at the v0.2.184 tag and at forge/main 772ef233."
 }

@@ -33,7 +33,7 @@ test("dist/ holds templates.js, manifest.json and assets/ — the three things w
 test("manifest: version from package.json, requiresViews from the vendored contract, the htmx version", () => {
   const m = manifest();
   assert.equal(m.version, pkg.version);
-  assert.equal(contractVersion, "1.0");
+  assert.equal(contractVersion, "1.2");
   assert.equal(m.requiresViews, contractVersion);
   assert.equal(m.htmx, vendor.htmx.version);
 });

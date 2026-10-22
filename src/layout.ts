@@ -13,7 +13,7 @@ import type { SafeHtml } from "./html.js";
  */
 
 /** The contract this bundle was built against; a different `ctx.api` shows the version-skew banner (ADR-0234 §9). */
-const BUILT_FOR: ConsoleApiVersion = "1.0";
+const BUILT_FOR: ConsoleApiVersion = "1.2";
 
 /** htmx configuration. 4xx/5xx responses swap so weave's error fragment (#weave-error, out of band) is shown. */
 export const HTMX_CONFIG = {
