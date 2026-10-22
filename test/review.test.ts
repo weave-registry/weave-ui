@@ -22,13 +22,20 @@ test("Control can stop the fleet: Halt on the running card, the yolo switch on t
   assert.match(full, /<input type="hidden" name="off:bool" value="true">/);
 });
 
-test("Home: Halt is a danger control, every Resume asks first, and one set of fleet controls", () => {
+test("Home: Halt and Resume are their CLI commands as text (ADR-0245 §3), and one set of fleet controls", () => {
   const live = T.home!(fx("home.live"), CTX);
-  assert.match(live, /<button class="btn danger" type="submit">■ Halt<\/button>/);
+  assert.match(live, /Halt from the command line: <code>weave halt<\/code>/);
   const halted = T.home!(fx("home.halted"), CTX);
-  for (const m of halted.matchAll(/<form [^>]*hx-post="\/ui\/a\/fleet"[^>]*>/g)) assert.match(m[0], /data-confirm="/, m[0]);
-  const resumes = (halted.match(/name="@" value="resume"/g) ?? []).length;
-  assert.ok(resumes <= 2, `${resumes} Resume forms on a halted Home`);
+  assert.match(halted, /Resume from the command line: <code>weave resume<\/code>/);
+  const resumes = (halted.match(/<code>weave resume<\/code>/g) ?? []).length;
+  assert.ok(resumes <= 2, `${resumes} Resume commands on a halted Home`);
+});
+
+test("no page posts the fleet action: the console credential may not halt or resume (ADR-0245 §3)", () => {
+  for (const f of fixtures()) {
+    const out = T[f.template]!(f.vm, CTX);
+    assert.doesNotMatch(out, /\/ui\/a\/fleet"/, `${f.template}.${f.name}`);
+  }
 });
 
 test("no link into a dropped page: no bare /task, no /knowledge", () => {

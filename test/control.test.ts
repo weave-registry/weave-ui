@@ -28,7 +28,9 @@ test("control plane: budget with its source, halt with who and Resume, autonomy 
   assert.match(full, /Halted \(drain\)/);
   assert.ok(full.includes("budget · over budget"));
   assert.ok(full.includes("gary@bazzite · pid 123 · gateway"));
-  assert.match(full, /hx-post="\/ui\/a\/fleet"[^>]*data-confirm="Resume the fleet\? Peers start claiming and spending again — and a budget halt comes back while the spend is still over\."><input type="hidden" name="@" value="resume"><button class="btn primary" type="submit">Resume fleet<\/button>/);
+  // ADR-0245 §3: halt and resume are `weave halt` / `weave resume`, shown as text — the console credential may not.
+  assert.match(full, /<div class="actions"><span class="cli">Resume from the command line: <code>weave resume<\/code><\/span><\/div>/);
+  assert.doesNotMatch(full, /\/ui\/a\/fleet/);
   assert.ok(live.includes("Not halted — peers claim normally."));
   assert.ok(full.includes("strict · set by gary"));
   assert.match(full, /<td><code>model\.default<\/code><\/td><td><code>opus<\/code><\/td>/);
